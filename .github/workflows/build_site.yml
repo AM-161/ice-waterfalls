@@ -1,0 +1,81 @@
+name: Build & Deploy Icefall Map (daily)
+
+on:
+  schedule:
+    - cron: "20 0 * * *"   # täglich 00:20 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: System dependencies (spatial + netcdf)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev libssl-dev libxml2-dev \
+            libgdal-dev libproj-dev libgeos-dev libudunits2-dev \
+            libnetcdf-dev netcdf-bin
+
+      - name: Install R packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::httr
+            any::httr2
+            any::jsonlite
+            any::dplyr
+            any::lubridate
+            any::tidyr
+            any::readr
+            any::tibble
+            any::zoo
+            any::ggplot2
+            any::patchwork
+            any::raster
+            any::leaflet
+            any::htmlwidgets
+            any::htmltools
+            any::ncdf4
+            any::png
+            any::readxl
+          needs: check
+
+      - name: Build plots (all UIDs)
+        run: Rscript scripts/00_build_plots_all.R
+
+      - name: Build list page (summary table)
+        run: Rscript scripts/02_build_list_page.R
+
+      - name: Build map (site/)
+        run: Rscript scripts/01_build_map.R
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact (site/)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
