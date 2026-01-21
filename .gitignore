@@ -3,6 +3,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
 #Outputs
 /site
 /data/plots
@@ -10,3 +11,6 @@
 Rplots.pdf
 list.html
 icefalls_table.json
+
+#Modell anpassen und Fehler suchen
+/adj_model

@@ -54,7 +54,7 @@ PATH_INCA_DIR <- "adj_model/plots/inca"
 PATH_NWP_DIR  <- "adj_model/plots/nwp"
 
 # ✅ NEU: ModelRuns ohne extra Unterordner (war bei dir eh schon so)
-PATH_OUT      <- sprintf("adj_model/plots/ModelRuns/model_uid%s.csv", UID_TEST)
+PATH_OUT      <- sprintf("data/plots/ModelRuns/model_uid%s.csv", UID_TEST)
 
 # ----------------------------
 # Helpers
