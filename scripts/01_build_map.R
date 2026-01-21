@@ -1128,17 +1128,56 @@ m <- m |>
     position = "bottomright",
     html = htmltools::HTML(
       paste0(
-        "<div id='impressum-box' style='font-size: 14px; background: rgba(255,255,255,0.9);",
-        "padding: 6px 8px; border-radius: 6px; max-width: 340px; line-height: 1.4;'>",
-        "<div id='impressum-header' style='font-weight:bold; cursor:pointer; margin-bottom:4px;'>",
-        "Impressum / Quellen ▾",
+        "<div id='impressum-box' style='font-size:13px; background: rgba(255,255,255,0.92);",
+        "padding:10px 12px; border-radius:10px; max-width:360px; line-height:1.35;",
+        "box-shadow:0 6px 18px rgba(0,0,0,0.18); border:1px solid rgba(0,0,0,0.08);'>",
+        
+        "<div id='impressum-header' style='font-weight:700; cursor:pointer; margin:0; display:flex;",
+        "align-items:center; justify-content:space-between;'>",
+        "<span>Impressum / Quellen</span>",
+        "<span style='font-size:12px; opacity:0.8;'>▾</span>",
         "</div>",
-        "<div id='impressum-body' style='display:none;'>",
-        "<strong>Quellen</strong><br/>",
-        "INCA (GeoSphere Austria, <a href='https://doi.org/10.60669/6akt-5p05' target='_blank'>doi:10.60669/6akt-5p05</a>)<br/>",
-        "NWP AROME (GeoSphere Austria, <a href='https://doi.org/10.60669/9zm8-s664' target='_blank'>doi:10.60669/9zm8-s664</a>)<br/>",
-        "DEM Tirol (<a href='https://www.data.gv.at/katalog/datasets/0454f5f3-1d8c-464e-847d-541901eb021a' target='_blank'>data.gv.at</a>)<br/><br/>",
+        
+        "<div id='impressum-body' style='display:none; margin-top:8px;'>",
+        
+        "<div style='font-weight:700; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; ",
+        "opacity:0.75; margin:2px 0 6px;'>Quellen</div>",
+        
+        "<ul style='margin:0; padding-left:16px;'>",
+        
+        "<li style='margin:0 0 6px 0;'>",
+        "<span style='font-weight:600;'>Wetterstationen:</span><br/>",
+        "<span style='opacity:0.9;'>GeoSphere Austria (klima-v2-10min)</span> ",
+        "<a href='https://data.hub.geosphere.at/dataset/klima-v2-10min' target='_blank' ",
+        "style='text-decoration:none;'>↗</a><br/>",
+        "<span style='opacity:0.9;'>LWD Tirol / HD Tirol (OGD Österreich)</span> ",
+        "<a href='https://www.data.gv.at/datasets/bb43170b-30fb-48aa-893f-51c60d27056f?locale=de' target='_blank' ",
+        "style='text-decoration:none;'>↗</a>",
+        "</li>",
+        
+        "<li style='margin:0 0 6px 0;'>",
+        "<span style='font-weight:600;'>INCA:</span> GeoSphere Austria ",
+        "<a href='https://doi.org/10.60669/6akt-5p05' target='_blank' style='text-decoration:none;'>doi:10.60669/6akt-5p05</a>",
+        "</li>",
+        
+        "<li style='margin:0 0 6px 0;'>",
+        "<span style='font-weight:600;'>NWP AROME:</span> GeoSphere Austria ",
+        "<a href='https://doi.org/10.60669/9zm8-s664' target='_blank' style='text-decoration:none;'>doi:10.60669/9zm8-s664</a>",
+        "</li>",
+        
+        "<li style='margin:0;'>",
+        "<span style='font-weight:600;'>DEM Tirol:</span> ",
+        "<a href='https://www.data.gv.at/katalog/datasets/0454f5f3-1d8c-464e-847d-541901eb021a' target='_blank' style='text-decoration:none;'>data.gv.at</a>",
+        "</li>",
+        
+        "</ul>",
+        
+        "<div style='height:1px; background:rgba(0,0,0,0.08); margin:8px 0;'></div>",
+        
+        "<div style='font-size:12px; opacity:0.85;'>",
         "<em>Letztes Update: ", last_update, "</em>",
+        "</div>",
+        
         "</div>",
         "</div>"
       )
