@@ -14,3 +14,7 @@ icefalls_table.json
 
 #Modell anpassen und Fehler suchen
 /adj_model
+
+#Neue Stationen oder Eisfälle hinzufügen
+/add_new
+DGM_Tirol_5m_epsg31254_2006_2020.tif
