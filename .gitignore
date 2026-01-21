@@ -1,9 +1,11 @@
+#RStudio
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
+
+#Outputs
 /site
 /data/plots
 /data/nwp_2500m_forecast
-.pdf
 Rplots.pdf
