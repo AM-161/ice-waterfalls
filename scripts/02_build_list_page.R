@@ -345,8 +345,6 @@ out <- out %>%
 # ----------------------------
 jsonlite::write_json(out, OUT_JSON, pretty = TRUE, auto_unbox = TRUE, na = "null")
 message("✅ Wrote JSON: ", OUT_JSON)
-file.copy(OUT_JSON, ROOT_JSON, overwrite = TRUE)
-message("✅ Copied JSON to repo root: ", ROOT_JSON)
 
 # ----------------------------
 # 7) Write list.html
@@ -1052,8 +1050,6 @@ html <- paste(html_lines, collapse = "\n")
 
 writeLines(enc2utf8(html), OUT_HTML, useBytes = TRUE)
 message("✅ Wrote HTML: ", OUT_HTML)
-file.copy(OUT_HTML, ROOT_HTML, overwrite = TRUE)
-message("✅ Copied HTML to repo root: ", ROOT_HTML)
 
 message("Done. Outputs:")
 message(" - ", normalizePath(OUT_JSON, winslash = "/", mustWork = FALSE))
