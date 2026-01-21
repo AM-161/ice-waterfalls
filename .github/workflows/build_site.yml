@@ -2,7 +2,7 @@ name: Build & Deploy Icefall Map (daily)
 
 on:
   schedule:
-    - cron: "0 16 * * *"   # täglich 00:20 UTC
+    - cron: "0 15 * * *"   # täglich 00:20 UTC
   workflow_dispatch:
 
 permissions:
