@@ -50,11 +50,11 @@ PATH_SUN      <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
 
 # ✅ NEU: keine UID-Unterordner mehr – alles direkt in diese Ordner
-PATH_INCA_DIR <- "data/plots/inca"
-PATH_NWP_DIR  <- "data/plots/nwp"
+PATH_INCA_DIR <- "adj_model/plots/inca"
+PATH_NWP_DIR  <- "adj_model/plots/nwp"
 
 # ✅ NEU: ModelRuns ohne extra Unterordner (war bei dir eh schon so)
-PATH_OUT      <- sprintf("data/plots/ModelRuns/model_uid%s.csv", UID_TEST)
+PATH_OUT      <- sprintf("adj_model/plots/ModelRuns/model_uid%s.csv", UID_TEST)
 
 # ----------------------------
 # Helpers
