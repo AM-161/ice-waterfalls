@@ -5,7 +5,7 @@
 # - NWP Forecast: t2m/rh2m/u10m/v10m/grad (stündlich -> 10-min LOCF)
 # - Topo-Sonne + Wind-Vulnerability LUT
 # - Modellstart immer 01.10. laufende Saison
-# Output: data/ModelRuns/model_uid48.csv
+# Output: data/plots/ModelRuns/model_uid48.csv
 # =====================================================================
 
 suppressPackageStartupMessages({
@@ -48,9 +48,13 @@ PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 PATH_SUN      <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
-PATH_INCA_DIR <- "data/inca_nordtirol"
+
+# ✅ NEU: keine UID-Unterordner mehr – alles direkt in diese Ordner
+PATH_INCA_DIR <- "data/plots/inca"
 PATH_NWP_DIR  <- "data/nwp_2500m_forecast"
-PATH_OUT      <- sprintf("data/ModelRuns/model_uid%s.csv", UID_TEST)
+
+# ✅ NEU: ModelRuns ohne extra Unterordner (war bei dir eh schon so)
+PATH_OUT      <- sprintf("data/plots/ModelRuns/model_uid%s.csv", UID_TEST)
 
 # ----------------------------
 # Helpers
@@ -144,13 +148,17 @@ parse_inca_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
     select(time, UU, VV, GL)
 }
 
+# ✅ geändert: kein out_dir pro uid mehr
+# Dateien landen direkt in base_dir, Dateiname enthält uid + Zeitraum
 download_inca_point_uid_ts <- function(uid, lat, lon, start_date, end_date,
                                        base_dir = PATH_INCA_DIR, verbose = TRUE) {
-  out_dir <- file.path(base_dir, sprintf("uid_%s_ts", uid))
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
   
   cs <- as.Date(start_date); ce <- as.Date(end_date)
-  outfile <- file.path(out_dir, sprintf("inca_uid%s_ts_%s_%s.csv", uid, format(cs, "%Y%m%d"), format(ce, "%Y%m%d")))
+  outfile <- file.path(
+    base_dir,
+    sprintf("inca_uid%s_ts_%s_%s.csv", uid, format(cs, "%Y%m%d"), format(ce, "%Y%m%d"))
+  )
   
   if (file.exists(outfile) && file.info(outfile)$size > 0) return(outfile)
   
@@ -282,12 +290,12 @@ parse_nwp_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
     select(time, t2m, rh2m, u10m, v10m, grad)
 }
 
+# ✅ geändert: kein out_dir pro uid mehr
+# Dateien landen direkt in base_dir, Dateiname enthält uid + ref + Zeitraum
 download_nwp_point_uid_fc <- function(uid, lat, lon, start_time_utc, end_time_utc,
                                       forecast_offset = 0,
                                       base_dir = PATH_NWP_DIR, verbose = TRUE) {
   dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
-  out_dir <- file.path(base_dir, sprintf("uid_%s_fc", uid))
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   meta <- get_nwp_metadata_cached(base_dir = base_dir)
   last_ref <- meta[["last_forecast_reftime"]]
@@ -295,11 +303,13 @@ download_nwp_point_uid_fc <- function(uid, lat, lon, start_time_utc, end_time_ut
   ref_tag <- gsub("[^0-9T-]", "", ref_tag)
   
   outfile <- file.path(
-    out_dir,
-    sprintf("nwp_uid%s_fc_off%s_ref%s_%s_%s.csv",
-            uid, forecast_offset, ref_tag,
-            format(start_time_utc, "%Y%m%d%H%M"),
-            format(end_time_utc,   "%Y%m%d%H%M"))
+    base_dir,
+    sprintf(
+      "nwp_uid%s_fc_off%s_ref%s_%s_%s.csv",
+      uid, forecast_offset, ref_tag,
+      format(start_time_utc, "%Y%m%d%H%M"),
+      format(end_time_utc,   "%Y%m%d%H%M")
+    )
   )
   
   if (file.exists(outfile) && file.info(outfile)$size > 0) return(outfile)
@@ -367,6 +377,7 @@ get_nwp_point_forecast_hourly <- function(uid, start_time, end_time, lon, lat,
     GLOW = glow
   )
 }
+
 
 # ----------------------------
 # Station weather TL/RF (GeoSphere JSON OR LWD CSV)
@@ -1001,7 +1012,7 @@ if (!has_fc) {
   plt <- (p_hist + p_fc) +
     patchwork::plot_layout(widths = c(2, 1)) +
     patchwork::plot_annotation(
-      title = paste0("Modellierte Eisdicke – ", ice_name),
+      title = paste0("Modellierte Eisdicke – ", ice_name, " (UID ", sprintf("%03d", UID_TEST), ")"),
       subtitle = paste(
         c(
           if (!is.na(ice_alt_m)) paste0("Höhe: ", round(ice_alt_m, 0), " m"),
@@ -1025,6 +1036,7 @@ if (!has_fc) {
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
 plot_file <- sprintf("site/plots/uid_%03d.png", UID_TEST)
+
 
 ggsave(
   filename = plot_file,
