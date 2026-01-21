@@ -51,7 +51,7 @@ PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
 
 # ✅ NEU: keine UID-Unterordner mehr – alles direkt in diese Ordner
 PATH_INCA_DIR <- "data/plots/inca"
-PATH_NWP_DIR  <- "data/nwp_2500m_forecast"
+PATH_NWP_DIR  <- "data/plots/nwp"
 
 # ✅ NEU: ModelRuns ohne extra Unterordner (war bei dir eh schon so)
 PATH_OUT      <- sprintf("data/plots/ModelRuns/model_uid%s.csv", UID_TEST)
