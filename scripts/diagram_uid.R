@@ -884,8 +884,6 @@ if (!has_fc) {
     theme_minimal(base_size = 12) +
     theme(axis.text.x = element_text(size = 9, lineheight = 0.95))
   
-  print(plt)
-  
 } else {
   
   forecast_start <- min(mod$time[mod$is_forecast], na.rm = TRUE)
@@ -1026,8 +1024,7 @@ if (!has_fc) {
       caption = paste0("10-min Modell (dt=", MODEL_STEP_MIN, " min): FDH/PDH + SW(toposun) + Wind(vuln) + Dryness + Sättigung")
     )
   
-  print(plt)
-}
+  }
 
 
 # =====================================================================
