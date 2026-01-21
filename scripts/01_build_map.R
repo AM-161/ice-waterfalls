@@ -51,6 +51,7 @@ param_str     <- paste(parameters, collapse = ",")
 base_url_inca <- "https://dataset.api.hub.geosphere.at/v1/grid/historical/inca-v1-1h-1km"
 
 out_dir <- "data/inca_nordtirol"
+out_dir_nwp <- "data/nwp_2500m_forecast"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 nc_files <- character(length(chunk_starts))
@@ -592,7 +593,7 @@ start_fc <- format(t_now,    "%Y-%m-%dT%H:%M")
 end_fc   <- format(t_fc_end, "%Y-%m-%dT%H:%M")
 
 outfile_fc <- file.path(
-  out_dir,
+  out_dir_nwp,
   sprintf("nwp_nordtirol_%s_%sh.nc",
           format(as.Date(t_now), "%Y%m%d"),
           fc_h_max)
