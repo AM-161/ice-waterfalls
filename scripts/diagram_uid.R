@@ -48,6 +48,8 @@ PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 PATH_SUN      <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
+PATH_INV_DIR <- "data/_cache_inversion"
+PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
 # ✅ NEU: keine UID-Unterordner mehr – alles direkt in diese Ordner
 PATH_INCA_DIR <- "adj_model/plots/inca"
@@ -715,6 +717,25 @@ wx <- bind_rows(
   wx_fc %>% mutate(is_forecast = TRUE)
 ) %>% arrange(time)
 
+# --- Inversion join (global, gleiche Zeit für alle UIDs) ---
+if (file.exists(PATH_INV_RDS)) {
+  inv <- readRDS(PATH_INV_RDS) %>%
+    mutate(time = as.POSIXct(time, tz = TZ_LOCAL))
+  wx <- wx %>%
+    left_join(inv %>% select(time, inv_active, inv_score_C, inv_class,
+                             inv_grad_max_C_per_100m,
+                             grad01_K_per_m, grad12_K_per_m, grad02_K_per_m),
+              by = "time") %>%
+    mutate(
+      inv_active = ifelse(is.na(inv_active), FALSE, inv_active),
+      inv_score_C  = ifelse(is.na(inv_score_C),  0,     inv_score_C),
+      inv_class  = ifelse(is.na(inv_class),  "none", inv_class)
+    )
+} else {
+  wx <- wx %>% mutate(inv_active = FALSE, inv_score_C = 0, inv_class = "none")
+  message("⚠️ Inversion cache fehlt: ", PATH_INV_RDS, " (inv_active=FALSE)")
+}
+
 # =====================================================================
 # 6) Join topo sun + wind vulnerability
 # =====================================================================
@@ -750,12 +771,43 @@ coef <- list(
 
 wx <- wx %>%
   mutate(
-    dz_eff = ifelse(is_forecast, 0, dz_m),
-    TLz    = TL - coef$lapse_K_per_m * dz_eff,
+    # Roh-Delta z (Forecast optional auf 0 setzen)
+    dz_raw = if_else(is_forecast, 0, dz_m),
+    
+    # physikalisches Profil nur anwenden, wenn Inversion aktiv UND Stationhöhe bekannt
+    use_prof = (!is_forecast) & inv_active & is.finite(z_aws) & is.finite(dz_m) &
+      is.finite(grad01_K_per_m) & is.finite(grad12_K_per_m),
+    
+    # Zielhöhe aus Stationshöhe + dz (funktioniert auch wenn ice_alt_m fehlt)
+    z_target_m = z_aws + dz_m,
+    
+    # piecewise ΔT über zwei Schichten (unter/über Z1=1935m); Vorzeichen korrekt in beide Richtungen
+    dT_prof = if_else(
+      use_prof,
+      {
+        z1_m <- 1935
+        lo <- pmin(z_aws, z_target_m)
+        hi <- pmax(z_aws, z_target_m)
+        
+        len_low  <- pmax(0, pmin(hi, z1_m) - lo)
+        len_high <- pmax(0, hi - pmax(lo, z1_m))
+        
+        sgn <- if_else(z_target_m >= z_aws, 1, -1)
+        sgn * (grad01_K_per_m * len_low + grad12_K_per_m * len_high)
+      },
+      NA_real_
+    ),
+    
+    # Temperatur auf Eisfall-Höhe:
+    # - Standard: konstante Lapse
+    # - Bei inv_active: physikalisches Profil (auch für dz>0 und dz<0)
+    TLz_raw = TL - coef$lapse_K_per_m * dz_raw,
+    TLz     = if_else(use_prof, TL + dT_prof, TLz_raw),
+    
     FDH = pmax(0, -TLz),
     PDH = pmax(0,  TLz),
     
-    GLOW = ifelse(is.finite(GLOW), GLOW, 0),
+    GLOW = if_else(is.finite(GLOW), GLOW, 0),
     SW_MJ_step = GLOW * W2MJ_STEP * topo_sun_fac * (1 - ice_params$albedo),
     
     FF_eff   = pmin(coef$wind_cap_ms, pmax(0, FF)),

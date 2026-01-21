@@ -17,6 +17,12 @@ if (length(uids) == 0) stop("Keine UIDs gefunden.")
 
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
+# 0) Inversion einmal berechnen (Cache)
+inv_script <- "scripts/00_build_inversion_cache.R"
+if (!file.exists(inv_script)) stop("Fehlt Inversion-Skript: ", inv_script)
+
+system2("Rscript", c(inv_script), stdout = "", stderr = "")
+
 # Diagramm-Skript Pfad (anpassen, wie du es ablegst)
 plot_script <- "scripts/diagram_uid.R"
 if (!file.exists(plot_script)) stop("Fehlt Diagramm-Skript: ", plot_script)
