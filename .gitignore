@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-/site
+/site/
 /data/plots
+/data/nwp_2500m_forecast
