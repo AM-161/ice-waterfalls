@@ -498,7 +498,7 @@ html_lines <- c(
   '          <th data-key="thickness_tomorrow_07_m">Eisdicke morgen ~07:00 (m)</th>',
   '          <th data-key="climb_max_tomorrow">Max. Kletterbarkeit morgen</th>',
   '          <th data-key="climb_max_time_local">Uhrzeit</th>',
-  '          <th>Diagramm</th>',
+  '          <th>Details</th>',
   '          <th>Topo</th>',
   '        </tr>',
   '      </thead>',
@@ -801,9 +801,9 @@ html_lines <- c(
   '      for(const r of view){',
   '        const tr = document.createElement("tr");',
   '        const topoLink = r.topo_url ? `<a href="${r.topo_url}" target="_blank" rel="noopener">Topo</a>` : `<span class="muted">&mdash;</span>`;',
-  '        const plotUrl = r.plot_url || "";',
-  '        const safeTitle = str(r.name).replace(/"/g, "&quot;");',
-  '        const plotBtn = plotUrl ? `<button class="btn" data-plot="${plotUrl}" data-title="${safeTitle}">Vollbild</button>` : `<span class="muted">&mdash;</span>`;',
+  '        const uidPad = String(r.uid).padStart(3,"0");',
+  '   const detailsUrl = `icefalls/uid_${uidPad}.html`;',
+  '   const detailsBtn = `<a class="btn" href="${detailsUrl}" target="_blank" rel="noopener">Öffnen</a>`;',
   '',
   '        const aTxt  = isFinite(num(r._grade_a))  ? ("A" + fmtGrade(r._grade_a))  : "<span class=muted>&mdash;</span>";',
   '        const mTxt  = isFinite(num(r._grade_m))  ? ("M" + fmtGrade(r._grade_m))  : "<span class=muted>&mdash;</span>";',
@@ -827,7 +827,7 @@ html_lines <- c(
   '          <td>${r.thickness_tomorrow_07_txt || "<span class=muted>&mdash;</span>"}</td>',
   '          <td>${r.climb_max_tomorrow_txt || "<span class=muted>&mdash;</span>"}</td>',
   '          <td>${str(r.climb_max_time_local) || "<span class=muted>&mdash;</span>"}</td>',
-  '          <td>${plotBtn} ${plotUrl ? `<a class="muted small" href="${plotUrl}" target="_blank" rel="noopener">neu Tab</a>` : ""}</td>',
+' <td>${detailsBtn}</td>',
   '          <td>${topoLink}</td>',
   '        `;',
   '        tbody.appendChild(tr);',
@@ -1050,6 +1050,326 @@ html <- paste(html_lines, collapse = "\n")
 
 writeLines(enc2utf8(html), OUT_HTML, useBytes = TRUE)
 message("✅ Wrote HTML: ", OUT_HTML)
+
+# ----------------------------
+# 8) Write detail pages per UID (site/icefalls/uid_###.html)
+# ----------------------------
+
+DETAIL_DIR <- file.path(OUT_DIR, "icefalls")
+dir.create(DETAIL_DIR, showWarnings = FALSE, recursive = TRUE)
+
+# Cloudflare Worker + R2 Public base
+API_BASE  <- "https://icefalls-api.carlos-wydra.workers.dev"
+R2_PUBLIC <- "https://pub-1b553d6f009540c0881b434b7791c67c.r2.dev"
+
+# Helper: safe HTML text (very small; JS does most escaping)
+esc_html <- function(x) {
+  x <- ifelse(is.na(x) | x %in% c("", "NA", "NaN", "NULL"), "", as.character(x))
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;",  x, fixed = TRUE)
+  x <- gsub(">", "&gt;",  x, fixed = TRUE)
+  x <- gsub("\"", "&quot;", x, fixed = TRUE)
+  x
+}
+
+# Iterate over all rows (one detail page per uid)
+for (i in seq_len(nrow(out))) {
+  
+  r <- out[i, , drop = FALSE]
+  
+  uid <- as.integer(r$uid[[1]])
+  if (!is.finite(uid)) next
+  
+  uid_pad <- sprintf("%03d", uid)
+  
+  nm  <- esc_html(r$name[[1]])
+  diff <- esc_html(r$difficulty[[1]])
+  elev <- r$elev_m[[1]]
+  elev_txt <- if (is.finite(elev)) paste0(round(elev), " m") else "&mdash;"
+  
+  topo_url <- as.character(r$topo_url[[1]])
+  topo_url <- ifelse(is.na(topo_url) | topo_url == "", "", topo_url)
+  
+  lat <- r$latitude[[1]]
+  lon <- r$longitude[[1]]
+  lat_txt <- if (is.finite(lat)) sprintf("%.6f", lat) else ""
+  lon_txt <- if (is.finite(lon)) sprintf("%.6f", lon) else ""
+  
+  # plot png relative to site root
+  plot_rel <- sprintf("plots/uid_%03d.png", uid)
+  
+  out_file <- file.path(DETAIL_DIR, sprintf("uid_%s.html", uid_pad))
+  
+  detail_html <- c(
+    "<!doctype html>",
+    "<html lang='de'>",
+    "<head>",
+    "  <meta charset='utf-8'/>",
+    "  <meta name='viewport' content='width=device-width, initial-scale=1'/>",
+    paste0("  <title>", nm, " (UID ", uid_pad, ")</title>"),
+    
+    # Leaflet (small map)
+    "  <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>",
+    "  <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>",
+    
+    "  <style>",
+    "    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;padding:0;background:#fff;}",
+    "    header{padding:10px 14px;border-bottom:1px solid #ddd;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}",
+    "    header a{text-decoration:none;padding:6px 10px;border:1px solid #ddd;border-radius:10px;color:#111;background:#fff;}",
+    "    header a:hover{background:#f4f4f4;}",
+    "    .wrap{padding:12px 14px;max-width:1400px;margin:0 auto;}",
+    
+    "    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}",
+    "    @media(max-width:900px){.grid2{grid-template-columns:1fr;}}",
+    
+    "    .card{border:1px solid #eee;border-radius:16px;padding:12px 14px;background:#fff;}",
+    "    .card h2{margin:0 0 8px 0;font-size:16px;}",
+    "    .kv{display:grid;grid-template-columns:170px 1fr;gap:6px 10px;font-size:14px;}",
+    "    .k{color:#666;}",
+    "    .muted{color:#666;font-size:12px;}",
+    
+    "    .btn{display:inline-flex;gap:6px;align-items:center;padding:8px 12px;border:1px solid #ddd;border-radius:12px;background:#fff;cursor:pointer;text-decoration:none;color:#111;}",
+    "    .btn:hover{background:#f4f4f4;}",
+    
+    "    .gallery{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}",
+    "    .ph{width:220px;border:1px solid #eee;border-radius:14px;overflow:hidden;background:#fff;}",
+    "    .ph img{width:100%;height:160px;object-fit:cover;display:block;}",
+    "    .cap{padding:8px 10px;font-size:12px;}",
+    
+    "    input[type='file'], input[type='date'], select, textarea{padding:10px 12px;border:1px solid #ccc;border-radius:12px;font-size:14px;}",
+    "    textarea{resize:vertical;}",
+    
+    # diagram full width
+    "    .plotWrap{margin-top:12px;}",
+    "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;}",
+    
+    "    #map{height:240px;border-radius:16px;border:1px solid #eee;}",
+    "  </style>",
+    "</head>",
+    "<body>",
+    
+    "<header>",
+    "  <a href='../list.html'>&larr; &Uuml;bersicht</a>",
+    "  <a href='../index.html'>Karte</a>",
+    paste0("  <div style='font-weight:700;'>", nm, " <span class='muted'>(UID ", uid_pad, ")</span></div>"),
+    "</header>",
+    
+    "<div class='wrap'>",
+    
+    # top row: Basic Infos + Bilder (empty state initially)
+    "  <div class='grid2'>",
+    "    <div class='card'>",
+    "      <h2>Basic Infos</h2>",
+    "      <div class='kv'>",
+    paste0("        <div class='k'>Schwierigkeit</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
+    paste0("        <div class='k'>H&ouml;he &uuml;. NN</div><div><b>", elev_txt, "</b></div>"),
+    paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),
+    "      </div>",
+    "    </div>",
+    
+    "    <div class='card'>",
+    "      <h2>Bilder</h2>",
+    "      <div class='muted' style='display:flex;justify-content:space-between;gap:10px;align-items:center;'>",
+    "        <div id='imgStatus'>Lade...</div>",
+    "        <div>Uploads werden &ouml;ffentlich angezeigt.</div>",
+    "      </div>",
+    "      <div id='gallery' class='gallery' style='margin-top:10px;'></div>",
+    "    </div>",
+    "  </div>",
+    
+    # full-width plot card
+    "  <div class='card plotWrap'>",
+    "    <h2>Diagramm</h2>",
+    paste0("    <div style='margin-bottom:8px;'><a class='btn' href='../", plot_rel, "' target='_blank' rel='noopener'>gro&szlig; &ouml;ffnen</a></div>"),
+    paste0("    <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=\\\"muted\\\">Kein Plot gefunden.</div>';\"/>"),
+    "  </div>",
+    
+    # upload + map row
+    "  <div class='grid2' style='margin-top:12px;'>",
+    
+    # upload card
+    "    <div class='card'>",
+    "      <h2>Bild hochladen</h2>",
+    "      <div class='muted' style='margin-bottom:10px;'>Mit Upload best&auml;tigst du, dass du die Rechte am Bild hast. Bitte keine personenbezogenen Daten.</div>",
+    
+    "      <div style='display:flex;gap:10px;flex-wrap:wrap;align-items:center;'>",
+    "        <div class='muted' style='min-width:110px;'>Kletterbarkeit</div>",
+    "        <select id='rating'>",
+    "          <option value='3'>gut</option>",
+    "          <option value='2'>grenzwertig</option>",
+    "          <option value='1'>gar nicht</option>",
+    "        </select>",
+    "        <div class='muted' style='min-width:50px;'>Datum</div>",
+    "        <input id='shotDate' type='date'/>",
+    "      </div>",
+    
+    # comment ONLY here (NOT in Basic Infos)
+    "      <div style='margin-top:10px;'>",
+    "        <textarea id='comment' rows='3' placeholder='Kommentar (optional): Eiszustand, Bedingungen, Gefahren…' style='width:100%;max-width:100%;'></textarea>",
+    "      </div>",
+    
+    "      <div style='display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;'>",
+    "        <input id='file' type='file' accept='image/*'/>",
+    "        <button id='btnUpload' class='btn' type='button'>Upload</button>",
+    "        <span id='upStatus' class='muted'></span>",
+    "      </div>",
+    "    </div>",
+    
+    # map card
+    "    <div class='card'>",
+    "      <h2>Location</h2>",
+    paste0("      <div class='muted' style='margin-bottom:8px;'>Koordinaten: ",
+           ifelse(nchar(lat_txt)>0 && nchar(lon_txt)>0, paste0(lat_txt, ", ", lon_txt), "&mdash;"),
+           "</div>"),
+    "      <div id='map'></div>",
+    "      <div id='mapStatus' class='muted' style='margin-top:8px;'></div>",
+    "    </div>",
+    
+    "  </div>",
+    
+    # script
+    "  <script>",
+    paste0("  const API_BASE = ", jsonlite::toJSON(API_BASE, auto_unbox = TRUE), ";"),
+    paste0("  const R2_PUBLIC = ", jsonlite::toJSON(R2_PUBLIC, auto_unbox = TRUE), ";"),
+    paste0("  const UID = ", uid, ";"),
+    paste0("  const ICE_NAME = ", jsonlite::toJSON(as.character(r$name[[1]]), auto_unbox = TRUE), ";"),
+    paste0("  const ICE_LAT = ", ifelse(is.finite(lat), format(lat, scientific = FALSE), "null"), ";"),
+    paste0("  const ICE_LON = ", ifelse(is.finite(lon), format(lon, scientific = FALSE), "null"), ";"),
+    
+    "  const elGal = document.getElementById('gallery');",
+    "  const elImgStatus = document.getElementById('imgStatus');",
+    "  const elUpStatus = document.getElementById('upStatus');",
+    "  const elFile = document.getElementById('file');",
+    "  const elRating = document.getElementById('rating');",
+    "  const elDate = document.getElementById('shotDate');",
+    "  const elComment = document.getElementById('comment');",
+    "  const btn = document.getElementById('btnUpload');",
+    
+    "  function escHtml(s){",
+    "    s = (s===null || s===undefined) ? '' : String(s);",
+    "    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');",
+    "  }",
+    
+    "  function ratingTxt(v){",
+    "    v = Number(v);",
+    "    if (v === 3) return 'gut';",
+    "    if (v === 2) return 'grenzwertig';",
+    "    if (v === 1) return 'gar nicht';",
+    "    return String(v);",
+    "  }",
+    
+    "  async function loadImages(){",
+    "    elImgStatus.textContent = 'Lade...';",
+    "    elGal.innerHTML = '';",
+    "    try {",
+    "      const res = await fetch(`${API_BASE}/api/images?uid=${UID}`, { method:'GET' });",
+    "      if (!res.ok) throw new Error('HTTP ' + res.status);",
+    "      const arr = await res.json();",
+    "      if (!Array.isArray(arr) || arr.length === 0){",
+    "        elImgStatus.textContent = 'Noch keine Bilder.';",
+    "        return;",
+    "      }",
+    "      elImgStatus.textContent = `Bilder: ${arr.length}`;",
+    "      const html = arr.map(x => {",
+    "        const url = x.public_url || '';",
+    "        const d = escHtml(x.shot_date || '');",
+    "        const rt = ratingTxt(x.rating);",
+    "        const c = escHtml(x.comment || '');",
+    "        const cHtml = c ? `<div style=\"margin-top:6px;\">${c}</div>` : '';",
+    "        if (!url) return '';",
+    "        return `",
+    "          <div class=\"ph\">",
+    "            <a href=\"${url}\" target=\"_blank\" rel=\"noopener\">",
+    "              <img src=\"${url}\" alt=\"Bild\" loading=\"lazy\"/>",
+    "            </a>",
+    "            <div class=\"cap\">",
+    "              <b>${d}</b>",
+    "              <div class=\"muted\">Kletterbarkeit: ${escHtml(rt)}</div>",
+    "              ${cHtml}",
+    "            </div>",
+    "          </div>`;",
+    "      }).join('');",
+    "      elGal.innerHTML = html;",
+    "    } catch(e){",
+    "      elImgStatus.textContent = 'Fehler beim Laden: ' + (e && e.message ? e.message : e);",
+    "    }",
+    "  }",
+    
+    "  function initDateDefault(){",
+    "    // default = today local",
+    "    const now = new Date();",
+    "    const yyyy = now.getFullYear();",
+    "    const mm = String(now.getMonth()+1).padStart(2,'0');",
+    "    const dd = String(now.getDate()).padStart(2,'0');",
+    "    if (elDate && !elDate.value) elDate.value = `${yyyy}-${mm}-${dd}`;",
+    "  }",
+    
+    "  async function doUpload(){",
+    "    const f = elFile && elFile.files && elFile.files[0] ? elFile.files[0] : null;",
+    "    if (!f){ elUpStatus.textContent = 'Bitte Datei ausw\u00e4hlen.'; return; }",
+    "    const rating = elRating ? Number(elRating.value) : 3;",
+    "    const shotDate = elDate ? String(elDate.value || '') : '';",
+    "    if (!shotDate){ elUpStatus.textContent = 'Bitte Datum setzen.'; return; }",
+    "    const comment = (elComment && elComment.value) ? elComment.value.trim() : '';",
+    
+    "    elUpStatus.textContent = 'Upload...';",
+    "    const form = new FormData();",
+    "    form.append('file', f);",
+    "    form.append('uid', String(UID));",
+    "    form.append('ice_name', ICE_NAME || '');",
+    "    form.append('rating', String(rating));",
+    "    form.append('shot_date', shotDate);",
+    "    if (comment) form.append('comment', comment);",
+    
+    "    try {",
+    "      const res = await fetch(`${API_BASE}/api/upload`, { method:'POST', body: form });",
+    "      const txt = await res.text();",
+    "      if (!res.ok) throw new Error(txt || ('HTTP ' + res.status));",
+    "      elUpStatus.textContent = 'Upload ok.';",
+    "      if (elFile) elFile.value = '';",
+    "      if (elComment) elComment.value = '';",
+    "      await loadImages();",
+    "    } catch(e){",
+    "      elUpStatus.textContent = 'Upload fehlgeschlagen: ' + (e && e.message ? e.message : e);",
+    "    }",
+    "  }",
+    
+    "  function initMap(){",
+    "    const mapStatus = document.getElementById('mapStatus');",
+    "    if (ICE_LAT === null || ICE_LON === null || !isFinite(ICE_LAT) || !isFinite(ICE_LON)){",
+    "      if (mapStatus) mapStatus.textContent = 'Keine Koordinaten verf\u00fcgbar.';",
+    "      return;",
+    "    }",
+    "    try {",
+    "      const m = L.map('map', { scrollWheelZoom: false }).setView([ICE_LAT, ICE_LON], 13);",
+    "      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {",
+    "        maxZoom: 19,",
+    "        attribution: '&copy; OpenStreetMap'",
+    "      }).addTo(m);",
+    "      L.marker([ICE_LAT, ICE_LON]).addTo(m).bindPopup(escHtml(ICE_NAME || ('UID ' + UID))).openPopup();",
+    "      if (mapStatus) mapStatus.textContent = 'Karte: OSM';",
+    "    } catch(e){",
+    "      if (mapStatus) mapStatus.textContent = 'Kartenfehler: ' + (e && e.message ? e.message : e);",
+    "    }",
+    "  }",
+    
+    "  if (btn) btn.addEventListener('click', doUpload);",
+    "  initDateDefault();",
+    "  initMap();",
+    "  loadImages();",
+    "  </script>",
+    
+    "</div>",
+    "</body>",
+    "</html>"
+  )
+  
+  writeLines(detail_html, out_file, useBytes = TRUE)
+}
+
+message("✅ Wrote detail pages: ", DETAIL_DIR, " (", length(unique(out$uid)), " UIDs)")
+
+
 
 message("Done. Outputs:")
 message(" - ", normalizePath(OUT_JSON, winslash = "/", mustWork = FALSE))
