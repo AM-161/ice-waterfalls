@@ -960,16 +960,27 @@ sun_today <- sun_today %>%
     uid_pad  = sprintf("%03d", uid),
     plot_png = paste0("plots/uid_", uid_pad, ".png"),
     
+    detail_url = paste0("icefalls/uid_", uid_pad, ".html"),
+    
     plot_block = paste0(
       "<hr style='margin:6px 0;'/>",
-      "<div style='font-size:12px;'>",
-      "<a href='", plot_png, "' target='_blank' style='font-weight:bold;'>🔍 Diagramm groß öffnen</a><br/>",
+      
+      "<div style='display:flex; gap:6px; flex-wrap:wrap;'>",
+      
+      "<a href='", detail_url, "' target='_blank' ",
+      "style='padding:6px 10px; background:#0d6efd; color:white; ",
+      "border-radius:6px; text-decoration:none; font-weight:600;'>",
+      "📄 Details & Upload",
+      "</a>",
+
+      "</div>",
+      
       "<a href='", plot_png, "' target='_blank'>",
       "<img src='", plot_png, "' ",
-      "style='width:360px;max-width:100%;height:auto;border:1px solid #ccc;border-radius:4px;margin-top:4px;cursor:zoom-in;' ",
+      "style='width:320px;max-width:100%;height:auto;",
+      "border:1px solid #ccc;border-radius:4px;margin-top:6px;' ",
       "onerror=\"this.style.display='none';\"/>",
-      "</a>",
-      "</div>"
+      "</a>"
     ),
     
     popup = ifelse(
