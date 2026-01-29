@@ -15,6 +15,21 @@ uids <- uids[is.finite(uids)]
 
 if (length(uids) == 0) stop("Keine UIDs gefunden.")
 
+# Optional: limit build to a specific UID list (for faster testing)
+# Usage:
+#   Rscript scripts/00_build_plots_all.R --uids=12,34,56
+#   or set environment variable UID_LIMIT="12,34,56"
+uid_arg <- grep("^--uids=", commandArgs(trailingOnly = TRUE), value = TRUE)
+uid_raw <- if (length(uid_arg) > 0) sub("^--uids=", "", uid_arg[1]) else Sys.getenv("UID_LIMIT", "")
+if (nzchar(uid_raw)) {
+  uid_list <- suppressWarnings(as.integer(trimws(unlist(strsplit(uid_raw, "[,;\\s]+")))))
+  uid_list <- uid_list[is.finite(uid_list)]
+  if (length(uid_list) == 0) stop("UID_LIMIT/--uids enthaelt keine gueltigen UIDs.")
+  uids <- uids[uids %in% uid_list]
+  if (length(uids) == 0) stop("Keine UIDs uebrig nach Filter: ", uid_raw)
+  message("⚙️ UID-Filter aktiv: ", paste(uids, collapse = ", "))
+}
+
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
 # 0) Inversion einmal berechnen (Cache)
