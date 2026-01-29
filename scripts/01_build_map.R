@@ -1091,14 +1091,71 @@ m <- m |>
        </div>"
     )
   )  |>
+  addControl(
+    position = "topleft",
+    html = htmltools::HTML(
+      "<div id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:6px;min-width:220px;'>\n        <div style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;margin-bottom:6px;'>Filter</div>\n        <input id='mapFilterInput' type='search' placeholder='Name oder UID' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n        <div id='mapFilterStatus' style='margin-top:6px;font-size:12px;color:#666;'></div>\n      </div>"
+    )
+  )  |>
   htmlwidgets::onRender(
     "function(el, x) {
        var style = document.createElement('style');
        style.textContent = \"@media (max-width: 720px){\" +
          \".leaflet-control .map-list-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
+         \"#map-filter{min-width:180px;}\" +
          \".leaflet-control{max-width:calc(100vw - 24px);}\" +
          \"}\";
        el.appendChild(style);
+     }"
+  ) |>
+  htmlwidgets::onRender(
+    "function(el, x) {
+       var map = this;
+       var input = el.querySelector('#mapFilterInput');
+       var status = el.querySelector('#mapFilterStatus');
+       if (!input || !status) return;
+
+       function getGroup() {
+         if (map.layerManager) {
+           if (typeof map.layerManager.getLayerGroup === 'function') {
+             return map.layerManager.getLayerGroup('Eisfälle');
+           }
+           if (map.layerManager._byGroup && map.layerManager._byGroup['Eisfälle']) {
+             return map.layerManager._byGroup['Eisfälle'];
+           }
+         }
+         return null;
+       }
+
+       var group = getGroup();
+       if (!group || typeof group.getLayers !== 'function') {
+         status.textContent = 'Filter derzeit nicht verf\u00fcgbar.';
+         return;
+       }
+
+       var allMarkers = group.getLayers ? group.getLayers().slice() : [];
+       function markerText(layer) {
+         var props = (layer && layer.feature && layer.feature.properties) ? layer.feature.properties : {};
+         var name = props.name || props.Name || '';
+         var uid = props.uid || props.UID || '';
+         return (String(name) + ' ' + String(uid)).toLowerCase();
+       }
+
+       function applyFilter() {
+         var term = input.value.trim().toLowerCase();
+         group.clearLayers();
+         var visible = 0;
+         allMarkers.forEach(function(layer) {
+           if (!term || markerText(layer).indexOf(term) !== -1) {
+             group.addLayer(layer);
+             visible += 1;
+           }
+         });
+         status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle';
+       }
+
+       input.addEventListener('input', applyFilter);
+       applyFilter();
      }"
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax) |>
