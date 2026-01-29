@@ -300,8 +300,10 @@
         const tr = document.createElement("tr");
         const topoLink = r.topo_url ? `<a href="${r.topo_url}" target="_blank" rel="noopener">Topo</a>` : `<span class="muted">&mdash;</span>`;
         const uidPad = String(r.uid).padStart(3,"0");
+        const stationTxt = r.station_id ? ("Station: " + str(r.station_id) + (r.source ? (" (" + str(r.source) + ")") : "")) : "";
+        const metaTxt = ["UID " + uidPad, stationTxt].filter(Boolean).join(" · ");
    const detailsUrl = `icefalls/uid_${uidPad}.html`;
-   const detailsBtn = `<a class="btn" href="${detailsUrl}" target="_blank" rel="noopener">Öffnen</a>`;
+   const detailsBtn = `<a class="btn" href="${detailsUrl}">Öffnen</a>`;
 
         const aTxt  = isFinite(num(r._grade_a))  ? ("A" + fmtGrade(r._grade_a))  : "<span class=muted>&mdash;</span>";
         const mTxt  = isFinite(num(r._grade_m))  ? ("M" + fmtGrade(r._grade_m))  : "<span class=muted>&mdash;</span>";
@@ -311,7 +313,7 @@
         tr.innerHTML = `
           <td>
             <div><b>${str(r.name) || ("UID " + r.uid)}</b></div>
-            <div class="muted">${r.station_id ? ("Station: " + str(r.station_id) + (r.source ? (" (" + str(r.source) + ")") : "")) : ""}</div>
+            <div class="muted">${metaTxt}</div>
           </td>
           <td>${str(r.difficulty) || "<span class=muted>&mdash;</span>"}</td>
           <td>${aTxt}</td>
