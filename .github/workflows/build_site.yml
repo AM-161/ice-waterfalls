@@ -75,6 +75,11 @@ jobs:
       - name: Build list page (summary table)
         run: Rscript scripts/02_build_list_page.R
 
+      - name: Add homepage (static)
+        run: |
+          mkdir -p site/assets
+          cp static/index.html site/index.html
+
       - name: Build map (site/)
         run: Rscript scripts/01_build_map.R
 
