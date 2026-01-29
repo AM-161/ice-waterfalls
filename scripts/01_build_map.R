@@ -1110,26 +1110,14 @@ m <- m |>
     data        = sun_today,
     lng         = ~longitude,
     lat         = ~latitude,
-    radius      = 3,
-    color       = "black",
-    weight      = 1,
-    fillColor   = "orange",
+    radius      = 5,
+    color       = "#0b3d91",
+    weight      = 2,
+    fillColor   = "#ffd166",
     fillOpacity = 0.9,
     popup       = ~popup,
-    group       = "Eisfälle"
-  ) |>
-  addCircleMarkers(
-    data        = sun_today,
-    lng         = ~longitude,
-    lat         = ~latitude,
-    radius      = 20,
-    color       = "transparent",
-    weight      = 0,
-    fillColor   = "transparent",
-    fillOpacity = 0,
-    opacity     = 0,
-    popup       = ~popup,
-    group       = "Eisfälle"
+    group       = "Eisfälle",
+    clusterOptions = markerClusterOptions()
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
@@ -1351,10 +1339,9 @@ if (length(time_labels) > 0L) {
 # 13) Output: NICHT selfcontained, in site/ ----------------------------
 
 dir.create("site", showWarnings = FALSE)
-saveWidget(m, "site/index.html", selfcontained = FALSE)
-message("✅ Fertig: site/index.html + site/img/*.png")
+saveWidget(m, "site/map.html", selfcontained = FALSE)
+message("✅ Fertig: site/map.html + site/img/*.png")
 
 if (interactive()) {
   m
 }
-

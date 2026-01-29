@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 15 * * *"   # täglich 00:20 UTC
   workflow_dispatch:
+    inputs:
+      uids:
+        description: "Optionale UID-Liste (z.B. 12,34,56) fuer Plot-Build"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -60,10 +65,20 @@ jobs:
           needs: check
 
       - name: Build plots (all UIDs)
-        run: Rscript scripts/00_build_plots_all.R
+        run: |
+          if [ -n "${{ inputs.uids }}" ]; then
+            Rscript scripts/00_build_plots_all.R --uids="${{ inputs.uids }}"
+          else
+            Rscript scripts/00_build_plots_all.R
+          fi
 
       - name: Build list page (summary table)
         run: Rscript scripts/02_build_list_page.R
+
+      - name: Add homepage (static)
+        run: |
+          mkdir -p site/assets
+          cp static/index.html site/index.html
 
       - name: Build map (site/)
         run: Rscript scripts/01_build_map.R
