@@ -1182,6 +1182,7 @@ m <- m |>
        }
 
        function num(x){
+         if (x === '' || x === null || typeof x === 'undefined') return NaN;
          var n = Number(x);
          return isFinite(n) ? n : NaN;
        }
