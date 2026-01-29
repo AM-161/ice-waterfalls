@@ -863,7 +863,7 @@ pal_ci <- colorNumeric(
   na.color = "transparent"
 )
 
-last_update <- format(Sys.time(), "%d.%m.%Y %H:%M UTC")
+last_update <- format(Sys.time(), tz = "Europe/Vienna", "%d.%m.%Y %H:%M %Z")
 ext         <- extent(r_template)
 
 # =====================================================================
@@ -967,7 +967,7 @@ sun_today <- sun_today %>%
       
       "<div style='display:flex; gap:6px; flex-wrap:wrap;'>",
       
-      "<a href='", detail_url, "' target='_blank' ",
+      "<a href='", detail_url, "' ",
       "style='padding:6px 10px; background:#0d6efd; color:white; ",
       "border-radius:6px; text-decoration:none; font-weight:600;'>",
       "📄 Details & Upload",
@@ -1087,10 +1087,20 @@ m <- m |>
     position = "topleft",
     html = htmltools::HTML(
       "<div style='background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:6px;'>
-         <a href='list.html' target='_blank' style='font-size:14px;font-weight:bold;'>📋 Eisfall-Liste</a>
+         <a href='list.html' class='map-list-link' style='font-size:14px;font-weight:bold;'>📋 Eisfall-Liste</a>
        </div>"
     )
   )  |>
+  htmlwidgets::onRender(
+    "function(el, x) {
+       var style = document.createElement('style');
+       style.textContent = \"@media (max-width: 720px){\" +
+         \".leaflet-control .map-list-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
+         \".leaflet-control{max-width:calc(100vw - 24px);}\" +
+         \"}\";
+       el.appendChild(style);
+     }"
+  ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax) |>
   addLegend(
     pal       = pal_ci,
@@ -1134,45 +1144,11 @@ m <- m |>
         
         "<div id='impressum-header' style='font-weight:700; cursor:pointer; margin:0; display:flex;",
         "align-items:center; justify-content:space-between;'>",
-        "<span>Impressum / Quellen</span>",
+        "<span>Impressum</span>",
         "<span style='font-size:12px; opacity:0.8;'>▾</span>",
         "</div>",
         
         "<div id='impressum-body' style='display:none; margin-top:8px;'>",
-        
-        "<div style='font-weight:700; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; ",
-        "opacity:0.75; margin:2px 0 6px;'>Quellen</div>",
-        
-        "<ul style='margin:0; padding-left:16px;'>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>Wetterstationen:</span><br/>",
-        "<span style='opacity:0.9;'>GeoSphere Austria (klima-v2-10min)</span> ",
-        "<a href='https://data.hub.geosphere.at/dataset/klima-v2-10min' target='_blank' ",
-        "style='text-decoration:none;'>↗</a><br/>",
-        "<span style='opacity:0.9;'>LWD Tirol / HD Tirol (OGD Österreich)</span> ",
-        "<a href='https://www.data.gv.at/datasets/bb43170b-30fb-48aa-893f-51c60d27056f?locale=de' target='_blank' ",
-        "style='text-decoration:none;'>↗</a>",
-        "</li>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>INCA:</span> GeoSphere Austria ",
-        "<a href='https://doi.org/10.60669/6akt-5p05' target='_blank' style='text-decoration:none;'>doi:10.60669/6akt-5p05</a>",
-        "</li>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>NWP AROME:</span> GeoSphere Austria ",
-        "<a href='https://doi.org/10.60669/9zm8-s664' target='_blank' style='text-decoration:none;'>doi:10.60669/9zm8-s664</a>",
-        "</li>",
-        
-        "<li style='margin:0;'>",
-        "<span style='font-weight:600;'>DEM Tirol:</span> ",
-        "<a href='https://www.data.gv.at/katalog/datasets/0454f5f3-1d8c-464e-847d-541901eb021a' target='_blank' style='text-decoration:none;'>data.gv.at</a>",
-        "</li>",
-        
-        "</ul>",
-        
-        "<div style='height:1px; background:rgba(0,0,0,0.08); margin:8px 0;'></div>",
         
         "<div style='font-size:12px; opacity:0.85;'>",
         "<em>Letztes Update: ", last_update, "</em>",
@@ -1212,7 +1188,7 @@ m <- htmlwidgets::onRender(
      var iv = setInterval(function(){
        tries++;
        var okImp = bindToggle('#impressum-header', '#impressum-body',
-                             'Impressum / Quellen ▾', 'Impressum / Quellen ▴');
+                             'Impressum ▾', 'Impressum ▴');
        if (okImp || tries > 30) clearInterval(iv);
      }, 200);
    }"
@@ -1227,16 +1203,26 @@ if (length(time_labels) > 0L) {
     "function(el, x) {
        var map = this;
 
+       var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+
        // UI scale
        var lc = el.getElementsByClassName('leaflet-control-layers-expanded')[0]
                 || el.getElementsByClassName('leaflet-control-layers')[0];
        if (lc) {
-          lc.style.marginTop   = '10px';
-          lc.style.marginRight = '90px';
-          lc.style.transform   = 'scale(1.5)';
-          lc.style.transformOrigin = 'top left';
-          lc.style.padding     = '12px 15px';
-          lc.style.fontSize    = '16px';
+          if (isMobile) {
+            lc.style.marginTop   = '6px';
+            lc.style.marginRight = '0';
+            lc.style.transform   = 'none';
+            lc.style.padding     = '8px 10px';
+            lc.style.fontSize    = '13px';
+          } else {
+            lc.style.marginTop   = '10px';
+            lc.style.marginRight = '90px';
+            lc.style.transform   = 'scale(1.5)';
+            lc.style.transformOrigin = 'top left';
+            lc.style.padding     = '12px 15px';
+            lc.style.fontSize    = '16px';
+          }
        }
 
        var labels = %s;
@@ -1285,11 +1271,11 @@ if (length(time_labels) > 0L) {
          div.style.background   = 'rgba(255,255,255,0.9)';
          div.style.padding      = '8px 10px';
          div.style.borderRadius = '6px';
-         div.style.minWidth     = '260px';
+         div.style.minWidth     = isMobile ? '200px' : '260px';
 
          // ✅ FIX: Mehr Abstand zur Layer-Control (größere Lücke)
-         div.style.marginTop    = '140px';
-         div.style.marginRight  = '10px';
+         div.style.marginTop    = isMobile ? '110px' : '140px';
+         div.style.marginRight  = isMobile ? '6px' : '10px';
 
          var title = document.createElement('div');
          title.style.fontSize    = '16px';
@@ -1310,7 +1296,7 @@ if (length(time_labels) > 0L) {
          slider.max   = nSteps - 1;
          slider.step  = 1;
          slider.value = initial;
-         slider.style.width = '240px';
+         slider.style.width = isMobile ? '200px' : '240px';
          slider.id    = 'time-slider';
          div.appendChild(slider);
 
