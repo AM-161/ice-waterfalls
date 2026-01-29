@@ -1201,45 +1201,11 @@ m <- m |>
         
         "<div id='impressum-header' style='font-weight:700; cursor:pointer; margin:0; display:flex;",
         "align-items:center; justify-content:space-between;'>",
-        "<span>Impressum / Quellen</span>",
+        "<span>Impressum</span>",
         "<span style='font-size:12px; opacity:0.8;'>▾</span>",
         "</div>",
         
         "<div id='impressum-body' style='display:none; margin-top:8px;'>",
-        
-        "<div style='font-weight:700; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; ",
-        "opacity:0.75; margin:2px 0 6px;'>Quellen</div>",
-        
-        "<ul style='margin:0; padding-left:16px;'>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>Wetterstationen:</span><br/>",
-        "<span style='opacity:0.9;'>GeoSphere Austria (klima-v2-10min)</span> ",
-        "<a href='https://data.hub.geosphere.at/dataset/klima-v2-10min' target='_blank' ",
-        "style='text-decoration:none;'>↗</a><br/>",
-        "<span style='opacity:0.9;'>LWD Tirol / HD Tirol (OGD Österreich)</span> ",
-        "<a href='https://www.data.gv.at/datasets/bb43170b-30fb-48aa-893f-51c60d27056f?locale=de' target='_blank' ",
-        "style='text-decoration:none;'>↗</a>",
-        "</li>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>INCA:</span> GeoSphere Austria ",
-        "<a href='https://doi.org/10.60669/6akt-5p05' target='_blank' style='text-decoration:none;'>doi:10.60669/6akt-5p05</a>",
-        "</li>",
-        
-        "<li style='margin:0 0 6px 0;'>",
-        "<span style='font-weight:600;'>NWP AROME:</span> GeoSphere Austria ",
-        "<a href='https://doi.org/10.60669/9zm8-s664' target='_blank' style='text-decoration:none;'>doi:10.60669/9zm8-s664</a>",
-        "</li>",
-        
-        "<li style='margin:0;'>",
-        "<span style='font-weight:600;'>DEM Tirol:</span> ",
-        "<a href='https://www.data.gv.at/katalog/datasets/0454f5f3-1d8c-464e-847d-541901eb021a' target='_blank' style='text-decoration:none;'>data.gv.at</a>",
-        "</li>",
-        
-        "</ul>",
-        
-        "<div style='height:1px; background:rgba(0,0,0,0.08); margin:8px 0;'></div>",
         
         "<div style='font-size:12px; opacity:0.85;'>",
         "<em>Letztes Update: ", last_update, "</em>",
@@ -1279,7 +1245,7 @@ m <- htmlwidgets::onRender(
      var iv = setInterval(function(){
        tries++;
        var okImp = bindToggle('#impressum-header', '#impressum-body',
-                             'Impressum / Quellen ▾', 'Impressum / Quellen ▴');
+                             'Impressum ▾', 'Impressum ▴');
        if (okImp || tries > 30) clearInterval(iv);
      }, 200);
    }"
