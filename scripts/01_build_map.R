@@ -1323,13 +1323,15 @@ m <- m |>
     overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
     options       = layersControlOptions(collapsed = FALSE)
   ) |>
-# Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
-if (length(time_labels) > 0L) {
-  labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
-  n_steps_js <- n_steps
-  
-  js_code <- sprintf(
-    "function(el, x) {
+  # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
+  {
+    m <- .
+    if (length(time_labels) > 0L) {
+      labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
+      n_steps_js <- n_steps
+
+      js_code <- sprintf(
+        "function(el, x) {
        var map = this;
 
        var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
@@ -1444,12 +1446,15 @@ if (length(time_labels) > 0L) {
 
        setTimeout(function(){ setTimeStep(initial); }, 200);
      }",
-    labels_js,
-    n_steps_js
-  )
-  
-  m <- htmlwidgets::onRender(m, js_code)
-}
+        labels_js,
+        n_steps_js
+      )
+
+      htmlwidgets::onRender(m, js_code)
+    } else {
+      m
+    }
+  }
 
 # 13) Output: NICHT selfcontained, in site/ ----------------------------
 
