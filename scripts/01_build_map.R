@@ -864,6 +864,18 @@ pal_ci <- colorNumeric(
 )
 
 last_update <- format(Sys.time(), tz = "Europe/Vienna", "%d.%m.%Y %H:%M %Z")
+last_update_iso <- format(Sys.time(), tz = "UTC", "%Y-%m-%dT%H:%M:%SZ")
+last_update_payload <- jsonlite::toJSON(
+  list(
+    last_update = last_update,
+    last_update_iso = last_update_iso
+  ),
+  auto_unbox = TRUE,
+  pretty = TRUE
+)
+dir.create("site", showWarnings = FALSE)
+writeLines(last_update_payload, "site/last_update.json", useBytes = TRUE)
+writeLines(last_update_payload, "last_update.json", useBytes = TRUE)
 ext         <- extent(r_template)
 
 # =====================================================================
