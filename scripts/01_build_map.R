@@ -1131,9 +1131,9 @@ m <- m |>
     )
   )  |>
   addControl(
-    position = "topleft",
+    position = "bottomright",
     html = htmltools::HTML(
-      "<div id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:6px;min-width:220px;'>\n        <div style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;margin-bottom:6px;'>Filter</div>\n        <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n        <div style='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;'>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>A min<input id='mapAmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>A max<input id='mapAmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>M min<input id='mapMmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>M max<input id='mapMmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>WI min<input id='mapWImin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>WI max<input id='mapWImax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>R min<input id='mapRmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>R max<input id='mapRmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n        </div>\n        <div style='margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;'>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>Sonne min (h)<input id='mapSunMin' type='number' step='0.1' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>Sonne max (h)<input id='mapSunMax' type='number' step='0.1' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n        </div>\n        <div id='mapFilterStatus' style='margin-top:6px;font-size:12px;color:#666;'></div>\n      </div>"
+      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Standort</div>\n            <div style='display:flex;flex-wrap:wrap;gap:6px;align-items:center;'>\n              <button id='mapUseGeo' type='button' style='padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;'>GPS</button>\n              <span id='mapGeoStatus' style='font-size:11px;color:#666;'></span>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;'></div>\n        </div>\n      </details>"
     )
   )  |>
   htmlwidgets::onRender(
@@ -1143,7 +1143,9 @@ m <- m |>
          \".leaflet-control .map-list-link,.leaflet-control .map-home-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
          \"#map-filter{min-width:180px;}\" +
          \".leaflet-control{max-width:calc(100vw - 24px);}\" +
-         \"}\";
+         \"}\" +
+         \"#map-filter summary{list-style:none;}\" +
+         \"#map-filter summary::-webkit-details-marker{display:none;}\";
        el.appendChild(style);
      }"
   ) |>
@@ -1152,6 +1154,8 @@ m <- m |>
        var map = this;
        var input = el.querySelector('#mapFilterInput');
        var status = el.querySelector('#mapFilterStatus');
+       var geoBtn = el.querySelector('#mapUseGeo');
+       var geoStatus = el.querySelector('#mapGeoStatus');
        var aMin = el.querySelector('#mapAmin');
        var aMax = el.querySelector('#mapAmax');
        var mMin = el.querySelector('#mapMmin');
@@ -1162,6 +1166,11 @@ m <- m |>
        var rMax = el.querySelector('#mapRmax');
        var sunMin = el.querySelector('#mapSunMin');
        var sunMax = el.querySelector('#mapSunMax');
+       var aRangeTxt = el.querySelector('#mapARangeTxt');
+       var mRangeTxt = el.querySelector('#mapMRangeTxt');
+       var wiRangeTxt = el.querySelector('#mapWIRangeTxt');
+       var rRangeTxt = el.querySelector('#mapRRangeTxt');
+       var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
        if (!input || !status) return;
 
        function getGroup() {
@@ -1185,6 +1194,38 @@ m <- m |>
        function num(x){
          var n = Number(x);
          return isFinite(n) ? n : NaN;
+       }
+
+       function fmtGrade(v){
+         var x = num(v);
+         if (!isFinite(x)) return '';
+         var base = Math.round(x);
+         var diff = x - base;
+         if (diff > 0.10) return String(base) + '+';
+         if (diff < -0.10) return String(base) + '-';
+         return String(base);
+       }
+
+       function clampMinMax(minEl, maxEl){
+         if (!minEl || !maxEl) return [NaN, NaN];
+         var a = Number(minEl.value);
+         var b = Number(maxEl.value);
+         if (!isFinite(a) || !isFinite(b)) return [NaN, NaN];
+         if (a > b) { var t = a; a = b; b = t; minEl.value = a; maxEl.value = b; }
+         return [a, b];
+       }
+
+       function updateRangeLabels(){
+         var a = clampMinMax(aMin, aMax);
+         var m = clampMinMax(mMin, mMax);
+         var w = clampMinMax(wiMin, wiMax);
+         var r = clampMinMax(rMin, rMax);
+         var s = clampMinMax(sunMin, sunMax);
+         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' \u2013 A' + fmtGrade(a[1]);
+         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' \u2013 M' + fmtGrade(m[1]);
+         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' \u2013 WI' + fmtGrade(w[1]);
+         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' \u2013 ' + fmtGrade(r[1]);
+         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' \u2013 ' + s[1].toFixed(1) + ' h';
        }
 
        function parseDifficulty(d){
@@ -1235,9 +1276,13 @@ m <- m |>
          return meta;
        }
 
-       var allMarkers = (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
-         return l && typeof l.getLatLng === 'function';
-       });
+       function collectMarkers(){
+         return (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
+           return l && typeof l.getLatLng === 'function';
+         });
+       }
+
+       var allMarkers = collectMarkers();
 
        function inRange(v, min, max){
          if (!isFinite(min) && !isFinite(max)) return true;
@@ -1249,16 +1294,27 @@ m <- m |>
 
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
-         var aMinVal = num(aMin && aMin.value);
-         var aMaxVal = num(aMax && aMax.value);
-         var mMinVal = num(mMin && mMin.value);
-         var mMaxVal = num(mMax && mMax.value);
-         var wiMinVal = num(wiMin && wiMin.value);
-         var wiMaxVal = num(wiMax && wiMax.value);
-         var rMinVal = num(rMin && rMin.value);
-         var rMaxVal = num(rMax && rMax.value);
-         var sunMinVal = num(sunMin && sunMin.value);
-         var sunMaxVal = num(sunMax && sunMax.value);
+         if (!allMarkers.length) allMarkers = collectMarkers();
+         if (!allMarkers.length) {
+           status.textContent = 'Filter wird geladen...';
+           return;
+         }
+         updateRangeLabels();
+         var a = clampMinMax(aMin, aMax);
+         var m = clampMinMax(mMin, mMax);
+         var w = clampMinMax(wiMin, wiMax);
+         var r = clampMinMax(rMin, rMax);
+         var s = clampMinMax(sunMin, sunMax);
+         var aMinVal = a[0];
+         var aMaxVal = a[1];
+         var mMinVal = m[0];
+         var mMaxVal = m[1];
+         var wiMinVal = w[0];
+         var wiMaxVal = w[1];
+         var rMinVal = r[0];
+         var rMaxVal = r[1];
+         var sunMinVal = s[0];
+         var sunMaxVal = s[1];
          group.clearLayers();
          var visible = 0;
          allMarkers.forEach(function(layer) {
@@ -1287,8 +1343,43 @@ m <- m |>
        if (rMax) rMax.addEventListener('input', applyFilter);
        if (sunMin) sunMin.addEventListener('input', applyFilter);
        if (sunMax) sunMax.addEventListener('input', applyFilter);
+       updateRangeLabels();
        applyFilter();
-     }"
+
+       if (geoBtn) {
+         geoBtn.addEventListener('click', function(){
+           if (!navigator.geolocation) {
+             if (geoStatus) geoStatus.textContent = 'GPS nicht verf\u00fcgbar.';
+             return;
+           }
+           if (geoStatus) geoStatus.textContent = 'GPS wird ermittelt...';
+           navigator.geolocation.getCurrentPosition(function(pos){
+             var lat = pos.coords.latitude;
+             var lon = pos.coords.longitude;
+             if (geoStatus) geoStatus.textContent = 'GPS: ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
+             if (typeof L !== 'undefined') {
+               if (!map._geoMarker) {
+                 map._geoMarker = L.circleMarker([lat, lon], {
+                   radius: 6,
+                   color: '#2563eb',
+                   weight: 2,
+                   fillColor: '#60a5fa',
+                   fillOpacity: 0.9
+                 }).addTo(map);
+               } else {
+                 map._geoMarker.setLatLng([lat, lon]);
+               }
+             }
+             if (typeof map.setView === 'function') {
+               var nextZoom = Math.max(map.getZoom ? map.getZoom() : 0, 11);
+               map.setView([lat, lon], nextZoom);
+             }
+           }, function(err){
+             if (geoStatus) geoStatus.textContent = 'GPS Fehler: ' + (err && err.message ? err.message : 'Unbekannt');
+           }, { enableHighAccuracy: true, timeout: 10000 });
+         });
+       }
+    }"
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax) |>
   addLegend(
