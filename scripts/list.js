@@ -300,6 +300,8 @@
         const tr = document.createElement("tr");
         const topoLink = r.topo_url ? `<a href="${r.topo_url}" target="_blank" rel="noopener">Topo</a>` : `<span class="muted">&mdash;</span>`;
         const uidPad = String(r.uid).padStart(3,"0");
+        const stationTxt = r.station_id ? ("Station: " + str(r.station_id) + (r.source ? (" (" + str(r.source) + ")") : "")) : "";
+        const metaTxt = ["UID " + uidPad, stationTxt].filter(Boolean).join(" · ");
    const detailsUrl = `icefalls/uid_${uidPad}.html`;
    const detailsBtn = `<a class="btn" href="${detailsUrl}">Öffnen</a>`;
 
@@ -311,7 +313,7 @@
         tr.innerHTML = `
           <td>
             <div><b>${str(r.name) || ("UID " + r.uid)}</b></div>
-            <div class="muted">${r.station_id ? ("Station: " + str(r.station_id) + (r.source ? (" (" + str(r.source) + ")") : "")) : ""}</div>
+            <div class="muted">${metaTxt}</div>
           </td>
           <td>${str(r.difficulty) || "<span class=muted>&mdash;</span>"}</td>
           <td>${aTxt}</td>
