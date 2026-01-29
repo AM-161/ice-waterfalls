@@ -1124,7 +1124,8 @@ m <- m |>
   addControl(
     position = "topleft",
     html = htmltools::HTML(
-      "<div style='background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:6px;'>
+      "<div style='background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:6px;display:flex;flex-direction:column;gap:6px;'>
+         <a href='index.html' class='map-home-link' style='font-size:14px;font-weight:bold;'>🏠 Startseite</a>
          <a href='list.html' class='map-list-link' style='font-size:14px;font-weight:bold;'>📋 Eisfall-Liste</a>
        </div>"
     )
@@ -1139,7 +1140,7 @@ m <- m |>
     "function(el, x) {
        var style = document.createElement('style');
        style.textContent = \"@media (max-width: 720px){\" +
-         \".leaflet-control .map-list-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
+         \".leaflet-control .map-list-link,.leaflet-control .map-home-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
          \"#map-filter{min-width:180px;}\" +
          \".leaflet-control{max-width:calc(100vw - 24px);}\" +
          \"}\";

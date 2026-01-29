@@ -431,6 +431,7 @@ html_lines <- c(
   '</head>',
   '<body>',
   '  <header>',
+  '    <a href="index.html">🏠 Startseite</a>',
   '    <a href="map.html">Karte</a>',
   '    <a href="list.html"><b>&Uuml;bersicht</b></a>',
   paste0('    <span class="muted">Morgen: ', tom_str, ' (TZ: Europe/Vienna)</span>'),
@@ -677,6 +678,7 @@ for (i in seq_len(nrow(out))) {
     "<body>",
     
     "<header>",
+    "  <a href='../index.html'>🏠 Startseite</a>",
     "  <a href='../list.html'>&larr; &Uuml;bersicht</a>",
     "  <a href='../map.html'>Karte</a>",
     paste0("  <div style='font-weight:700;'>", nm, " <span class='muted'>(UID ", uid_pad, ")</span></div>"),
