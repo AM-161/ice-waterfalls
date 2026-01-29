@@ -1145,9 +1145,15 @@ m <- m |>
   addControl(
     position = "bottomright",
     html = htmltools::HTML(
-      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Standort</div>\n            <div style='display:flex;flex-wrap:wrap;gap:6px;align-items:center;'>\n              <button id='mapUseGeo' type='button' style='padding:4px 8px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;'>GPS</button>\n              <span id='mapGeoStatus' style='font-size:11px;color:#666;'></span>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;'></div>\n        </div>\n      </details>"
+      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;'></div>\n        </div>\n      </details>"
     )
   )  |>
+  addControl(
+    position = "topright",
+    html = htmltools::HTML(
+      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;'>📍</button>"
+    )
+  ) |>
   htmlwidgets::onRender(
     "function(el, x) {
        var style = document.createElement('style');
@@ -1227,6 +1233,16 @@ m <- m |>
          return [a, b];
        }
 
+       function isDefaultRange(minEl, maxEl){
+         if (!minEl || !maxEl) return true;
+         var minVal = Number(minEl.value);
+         var maxVal = Number(maxEl.value);
+         var minDefault = Number(minEl.min);
+         var maxDefault = Number(maxEl.max);
+         if (!isFinite(minVal) || !isFinite(maxVal)) return true;
+         return Math.abs(minVal - minDefault) < 1e-6 && Math.abs(maxVal - maxDefault) < 1e-6;
+       }
+
        function updateRangeLabels(){
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
@@ -1238,6 +1254,13 @@ m <- m |>
          if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' \u2013 WI' + fmtGrade(w[1]);
          if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' \u2013 ' + fmtGrade(r[1]);
          if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' \u2013 ' + s[1].toFixed(1) + ' h';
+       }
+
+       function formatRange(label, text, fallback){
+         var out = text || fallback || '';
+         if (!out) return label;
+         if (out.indexOf(label) === 0) return out;
+         return label + ' ' + out;
        }
 
        function parseDifficulty(d){
@@ -1296,9 +1319,9 @@ m <- m |>
 
        var allMarkers = collectMarkers();
 
-       function inRange(v, min, max){
+       function inRange(v, min, max, minEl, maxEl){
          if (!isFinite(min) && !isFinite(max)) return true;
-         if (!isFinite(v)) return false;
+         if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
          if (isFinite(min) && v < min) return false;
          if (isFinite(max) && v > max) return false;
          return true;
@@ -1333,15 +1356,27 @@ m <- m |>
            var meta = layerMeta(layer);
            var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
            if (term && blob.indexOf(term) === -1) return;
-           if (!inRange(meta.grades.a, aMinVal, aMaxVal)) return;
-           if (!inRange(meta.grades.m, mMinVal, mMaxVal)) return;
-           if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal)) return;
-           if (!inRange(meta.grades.r, rMinVal, rMaxVal)) return;
-           if (!inRange(meta.sun, sunMinVal, sunMaxVal)) return;
+           if (!inRange(meta.grades.a, aMinVal, aMaxVal, aMin, aMax)) return;
+           if (!inRange(meta.grades.m, mMinVal, mMaxVal, mMin, mMax)) return;
+           if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal, wiMin, wiMax)) return;
+           if (!inRange(meta.grades.r, rMinVal, rMaxVal, rMin, rMax)) return;
+           if (!inRange(meta.sun, sunMinVal, sunMaxVal, sunMin, sunMax)) return;
              group.addLayer(layer);
              visible += 1;
          });
-         status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle';
+         var parts = [];
+         if (term) parts.push('Suche: ' + term);
+         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
+         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
+         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
+         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
+         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
+         parts.push(formatRange('A', aTxt, ''));
+         parts.push(formatRange('M', mTxt, ''));
+         parts.push(formatRange('WI', wiTxt, ''));
+         parts.push(formatRange('R', rTxt, ''));
+         parts.push('Sonne ' + sunTxt);
+         status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle \u00b7 ' + parts.join(' \u00b7 ');
        }
 
        input.addEventListener('input', applyFilter);
