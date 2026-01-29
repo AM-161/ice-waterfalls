@@ -916,6 +916,26 @@ sun_df <- readr::read_csv(
   show_col_types = FALSE
 )
 
+# Optional meta (difficulty) for map filters
+PATH_META <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+meta_map <- NULL
+if (file.exists(PATH_META)) {
+  parse_uid <- function(x) {
+    as.integer(readr::parse_number(as.character(x)))
+  }
+  get_chr <- function(df, ...) {
+    cands <- c(...)
+    for (nm in cands) if (nm %in% names(df)) return(as.character(df[[nm]]))
+    rep(NA_character_, nrow(df))
+  }
+  meta_raw <- readr::read_delim(PATH_META, delim = ";", show_col_types = FALSE) %>%
+    rename_with(tolower)
+  meta_map <- tibble(
+    uid = parse_uid(meta_raw$uid),
+    difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad")
+  )
+}
+
 if (!inherits(sun_df$sunrise_topo, "POSIXt")) {
   sun_df <- sun_df %>%
     mutate(
@@ -945,6 +965,14 @@ if (nrow(sun_today) == 0) {
   stop("sun_today ist leer – prüfe icefalls_sun_horizon.csv (Spaltennamen / date-Typ).")
 }
 
+if (!is.null(meta_map)) {
+  sun_today <- sun_today %>%
+    dplyr::left_join(meta_map, by = "uid")
+} else {
+  sun_today <- sun_today %>%
+    dplyr::mutate(difficulty = NA_character_)
+}
+
 sun_today <- sun_today %>%
   dplyr::mutate(
     sunrise_txt   = substr(as.character(sunrise_topo), 12, 16),
@@ -961,6 +989,14 @@ sun_today <- sun_today %>%
     plot_png = paste0("plots/uid_", uid_pad, ".png"),
     
     detail_url = paste0("icefalls/uid_", uid_pad, ".html"),
+    
+    map_meta = paste0(
+      "<span class='map-meta' data-uid='", uid,
+      "' data-name='", htmltools::htmlEscape(ifelse(is.na(name), "", name), attribute = TRUE),
+      "' data-difficulty='", htmltools::htmlEscape(ifelse(is.na(difficulty), "", difficulty), attribute = TRUE),
+      "' data-sun='", ifelse(is.na(sun_hours_topo), "", sprintf("%.2f", sun_hours_topo)),
+      "'></span>"
+    ),
     
     plot_block = paste0(
       "<hr style='margin:6px 0;'/>",
@@ -986,6 +1022,7 @@ sun_today <- sun_today %>%
     popup = ifelse(
       is.na(sun_hours_topo) | is.na(sunrise_topo) | is.na(sunset_topo),
       paste0(
+        map_meta,
         sprintf(
           "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung<br/>%s",
           name, date_txt, link_txt
@@ -993,6 +1030,7 @@ sun_today <- sun_today %>%
         plot_block
       ),
       paste0(
+        map_meta,
         sprintf(
           "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)<br/>%s",
           name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, link_txt
@@ -1094,7 +1132,7 @@ m <- m |>
   addControl(
     position = "topleft",
     html = htmltools::HTML(
-      "<div id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:6px;min-width:220px;'>\n        <div style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;margin-bottom:6px;'>Filter</div>\n        <input id='mapFilterInput' type='search' placeholder='Name oder UID' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n        <div id='mapFilterStatus' style='margin-top:6px;font-size:12px;color:#666;'></div>\n      </div>"
+      "<div id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);margin-top:6px;min-width:220px;'>\n        <div style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;margin-bottom:6px;'>Filter</div>\n        <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n        <div style='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;'>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>A min<input id='mapAmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>A max<input id='mapAmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>M min<input id='mapMmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>M max<input id='mapMmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>WI min<input id='mapWImin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>WI max<input id='mapWImax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>R min<input id='mapRmin' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>R max<input id='mapRmax' type='number' step='0.25' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n        </div>\n        <div style='margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;'>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>Sonne min (h)<input id='mapSunMin' type='number' step='0.1' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n          <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>Sonne max (h)<input id='mapSunMax' type='number' step='0.1' style='width:100%;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:12px;'/></div>\n        </div>\n        <div id='mapFilterStatus' style='margin-top:6px;font-size:12px;color:#666;'></div>\n      </div>"
     )
   )  |>
   htmlwidgets::onRender(
@@ -1113,6 +1151,16 @@ m <- m |>
        var map = this;
        var input = el.querySelector('#mapFilterInput');
        var status = el.querySelector('#mapFilterStatus');
+       var aMin = el.querySelector('#mapAmin');
+       var aMax = el.querySelector('#mapAmax');
+       var mMin = el.querySelector('#mapMmin');
+       var mMax = el.querySelector('#mapMmax');
+       var wiMin = el.querySelector('#mapWImin');
+       var wiMax = el.querySelector('#mapWImax');
+       var rMin = el.querySelector('#mapRmin');
+       var rMax = el.querySelector('#mapRmax');
+       var sunMin = el.querySelector('#mapSunMin');
+       var sunMax = el.querySelector('#mapSunMax');
        if (!input || !status) return;
 
        function getGroup() {
@@ -1133,28 +1181,111 @@ m <- m |>
          return;
        }
 
-       var allMarkers = group.getLayers ? group.getLayers().slice() : [];
-       function markerText(layer) {
-         var props = (layer && layer.feature && layer.feature.properties) ? layer.feature.properties : {};
-         var name = props.name || props.Name || '';
-         var uid = props.uid || props.UID || '';
-         return (String(name) + ' ' + String(uid)).toLowerCase();
+       function num(x){
+         var n = Number(x);
+         return isFinite(n) ? n : NaN;
+       }
+
+       function parseDifficulty(d){
+         var s = String(d || '').toUpperCase();
+         s = s.replace(/SCHWIERIGKEIT|DIFFICULTY|GRADE|GRAD/g, ' ');
+         var out = { a: NaN, m: NaN, wi: NaN, r: NaN };
+         function signed(base, sign){
+           var n = Number(base);
+           if (!isFinite(n)) return NaN;
+           if (sign === '+') return n + 0.25;
+           if (sign === '-') return n - 0.25;
+           return n;
+         }
+         var m = s.match(/(?:^|[^A-Z])A\\s*(\\d{1,2})\\s*([+\\-])?/);
+         if (m) out.a = signed(m[1], m[2]);
+         m = s.match(/(?:^|[^A-Z])M\\s*(\\d{1,2})\\s*([+\\-])?/);
+         if (m) out.m = signed(m[1], m[2]);
+         m = s.match(/(?:^|[^A-Z])WI\\s*(\\d{1,2})\\s*([+\\-])?/);
+         if (m) out.wi = signed(m[1], m[2]);
+         var re = /(?:^|[^A-Z0-9])(1[0-2]|[1-9])\\s*([+\\-])?(?=\\b|[^0-9])/g;
+         var best = NaN;
+         while ((m = re.exec(s)) !== null) {
+           var v = signed(m[1], m[2]);
+           if (isFinite(v)) best = isFinite(best) ? Math.max(best, v) : v;
+         }
+         out.r = best;
+         return out;
+       }
+
+       function layerMeta(layer){
+         if (layer && layer._mapMeta) return layer._mapMeta;
+         var meta = { name: '', uid: '', difficulty: '', sun: NaN, grades: {a:NaN,m:NaN,wi:NaN,r:NaN} };
+         var popup = layer && layer.getPopup ? layer.getPopup() : null;
+         var content = popup && popup.getContent ? popup.getContent() : '';
+         if (content) {
+           var wrapper = document.createElement('div');
+           wrapper.innerHTML = content;
+           var node = wrapper.querySelector('.map-meta');
+           if (node && node.dataset) {
+             meta.name = node.dataset.name || '';
+             meta.uid = node.dataset.uid || '';
+             meta.difficulty = node.dataset.difficulty || '';
+             meta.sun = num(node.dataset.sun);
+           }
+         }
+         meta.grades = parseDifficulty(meta.difficulty);
+         if (layer) layer._mapMeta = meta;
+         return meta;
+       }
+
+       var allMarkers = (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
+         return l && typeof l.getLatLng === 'function';
+       });
+
+       function inRange(v, min, max){
+         if (!isFinite(min) && !isFinite(max)) return true;
+         if (!isFinite(v)) return false;
+         if (isFinite(min) && v < min) return false;
+         if (isFinite(max) && v > max) return false;
+         return true;
        }
 
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
+         var aMinVal = num(aMin && aMin.value);
+         var aMaxVal = num(aMax && aMax.value);
+         var mMinVal = num(mMin && mMin.value);
+         var mMaxVal = num(mMax && mMax.value);
+         var wiMinVal = num(wiMin && wiMin.value);
+         var wiMaxVal = num(wiMax && wiMax.value);
+         var rMinVal = num(rMin && rMin.value);
+         var rMaxVal = num(rMax && rMax.value);
+         var sunMinVal = num(sunMin && sunMin.value);
+         var sunMaxVal = num(sunMax && sunMax.value);
          group.clearLayers();
          var visible = 0;
          allMarkers.forEach(function(layer) {
-           if (!term || markerText(layer).indexOf(term) !== -1) {
+           var meta = layerMeta(layer);
+           var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
+           if (term && blob.indexOf(term) === -1) return;
+           if (!inRange(meta.grades.a, aMinVal, aMaxVal)) return;
+           if (!inRange(meta.grades.m, mMinVal, mMaxVal)) return;
+           if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal)) return;
+           if (!inRange(meta.grades.r, rMinVal, rMaxVal)) return;
+           if (!inRange(meta.sun, sunMinVal, sunMaxVal)) return;
              group.addLayer(layer);
              visible += 1;
-           }
          });
          status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle';
        }
 
        input.addEventListener('input', applyFilter);
+       if (aMin) aMin.addEventListener('input', applyFilter);
+       if (aMax) aMax.addEventListener('input', applyFilter);
+       if (mMin) mMin.addEventListener('input', applyFilter);
+       if (mMax) mMax.addEventListener('input', applyFilter);
+       if (wiMin) wiMin.addEventListener('input', applyFilter);
+       if (wiMax) wiMax.addEventListener('input', applyFilter);
+       if (rMin) rMin.addEventListener('input', applyFilter);
+       if (rMax) rMax.addEventListener('input', applyFilter);
+       if (sunMin) sunMin.addEventListener('input', applyFilter);
+       if (sunMax) sunMax.addEventListener('input', applyFilter);
        applyFilter();
      }"
   ) |>
@@ -1191,66 +1322,6 @@ m <- m |>
     overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
     options       = layersControlOptions(collapsed = FALSE)
   ) |>
-  addControl(
-    position = "bottomright",
-    html = htmltools::HTML(
-      paste0(
-        "<div id='impressum-box' style='font-size:13px; background: rgba(255,255,255,0.92);",
-        "padding:10px 12px; border-radius:10px; max-width:360px; line-height:1.35;",
-        "box-shadow:0 6px 18px rgba(0,0,0,0.18); border:1px solid rgba(0,0,0,0.08);'>",
-        
-        "<div id='impressum-header' style='font-weight:700; cursor:pointer; margin:0; display:flex;",
-        "align-items:center; justify-content:space-between;'>",
-        "<span>Impressum</span>",
-        "<span style='font-size:12px; opacity:0.8;'>▾</span>",
-        "</div>",
-        
-        "<div id='impressum-body' style='display:none; margin-top:8px;'>",
-        
-        "<div style='font-size:12px; opacity:0.85;'>",
-        "<em>Letztes Update: ", last_update, "</em>",
-        "</div>",
-        
-        "</div>",
-        "</div>"
-      )
-    )
-  )
-
-# ✅ FIX: Impressum-Toggle robust (Controls sind manchmal erst nach Render im DOM)
-# (Climbability-Tagesübersicht wurde entfernt -> kein Toggle dafür)
-m <- htmlwidgets::onRender(
-  m,
-  "function(el, x) {
-     function bindToggle(headerSel, bodySel, closedText, openText){
-       var header = el.querySelector(headerSel);
-       var body   = el.querySelector(bodySel);
-       if (!header || !body) return false;
-       if (header.dataset && header.dataset.bound === '1') return true;
-
-       body.style.display = 'none';
-       header.innerHTML = closedText;
-
-       header.addEventListener('click', function() {
-         var visible = body.style.display !== 'none';
-         body.style.display = visible ? 'none' : 'block';
-         header.innerHTML = visible ? closedText : openText;
-       });
-
-       if (header.dataset) header.dataset.bound = '1';
-       return true;
-     }
-
-     var tries = 0;
-     var iv = setInterval(function(){
-       tries++;
-       var okImp = bindToggle('#impressum-header', '#impressum-body',
-                             'Impressum ▾', 'Impressum ▴');
-       if (okImp || tries > 30) clearInterval(iv);
-     }, 200);
-   }"
-)
-
 # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
 if (length(time_labels) > 0L) {
   labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
