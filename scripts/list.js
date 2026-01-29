@@ -116,17 +116,17 @@
         return n;
       }
 
-      m = s.match(/(?:^|[^A-Z])A\\s*(\\d{1,2})\\s*([+\\-])?/);
+      m = s.match(/(?:^|[^A-Z])A\s*(\d{1,2})\s*([+\-])?/);
       if (m) out.a = signed(m[1], m[2]);
 
-      m = s.match(/(?:^|[^A-Z])M\\s*(\\d{1,2})\\s*([+\\-])?/);
+      m = s.match(/(?:^|[^A-Z])M\s*(\d{1,2})\s*([+\-])?/);
       if (m) out.m = signed(m[1], m[2]);
 
-      m = s.match(/(?:^|[^A-Z])WI\\s*(\\d{1,2})\\s*([+\\-])?/);
+      m = s.match(/(?:^|[^A-Z])WI\s*(\d{1,2})\s*([+\-])?/);
       if (m) out.wi = signed(m[1], m[2]);
 
       // Standalone rock grades (1..12) with optional +/-; take max if multiple
-      const re = /(?:^|[^A-Z0-9])(1[0-2]|[1-9])\\s*([+\\-])?(?=\\b|[^0-9])/g;
+      const re = /(?:^|[^A-Z0-9])(1[0-2]|[1-9])\s*([+\-])?(?=\b|[^0-9])/g;
       let best = NaN;
       while ((m = re.exec(s)) !== null) {
         const v = signed(m[1], m[2]);
