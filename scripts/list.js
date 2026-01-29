@@ -301,7 +301,7 @@
         const topoLink = r.topo_url ? `<a href="${r.topo_url}" target="_blank" rel="noopener">Topo</a>` : `<span class="muted">&mdash;</span>`;
         const uidPad = String(r.uid).padStart(3,"0");
    const detailsUrl = `icefalls/uid_${uidPad}.html`;
-   const detailsBtn = `<a class="btn" href="${detailsUrl}" target="_blank" rel="noopener">Öffnen</a>`;
+   const detailsBtn = `<a class="btn" href="${detailsUrl}">Öffnen</a>`;
 
         const aTxt  = isFinite(num(r._grade_a))  ? ("A" + fmtGrade(r._grade_a))  : "<span class=muted>&mdash;</span>";
         const mTxt  = isFinite(num(r._grade_m))  ? ("M" + fmtGrade(r._grade_m))  : "<span class=muted>&mdash;</span>";
