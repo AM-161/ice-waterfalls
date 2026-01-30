@@ -1175,9 +1175,9 @@ m <- m |>
     )
   )  |>
   addControl(
-    position = "topright",
+    position = "bottomright",
     html = htmltools::HTML(
-      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;'>📍</button>"
+      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
   htmlwidgets::onRender(
@@ -1216,6 +1216,17 @@ m <- m |>
        var rRangeTxt = el.querySelector('#mapRRangeTxt');
        var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
        if (!input || !status) return;
+       if (typeof L !== 'undefined') {
+         var filterBox = el.querySelector('#map-filter');
+         if (filterBox) {
+           L.DomEvent.disableClickPropagation(filterBox);
+           L.DomEvent.disableScrollPropagation(filterBox);
+         }
+         if (geoBtn) {
+           L.DomEvent.disableClickPropagation(geoBtn);
+           L.DomEvent.disableScrollPropagation(geoBtn);
+         }
+       }
 
        function getGroup() {
          if (map.layerManager) {
@@ -1275,11 +1286,11 @@ m <- m |>
          var w = clampMinMax(wiMin, wiMax);
          var r = clampMinMax(rMin, rMax);
          var s = clampMinMax(sunMin, sunMax);
-         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' – A' + fmtGrade(a[1]);
-         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' – M' + fmtGrade(m[1]);
-         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' – WI' + fmtGrade(w[1]);
-         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' – ' + fmtGrade(r[1]);
-         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' – ' + s[1].toFixed(1) + ' h';
+         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' \u2013 A' + fmtGrade(a[1]);
+         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' \u2013 M' + fmtGrade(m[1]);
+         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' \u2013 WI' + fmtGrade(w[1]);
+         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' \u2013 ' + fmtGrade(r[1]);
+         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' \u2013 ' + s[1].toFixed(1) + ' h';
        }
 
        function formatRange(label, text, fallback){
@@ -1358,6 +1369,13 @@ m <- m |>
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
+           if (!map._filterRetry) {
+             map._filterRetry = true;
+             setTimeout(function(){
+               map._filterRetry = false;
+               applyFilter();
+             }, 300);
+           }
            return;
          }
          updateRangeLabels();
@@ -1392,17 +1410,17 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
-         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
-         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
-         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
-         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
-         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
+         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
+         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
+         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
+         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
+         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
          parts.push(formatRange('A', aTxt, ''));
          parts.push(formatRange('M', mTxt, ''));
          parts.push(formatRange('WI', wiTxt, ''));
          parts.push(formatRange('R', rTxt, ''));
          parts.push('Sonne ' + sunTxt);
-         status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
+         status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle \u00b7 ' + parts.join(' \u00b7 ');
        }
 
        input.addEventListener('input', applyFilter);
@@ -1422,7 +1440,7 @@ m <- m |>
        if (geoBtn) {
          geoBtn.addEventListener('click', function(){
            if (!navigator.geolocation) {
-             if (geoStatus) geoStatus.textContent = 'GPS nicht verfügbar.';
+             if (geoStatus) geoStatus.textContent = 'GPS nicht verf\u00fcgbar.';
              return;
            }
            if (geoStatus) geoStatus.textContent = 'GPS wird ermittelt...';
