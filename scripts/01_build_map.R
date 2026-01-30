@@ -929,7 +929,7 @@ sun_df <- readr::read_csv(
 )
 
 # Optional meta (difficulty) for map filters
-PATH_META <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+PATH_META <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 meta_map <- NULL
 if (file.exists(PATH_META)) {
   parse_uid <- function(x) {
