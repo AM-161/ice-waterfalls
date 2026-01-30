@@ -25,11 +25,14 @@
     const rMax = document.getElementById("rMax");
     const sunMin = document.getElementById("sunMin");
     const sunMax = document.getElementById("sunMax");
+    const elevMin = document.getElementById("elevMin");
+    const elevMax = document.getElementById("elevMax");
     const aRangeTxt = document.getElementById("aRangeTxt");
     const mRangeTxt = document.getElementById("mRangeTxt");
     const wiRangeTxt = document.getElementById("wiRangeTxt");
     const rRangeTxt = document.getElementById("rRangeTxt");
     const sunRangeTxt = document.getElementById("sunRangeTxt");
+    const elevRangeTxt = document.getElementById("elevRangeTxt");
 
     const modal = document.getElementById("modal");
     const modalImg = document.getElementById("modalImg");
@@ -50,13 +53,15 @@
     let fWImin = NaN, fWImax = NaN;
     let fRmin = NaN, fRmax = NaN;
     let fSunMin = NaN, fSunMax = NaN;
+    let fElevMin = NaN, fElevMax = NaN;
 
     const RANGE = {
       A:  { min: 0.75, max: 4.25 },
       M:  { min: 0.75, max: 13.25 },
       WI: { min: 0.75, max: 7.25 },
       R:  { min: 0.75, max: 12.25 },
-      SUN:{ min: 0.00, max: 12.00 }
+      SUN:{ min: 0.00, max: 12.00 },
+      ELEV:{ min: 0, max: 4000 }
     };
     const API_BASE = "https://icefalls-api.carlos-wydra.workers.dev";
 
@@ -95,11 +100,13 @@
       const [w1,w2] = clampMinMax(wiMin, wiMax);
       const [r1,r2] = clampMinMax(rMin, rMax);
       const [s1,s2] = clampMinMax(sunMin, sunMax);
+      const [e1,e2] = clampMinMax(elevMin, elevMax);
       if (aRangeTxt && isFinite(a1) && isFinite(a2)) aRangeTxt.textContent = `A${fmtGrade(a1)} – A${fmtGrade(a2)}`;
       if (mRangeTxt && isFinite(m1) && isFinite(m2)) mRangeTxt.textContent = `M${fmtGrade(m1)} – M${fmtGrade(m2)}`;
       if (wiRangeTxt && isFinite(w1) && isFinite(w2)) wiRangeTxt.textContent = `WI${fmtGrade(w1)} – WI${fmtGrade(w2)}`;
       if (rRangeTxt && isFinite(r1) && isFinite(r2)) rRangeTxt.textContent = `${fmtGrade(r1)} – ${fmtGrade(r2)}`;
       if (sunRangeTxt && isFinite(s1) && isFinite(s2)) sunRangeTxt.textContent = `${s1.toFixed(1)} – ${s2.toFixed(1)} h`;
+      if (elevRangeTxt && isFinite(e1) && isFinite(e2)) elevRangeTxt.textContent = `${Math.round(e1)} – ${Math.round(e2)} m`;
     }
 
     function parseDifficulty(d){
@@ -218,6 +225,12 @@
         if (isFinite(fSunMin) && v < fSunMin) return false;
         if (isFinite(fSunMax) && v > fSunMax) return false;
       }
+      if (isFinite(fElevMin) || isFinite(fElevMax)) {
+        const v = num(r.elev_m);
+        if (!isFinite(v)) return false;
+        if (isFinite(fElevMin) && v < fElevMin) return false;
+        if (isFinite(fElevMax) && v > fElevMax) return false;
+      }
 
       if(!query) return true;
       const t = query.toLowerCase();
@@ -274,6 +287,7 @@
       let w = clampMinMax(wiMin, wiMax);
       let r = clampMinMax(rMin, rMax);
       let s = clampMinMax(sunMin, sunMax);
+      let e = clampMinMax(elevMin, elevMax);
 
       fAmin = (isFinite(a[0]) && a[0] > RANGE.A.min + 1e-9) ? a[0] : NaN;
       fAmax = (isFinite(a[1]) && a[1] < RANGE.A.max - 1e-9) ? a[1] : NaN;
@@ -285,6 +299,8 @@
       fRmax = (isFinite(r[1]) && r[1] < RANGE.R.max - 1e-9) ? r[1] : NaN;
       fSunMin = (isFinite(s[0]) && s[0] > RANGE.SUN.min + 1e-9) ? s[0] : NaN;
       fSunMax = (isFinite(s[1]) && s[1] < RANGE.SUN.max - 1e-9) ? s[1] : NaN;
+      fElevMin = (isFinite(e[0]) && e[0] > RANGE.ELEV.min + 1e-9) ? e[0] : NaN;
+      fElevMax = (isFinite(e[1]) && e[1] < RANGE.ELEV.max - 1e-9) ? e[1] : NaN;
 
       updateRangeLabels();
     }
@@ -363,6 +379,8 @@
     if (rMax) rMax.addEventListener("input", render);
     if (sunMin) sunMin.addEventListener("input", render);
     if (sunMax) sunMax.addEventListener("input", render);
+    if (elevMin) elevMin.addEventListener("input", render);
+    if (elevMax) elevMax.addEventListener("input", render);
 
     // Custom coordinate center
     if (setCustomBtn) setCustomBtn.addEventListener("click", () => {
