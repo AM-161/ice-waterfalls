@@ -1486,19 +1486,16 @@ m <- m |>
     baseGroups    = c("OSM", "Gelände (Topo)"),
     overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
     options       = layersControlOptions(collapsed = FALSE)
-  ) |>
-  (\(m) {
-    if (length(time_labels) > 0L) {
-      labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
-      n_steps_js <- n_steps
-      
-      js_code <- "function(el, x) { /* dein JS wie gehabt */ }"
-      
-      htmlwidgets::onRender(m, js_code)
-    } else {
-      m
-    }
-  })()
+  )
+
+if (length(time_labels) > 0L) {
+  labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
+  n_steps_js <- n_steps
+
+  js_code <- "function(el, x) { /* dein JS wie gehabt */ }"
+
+  m <- htmlwidgets::onRender(m, js_code)
+}
 
 
 # 13) Output: NICHT selfcontained, in site/ ----------------------------
