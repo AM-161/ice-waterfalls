@@ -1,7 +1,7 @@
 # scripts/02_build_list_page.R
 # ============================================================
 # Build list page (summary table) for GitHub Pages + offline viewing
-# - meta:        data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv
+# - meta:        data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv
 # - assignments: data/AWS/icefalls_nearest_station.csv (optional)
 # - sun:         data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv (optional)
 # - model runs:  data/ModelRuns/model_uid<uid>.csv
@@ -26,7 +26,7 @@ tomorrow <- as.Date(with_tz(Sys.time(), TZ_LOCAL) + days(1))
 # Paths
 # ----------------------------
 PATH_ASSIGN <- "data/AWS/icefalls_nearest_station.csv"
-PATH_META   <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+PATH_META   <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 PATH_SUN    <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 DIR_MODELS  <- "data/ModelRuns"
 
@@ -163,6 +163,8 @@ if (!"uid" %in% names(meta_raw)) stop("META CSV hat keine Spalte 'uid'.")
 meta <- tibble(
   uid = parse_uid(meta_raw$uid),
   name = get_chr(meta_raw, "name"),
+  topo_url = get_chr(meta_raw, "topo_url"),
+  topo_slug = get_chr(meta_raw, "topo_slug"),
   latitude  = get_num(meta_raw, "latitude", "lat"),
   longitude = get_num(meta_raw, "longitude", "lon"),
   elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
@@ -213,13 +215,15 @@ if (file.exists(PATH_SUN)) {
       uid = parse_uid(uid),
       date = as.Date(get_chr(., "date"))
     )
+
+  if (!"sun_hours_topo" %in% names(sun_raw)) {
+    sun_raw$sun_hours_topo <- NA_real_
+  }
   
   sun <- sun_raw %>%
     filter(.data$date == tomorrow) %>%
     group_by(uid) %>%
     summarise(
-      topo_url  = dplyr::coalesce(first(topo_url[topo_url != ""]), first(topo_url)),
-      topo_slug = dplyr::coalesce(first(topo_slug[topo_slug != ""]), first(topo_slug)),
       sunrise_topo_local = parse_time_iso_z(first_nonempty(sunrise_topo), out_tz = TZ_LOCAL),
       sunset_topo_local  = parse_time_iso_z(first_nonempty(sunset_topo),  out_tz = TZ_LOCAL),
       sun_hours_tomorrow_h = to_num(first_nonempty(sun_hours_topo)),
@@ -231,6 +235,14 @@ if (file.exists(PATH_SUN)) {
       sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h),
       .groups = "drop"
     )
+  
+  if (all(is.na(sun$sun_hours_tomorrow_h))) {
+    sun <- sun %>%
+      mutate(
+        sun_hours_tomorrow_h = as.numeric(difftime(sunset_topo_local, sunrise_topo_local, units = "hours")),
+        sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h)
+      )
+  }
 }
 
 # ----------------------------
@@ -324,11 +336,20 @@ if (!is.null(assign)) {
 if (!is.null(sun)) {
   out <- out %>% left_join(sun, by = "uid")
 } else {
-  out$topo_url <- NA_character_
-  out$topo_slug <- NA_character_
+  if (!"topo_url" %in% names(out)) out$topo_url <- NA_character_
+  if (!"topo_slug" %in% names(out)) out$topo_slug <- NA_character_
   out$sun_tomorrow_range_txt <- NA_character_
   out$sun_hours_tomorrow_h <- NA_real_
   out$sun_duration_tomorrow_txt <- NA_character_
+}
+
+if ("topo_url.y" %in% names(out) || "topo_slug.y" %in% names(out)) {
+  out <- out %>%
+    mutate(
+      topo_url = dplyr::coalesce(.data$topo_url, .data$topo_url.y),
+      topo_slug = dplyr::coalesce(.data$topo_slug, .data$topo_slug.y)
+    ) %>%
+    select(-dplyr::any_of(c("topo_url.y", "topo_slug.y")))
 }
 
 out <- out %>%
