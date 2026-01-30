@@ -929,7 +929,7 @@ sun_df <- readr::read_csv(
 )
 
 # Optional meta (difficulty) for map filters
-PATH_META <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+PATH_META <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 meta_map <- NULL
 if (file.exists(PATH_META)) {
   parse_uid <- function(x) {
@@ -945,7 +945,9 @@ if (file.exists(PATH_META)) {
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
-    topo_url = get_chr(meta_raw, "topo_url")
+    topo_url = get_chr(meta_raw, "topo_url"),
+    latitude = suppressWarnings(as.numeric(get_chr(meta_raw, "latitude", "lat"))),
+    longitude = suppressWarnings(as.numeric(get_chr(meta_raw, "longitude", "lon")))
   )
 }
 
@@ -986,6 +988,14 @@ if (!is.null(meta_map)) {
       mutate(topo_url = dplyr::coalesce(.data$topo_url.x, .data$topo_url.y)) %>%
       select(-dplyr::any_of(c("topo_url.x", "topo_url.y")))
   }
+  if ("latitude.x" %in% names(sun_today) || "latitude.y" %in% names(sun_today)) {
+    sun_today <- sun_today %>%
+      mutate(
+        latitude = dplyr::coalesce(.data$latitude.x, .data$latitude.y),
+        longitude = dplyr::coalesce(.data$longitude.x, .data$longitude.y)
+      ) %>%
+      select(-dplyr::any_of(c("latitude.x", "latitude.y", "longitude.x", "longitude.y")))
+  }
 } else {
   sun_today <- sun_today %>%
     dplyr::mutate(difficulty = NA_character_)
@@ -993,6 +1003,12 @@ if (!is.null(meta_map)) {
 
 if (!"topo_url" %in% names(sun_today)) {
   sun_today$topo_url <- NA_character_
+}
+if (!"latitude" %in% names(sun_today)) {
+  sun_today$latitude <- NA_real_
+}
+if (!"longitude" %in% names(sun_today)) {
+  sun_today$longitude <- NA_real_
 }
 
 sun_today <- sun_today %>%
@@ -1476,11 +1492,7 @@ m <- m |>
       labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
       n_steps_js <- n_steps
       
-      js_code <- sprintf(
-        "function(el, x) { /* dein JS wie gehabt */ }",
-        labels_js,
-        n_steps_js
-      )
+      js_code <- "function(el, x) { /* dein JS wie gehabt */ }"
       
       htmlwidgets::onRender(m, js_code)
     } else {

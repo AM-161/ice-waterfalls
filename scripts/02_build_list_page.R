@@ -1,7 +1,7 @@
 # scripts/02_build_list_page.R
 # ============================================================
 # Build list page (summary table) for GitHub Pages + offline viewing
-# - meta:        data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv
+# - meta:        data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv
 # - assignments: data/AWS/icefalls_nearest_station.csv (optional)
 # - sun:         data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv (optional)
 # - model runs:  data/ModelRuns/model_uid<uid>.csv
@@ -26,7 +26,7 @@ tomorrow <- as.Date(with_tz(Sys.time(), TZ_LOCAL) + days(1))
 # Paths
 # ----------------------------
 PATH_ASSIGN <- "data/AWS/icefalls_nearest_station.csv"
-PATH_META   <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+PATH_META   <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 PATH_SUN    <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 DIR_MODELS  <- "data/ModelRuns"
 
