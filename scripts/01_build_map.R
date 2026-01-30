@@ -1504,6 +1504,16 @@ m <- m |>
     baseGroups    = c("OSM", "Gelände (Topo)"),
     overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
     options       = layersControlOptions(collapsed = FALSE)
+  )
+
+if (length(time_labels) > 0L) {
+  labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
+  n_steps_js <- n_steps
+
+  js_code <- "function(el, x) { /* dein JS wie gehabt */ }"
+
+  m <- htmlwidgets::onRender(m, js_code)
+}
   ) |>
   # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
   {
