@@ -1,7 +1,7 @@
 # scripts/02_build_list_page.R
 # ============================================================
 # Build list page (summary table) for GitHub Pages + offline viewing
-# - meta:        data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv
+# - meta:        data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv
 # - assignments: data/AWS/icefalls_nearest_station.csv (optional)
 # - sun:         data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv (optional)
 # - model runs:  data/ModelRuns/model_uid<uid>.csv
@@ -26,7 +26,7 @@ tomorrow <- as.Date(with_tz(Sys.time(), TZ_LOCAL) + days(1))
 # Paths
 # ----------------------------
 PATH_ASSIGN <- "data/AWS/icefalls_nearest_station.csv"
-PATH_META   <- "data/Koordinaten_Wasserfaelle/tirol_eisklettern_links_entries_diff.csv"
+PATH_META   <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 PATH_SUN    <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
 DIR_MODELS  <- "data/ModelRuns"
 
@@ -163,6 +163,8 @@ if (!"uid" %in% names(meta_raw)) stop("META CSV hat keine Spalte 'uid'.")
 meta <- tibble(
   uid = parse_uid(meta_raw$uid),
   name = get_chr(meta_raw, "name"),
+  topo_url = get_chr(meta_raw, "topo_url"),
+  topo_slug = get_chr(meta_raw, "topo_slug"),
   latitude  = get_num(meta_raw, "latitude", "lat"),
   longitude = get_num(meta_raw, "longitude", "lon"),
   elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
@@ -213,13 +215,15 @@ if (file.exists(PATH_SUN)) {
       uid = parse_uid(uid),
       date = as.Date(get_chr(., "date"))
     )
+
+  if (!"sun_hours_topo" %in% names(sun_raw)) {
+    sun_raw$sun_hours_topo <- NA_real_
+  }
   
   sun <- sun_raw %>%
     filter(.data$date == tomorrow) %>%
     group_by(uid) %>%
     summarise(
-      topo_url  = dplyr::coalesce(first(topo_url[topo_url != ""]), first(topo_url)),
-      topo_slug = dplyr::coalesce(first(topo_slug[topo_slug != ""]), first(topo_slug)),
       sunrise_topo_local = parse_time_iso_z(first_nonempty(sunrise_topo), out_tz = TZ_LOCAL),
       sunset_topo_local  = parse_time_iso_z(first_nonempty(sunset_topo),  out_tz = TZ_LOCAL),
       sun_hours_tomorrow_h = to_num(first_nonempty(sun_hours_topo)),
@@ -231,6 +235,14 @@ if (file.exists(PATH_SUN)) {
       sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h),
       .groups = "drop"
     )
+  
+  if (all(is.na(sun$sun_hours_tomorrow_h))) {
+    sun <- sun %>%
+      mutate(
+        sun_hours_tomorrow_h = as.numeric(difftime(sunset_topo_local, sunrise_topo_local, units = "hours")),
+        sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h)
+      )
+  }
 }
 
 # ----------------------------
@@ -324,11 +336,20 @@ if (!is.null(assign)) {
 if (!is.null(sun)) {
   out <- out %>% left_join(sun, by = "uid")
 } else {
-  out$topo_url <- NA_character_
-  out$topo_slug <- NA_character_
+  if (!"topo_url" %in% names(out)) out$topo_url <- NA_character_
+  if (!"topo_slug" %in% names(out)) out$topo_slug <- NA_character_
   out$sun_tomorrow_range_txt <- NA_character_
   out$sun_hours_tomorrow_h <- NA_real_
   out$sun_duration_tomorrow_txt <- NA_character_
+}
+
+if ("topo_url.y" %in% names(out) || "topo_slug.y" %in% names(out)) {
+  out <- out %>%
+    mutate(
+      topo_url = dplyr::coalesce(.data$topo_url, .data$topo_url.y),
+      topo_slug = dplyr::coalesce(.data$topo_slug, .data$topo_slug.y)
+    ) %>%
+    select(-dplyr::any_of(c("topo_url.y", "topo_slug.y")))
 }
 
 out <- out %>%
@@ -506,6 +527,12 @@ html_lines <- c(
   '              <input id="sunMin" type="range" min="0" max="12" step="0.25" value="0" title="Sonnendauer (Topographie)">',
   '              <input id="sunMax" type="range" min="0" max="12" step="0.25" value="12" title="Sonnendauer (Topographie)">',
   '              <span class="muted" id="sunRangeTxt">0.0 – 12.0 h</span>',
+  '            </div>',
+  '            <div class="row">',
+  '              <label>H&ouml;he (m)</label>',
+  '              <input id="elevMin" type="range" min="0" max="4000" step="50" value="0" title="Hoehe der Eisfaelle in m">',
+  '              <input id="elevMax" type="range" min="0" max="4000" step="50" value="4000" title="Hoehe der Eisfaelle in m">',
+  '              <span class="muted" id="elevRangeTxt">0 – 4000 m</span>',
   '            </div>',
   '          </div>',
   '        </div>',
@@ -711,7 +738,7 @@ for (i in seq_len(nrow(out))) {
     "  <div class='card plotWrap'>",
     "    <h2>Diagramm</h2>",
     paste0("    <div style='margin-bottom:8px;'><a class='btn' href='../", plot_rel, "' target='_blank' rel='noopener'>gro&szlig; &ouml;ffnen</a></div>"),
-    paste0("    <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=\\\"muted\\\">Kein Plot gefunden.</div>';\"/>"),
+    paste0("    <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
     "  </div>",
     
     # upload + map row
@@ -788,6 +815,21 @@ for (i in seq_len(nrow(out))) {
     "    return String(v);",
     "  }",
     
+    "  function formatShotDate(raw){",
+    "    const s = (raw === null || raw === undefined) ? '' : String(raw).trim();",
+    "    if (!s) return '';",
+    "    const direct = s.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);",
+    "    if (direct) return `${direct[3]}.${direct[2]}.${direct[1]}`;",
+    "    const parsed = new Date(s);",
+    "    if (!Number.isNaN(parsed.getTime())) {",
+    "      const dd = String(parsed.getDate()).padStart(2, '0');",
+    "      const mm = String(parsed.getMonth() + 1).padStart(2, '0');",
+    "      const yyyy = parsed.getFullYear();",
+    "      return `${dd}.${mm}.${yyyy}`;",
+    "    }",
+    "    return s;",
+    "  }",
+    "",
     "  async function loadImages(){",
     "    elImgStatus.textContent = 'Lade...';",
     "    elGal.innerHTML = '';",
@@ -808,7 +850,7 @@ for (i in seq_len(nrow(out))) {
     "      });",
     "      const html = Object.values(groups).map(group => {",
     "        const first = group[0] || {};",
-    "        const d = escHtml(first.shot_date || '');",
+    "        const d = escHtml(formatShotDate(first.shot_date || ''));",
     "        const rt = ratingTxt(first.rating);",
     "        const c = escHtml(first.comment || '');",
     "        const cHtml = c ? `<div style=\"margin-top:6px;\">${c}</div>` : '';",
