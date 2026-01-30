@@ -1205,7 +1205,7 @@ m <- m |>
 
        var group = getGroup();
        if (!group || typeof group.getLayers !== 'function') {
-         status.textContent = 'Filter derzeit nicht verf\u00fcgbar.';
+         status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
        }
 
@@ -1249,11 +1249,11 @@ m <- m |>
          var w = clampMinMax(wiMin, wiMax);
          var r = clampMinMax(rMin, rMax);
          var s = clampMinMax(sunMin, sunMax);
-         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' \u2013 A' + fmtGrade(a[1]);
-         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' \u2013 M' + fmtGrade(m[1]);
-         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' \u2013 WI' + fmtGrade(w[1]);
-         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' \u2013 ' + fmtGrade(r[1]);
-         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' \u2013 ' + s[1].toFixed(1) + ' h';
+         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' – A' + fmtGrade(a[1]);
+         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' – M' + fmtGrade(m[1]);
+         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' – WI' + fmtGrade(w[1]);
+         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' – ' + fmtGrade(r[1]);
+         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' – ' + s[1].toFixed(1) + ' h';
        }
 
        function formatRange(label, text, fallback){
@@ -1376,7 +1376,7 @@ m <- m |>
          parts.push(formatRange('WI', wiTxt, ''));
          parts.push(formatRange('R', rTxt, ''));
          parts.push('Sonne ' + sunTxt);
-         status.textContent = visible + ' / ' + allMarkers.length + ' Eisf\u00e4lle \u00b7 ' + parts.join(' \u00b7 ');
+         status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
        }
 
        input.addEventListener('input', applyFilter);
@@ -1396,7 +1396,7 @@ m <- m |>
        if (geoBtn) {
          geoBtn.addEventListener('click', function(){
            if (!navigator.geolocation) {
-             if (geoStatus) geoStatus.textContent = 'GPS nicht verf\u00fcgbar.';
+             if (geoStatus) geoStatus.textContent = 'GPS nicht verfügbar.';
              return;
            }
            if (geoStatus) geoStatus.textContent = 'GPS wird ermittelt...';
