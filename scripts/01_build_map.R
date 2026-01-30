@@ -944,7 +944,8 @@ if (file.exists(PATH_META)) {
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
-    difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad")
+    difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
+    topo_url = get_chr(meta_raw, "topo_url")
   )
 }
 
@@ -980,9 +981,18 @@ if (nrow(sun_today) == 0) {
 if (!is.null(meta_map)) {
   sun_today <- sun_today %>%
     dplyr::left_join(meta_map, by = "uid")
+  if ("topo_url.x" %in% names(sun_today) || "topo_url.y" %in% names(sun_today)) {
+    sun_today <- sun_today %>%
+      mutate(topo_url = dplyr::coalesce(.data$topo_url.x, .data$topo_url.y)) %>%
+      select(-dplyr::any_of(c("topo_url.x", "topo_url.y")))
+  }
 } else {
   sun_today <- sun_today %>%
     dplyr::mutate(difficulty = NA_character_)
+}
+
+if (!"topo_url" %in% names(sun_today)) {
+  sun_today$topo_url <- NA_character_
 }
 
 sun_today <- sun_today %>%

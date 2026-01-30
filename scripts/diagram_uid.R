@@ -562,6 +562,9 @@ sun_all <- readr::read_csv(
   PATH_SUN, show_col_types = FALSE, progress = FALSE,
   col_select = dplyr::any_of(c("uid","name","date","sunrise_topo","sunset_topo","sun_hours_topo"))
 )
+if (!"sun_hours_topo" %in% names(sun_all)) {
+  sun_all$sun_hours_topo <- NA_real_
+}
 wind_lut <- readr::read_csv(
   PATH_WINDLUT, show_col_types = FALSE, progress = FALSE,
   col_select = dplyr::any_of(c("uid","dir_deg","wind_vuln_0_9"))
@@ -606,6 +609,13 @@ sun_uid <- sun_all %>%
   select(date, sunrise_topo, sunset_topo, sun_hours_topo) %>%
   distinct(date, .keep_all = TRUE) %>%
   filter(date >= START_DATE, date <= END_DATE_EXT)
+
+if (all(is.na(sun_uid$sun_hours_topo))) {
+  sun_uid <- sun_uid %>%
+    mutate(
+      sun_hours_topo = as.numeric(difftime(sunset_topo, sunrise_topo, units = "hours"))
+    )
+}
 
 if (nrow(sun_uid) == 0) stop("Keine Sun-Daten für uid ", UID_TEST)
 
