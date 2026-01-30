@@ -1183,9 +1183,9 @@ m <- m |>
     )
   )  |>
   addControl(
-    position = "topright",
+    position = "bottomright",
     html = htmltools::HTML(
-      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;'>📍</button>"
+      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
   htmlwidgets::onRender(
@@ -1224,6 +1224,17 @@ m <- m |>
        var rRangeTxt = el.querySelector('#mapRRangeTxt');
        var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
        if (!input || !status) return;
+       if (typeof L !== 'undefined') {
+         var filterBox = el.querySelector('#map-filter');
+         if (filterBox) {
+           L.DomEvent.disableClickPropagation(filterBox);
+           L.DomEvent.disableScrollPropagation(filterBox);
+         }
+         if (geoBtn) {
+           L.DomEvent.disableClickPropagation(geoBtn);
+           L.DomEvent.disableScrollPropagation(geoBtn);
+         }
+       }
 
        function getGroup() {
          if (map.layerManager) {
@@ -1366,6 +1377,13 @@ m <- m |>
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
+           if (!map._filterRetry) {
+             map._filterRetry = true;
+             setTimeout(function(){
+               map._filterRetry = false;
+               applyFilter();
+             }, 300);
+           }
            return;
          }
          updateRangeLabels();
@@ -1400,11 +1418,11 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
-         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
-         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
-         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
-         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
-         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
+         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
+         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
+         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
+         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
+         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
          parts.push(formatRange('A', aTxt, ''));
          parts.push(formatRange('M', mTxt, ''));
          parts.push(formatRange('WI', wiTxt, ''));
@@ -1504,6 +1522,139 @@ if (length(time_labels) > 0L) {
 
   m <- htmlwidgets::onRender(m, js_code)
 }
+  ) |>
+  # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
+  {
+    m <- .
+    if (length(time_labels) > 0L) {
+      labels_js  <- paste0("['", paste(time_labels, collapse = "','"), "']")
+      n_steps_js <- n_steps
+
+      js_code <- sprintf(
+        "function(el, x) {
+       var map = this;
+
+       var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+
+       // UI scale
+       var lc = el.getElementsByClassName('leaflet-control-layers-expanded')[0]
+                || el.getElementsByClassName('leaflet-control-layers')[0];
+       if (lc) {
+          if (isMobile) {
+            lc.style.marginTop   = '6px';
+            lc.style.marginRight = '0';
+            lc.style.transform   = 'none';
+            lc.style.padding     = '8px 10px';
+            lc.style.fontSize    = '13px';
+          } else {
+            lc.style.marginTop   = '10px';
+            lc.style.marginRight = '90px';
+            lc.style.transform   = 'scale(1.5)';
+            lc.style.transformOrigin = 'top left';
+            lc.style.padding     = '12px 15px';
+            lc.style.fontSize    = '16px';
+          }
+       }
+
+       var labels = %s;
+       var nSteps = %d;
+       if (!labels || labels.length === 0 || nSteps <= 0) return;
+
+       function pad3(n){ return String(n).padStart(3,'0'); }
+
+       var iceLayer   = window._iceOverlay   || null;
+       var climbLayer = window._climbOverlay || null;
+
+       if (!iceLayer || !climbLayer) {
+         map.eachLayer(function(l){
+           if(!iceLayer   && l && l.options && l.options.layerId === 'ice_overlay')   iceLayer = l;
+           if(!climbLayer && l && l.options && l.options.layerId === 'climb_overlay') climbLayer = l;
+         });
+       }
+
+       var initial = nSteps - 1;
+       if (initial < 0) initial = 0;
+
+       function setTimeStep(step) {
+         if (step < 0) step = 0;
+         if (step >= nSteps) step = nSteps - 1;
+
+         var i = step + 1; // 1..nSteps
+         if (iceLayer)   iceLayer.setUrl('img/ice_' + pad3(i) + '.png');
+         if (climbLayer) climbLayer.setUrl('img/climb_' + pad3(i) + '.png');
+
+         var labelDiv = document.getElementById('time-label');
+         if (labelDiv && step >= 0 && step < labels.length) {
+           labelDiv.textContent = labels[step];
+         }
+
+         var next = Math.min(nSteps, i+1);
+         var prev = Math.max(1, i-1);
+         var img1 = new Image(); img1.src = 'img/ice_' + pad3(next) + '.png';
+         var img2 = new Image(); img2.src = 'img/climb_' + pad3(next) + '.png';
+         var img3 = new Image(); img3.src = 'img/ice_' + pad3(prev) + '.png';
+         var img4 = new Image(); img4.src = 'img/climb_' + pad3(prev) + '.png';
+       }
+
+       var sliderControl = L.control({position: 'topright'});
+       sliderControl.onAdd = function() {
+         var div = L.DomUtil.create('div', 'info leaflet-control');
+         div.style.background   = 'rgba(255,255,255,0.9)';
+         div.style.padding      = '8px 10px';
+         div.style.borderRadius = '6px';
+         div.style.minWidth     = isMobile ? '200px' : '260px';
+
+         // ✅ FIX: Mehr Abstand zur Layer-Control (größere Lücke)
+         div.style.marginTop    = isMobile ? '110px' : '140px';
+         div.style.marginRight  = isMobile ? '6px' : '10px';
+
+         var title = document.createElement('div');
+         title.style.fontSize    = '16px';
+         title.style.marginBottom = '4px';
+         title.innerHTML = '<b>Eisdicke & Climbability – Zeitverlauf</b>';
+         div.appendChild(title);
+
+         var labelDiv = document.createElement('div');
+         labelDiv.id = 'time-label';
+         labelDiv.style.fontSize   = '14px';
+         labelDiv.style.marginBottom = '4px';
+         labelDiv.textContent = labels[initial] || labels[0];
+         div.appendChild(labelDiv);
+
+         var slider = document.createElement('input');
+         slider.type  = 'range';
+         slider.min   = 0;
+         slider.max   = nSteps - 1;
+         slider.step  = 1;
+         slider.value = initial;
+         slider.style.width = isMobile ? '200px' : '240px';
+         slider.id    = 'time-slider';
+         div.appendChild(slider);
+
+         slider.addEventListener('input', function(e) {
+           var step = parseInt(e.target.value, 10);
+           if (!isNaN(step)) setTimeStep(step);
+         });
+
+         slider.addEventListener('mousedown', function() { if (map && map.dragging) map.dragging.disable(); });
+         slider.addEventListener('mouseup',   function() { if (map && map.dragging) map.dragging.enable();  });
+
+         L.DomEvent.disableClickPropagation(div);
+         return div;
+       };
+       sliderControl.addTo(map);
+
+       setTimeout(function(){ setTimeStep(initial); }, 200);
+     }",
+        labels_js,
+        n_steps_js
+      )
+
+      htmlwidgets::onRender(m, js_code)
+    } else {
+      m
+    }
+  }
 
 
 # 13) Output: NICHT selfcontained, in site/ ----------------------------
