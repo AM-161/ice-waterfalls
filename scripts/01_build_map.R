@@ -940,14 +940,22 @@ if (file.exists(PATH_META)) {
     for (nm in cands) if (nm %in% names(df)) return(as.character(df[[nm]]))
     rep(NA_character_, nrow(df))
   }
+  to_num <- function(x) {
+    if (is.null(x)) return(NA_real_)
+    if (is.numeric(x)) return(x)
+    x <- as.character(x)
+    x[x %in% c("", "NA", "NaN", "NULL")] <- NA_character_
+    x <- gsub(",", ".", x, fixed = TRUE)
+    suppressWarnings(as.numeric(x))
+  }
   meta_raw <- readr::read_delim(PATH_META, delim = ";", show_col_types = FALSE) %>%
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
-    latitude = suppressWarnings(as.numeric(get_chr(meta_raw, "latitude", "lat"))),
-    longitude = suppressWarnings(as.numeric(get_chr(meta_raw, "longitude", "lon")))
+    latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
+    longitude = to_num(get_chr(meta_raw, "longitude", "lon"))
   )
 }
 
