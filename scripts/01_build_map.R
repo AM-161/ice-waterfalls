@@ -1366,11 +1366,11 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
-         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
-         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
-         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
-         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
-         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
+         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
+         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
+         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
+         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
+         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
          parts.push(formatRange('A', aTxt, ''));
          parts.push(formatRange('M', mTxt, ''));
          parts.push(formatRange('WI', wiTxt, ''));
