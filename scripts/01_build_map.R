@@ -53,6 +53,7 @@ base_url_inca <- "https://dataset.api.hub.geosphere.at/v1/grid/historical/inca-v
 out_dir <- "data/inca_nordtirol"
 out_dir_nwp <- "data/nwp_2500m_forecast"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(out_dir_nwp, showWarnings = FALSE, recursive = TRUE)
 
 nc_files <- character(length(chunk_starts))
 
