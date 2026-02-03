@@ -929,6 +929,13 @@ sun_df <- readr::read_csv(
   show_col_types = FALSE
 )
 
+# --- PATCH: uid + date richtig typisieren (sonst ist sun_today oft leer) ---
+sun_df <- sun_df %>%
+  dplyr::mutate(
+    uid  = as.integer(readr::parse_number(as.character(uid))),
+    date = as.Date(date)
+  )
+
 # Optional meta (difficulty) for map filters
 PATH_META <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 meta_map <- NULL
@@ -975,7 +982,7 @@ sun_df <- sun_df %>%
     sun_hours_topo = as.numeric(difftime(sunset_topo, sunrise_topo, units = "hours"))
   )
 
-sun_date <- Sys.Date()
+sun_date <- as.Date(Sys.time(), tz = "Europe/Vienna")
 
 sun_today <- sun_df %>% dplyr::filter(date == sun_date)
 
@@ -991,8 +998,11 @@ if (nrow(sun_today) == 0) {
 
 if (!is.null(meta_map)) {
   sun_today <- sun_today %>%
-    dplyr::left_join(meta_map, by = "uid")
-  if ("topo_url.x" %in% names(sun_today) || "topo_url.y" %in% names(sun_today)) {
+    dplyr::left_join(
+      meta_map %>% dplyr::select(uid, latitude, longitude, topo_url, difficulty),
+      by = "uid"
+    )
+    if ("topo_url.x" %in% names(sun_today) || "topo_url.y" %in% names(sun_today)) {
     sun_today <- sun_today %>%
       mutate(topo_url = dplyr::coalesce(.data$topo_url.x, .data$topo_url.y)) %>%
       select(-dplyr::any_of(c("topo_url.x", "topo_url.y")))
