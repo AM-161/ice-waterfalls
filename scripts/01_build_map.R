@@ -962,8 +962,8 @@ if (file.exists(PATH_META)) {
     uid = parse_uid(meta_raw$uid),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
-    latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
-    longitude = to_num(get_chr(meta_raw, "longitude", "lon"))
+    latitude = to_num(get_chr(meta_raw, "latitude")),
+    longitude = to_num(get_chr(meta_raw, "longitude"))
   )
 }
 
