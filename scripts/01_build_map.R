@@ -985,6 +985,7 @@ if (file.exists(PATH_META)) {
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
+    name = get_chr(meta_raw, "name", "eisfall", "icefall"),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
     latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
@@ -1079,23 +1080,28 @@ if (nrow(sun_today) == 0) {
 }
 
 if (!is.null(meta_map)) {
-  sun_today <- sun_today %>%
-    dplyr::left_join(
-      meta_map %>% dplyr::select(uid, latitude, longitude, topo_url, difficulty),
-      by = "uid"
-    )
-    if ("topo_url.x" %in% names(sun_today) || "topo_url.y" %in% names(sun_today)) {
-    sun_today <- sun_today %>%
-      mutate(topo_url = dplyr::coalesce(.data$topo_url.x, .data$topo_url.y)) %>%
-      select(-dplyr::any_of(c("topo_url.x", "topo_url.y")))
-  }
-  if ("latitude.x" %in% names(sun_today) || "latitude.y" %in% names(sun_today)) {
-    sun_today <- sun_today %>%
-      mutate(
-        latitude = dplyr::coalesce(.data$latitude.x, .data$latitude.y),
-        longitude = dplyr::coalesce(.data$longitude.x, .data$longitude.y)
+  marker_base <- meta_map %>%
+    dplyr::filter(is.finite(uid)) %>%
+    dplyr::select(uid, name, latitude, longitude, topo_url, difficulty) %>%
+    dplyr::arrange(uid) %>%
+    dplyr::distinct(uid, .keep_all = TRUE)
+
+  if (nrow(marker_base) == 0) {
+    message("⚠️ Meta-Daten enthalten keine gültigen UIDs – verwende Sun-Daten als Markerbasis.")
+    sun_today <- sun_today
+  } else {
+    sun_today <- marker_base %>%
+      dplyr::left_join(
+        sun_today %>%
+          dplyr::select(uid, name, date, sunrise_topo, sunset_topo, sun_hours_topo),
+        by = "uid",
+        suffix = c("_meta", "_sun")
       ) %>%
-      select(-dplyr::any_of(c("latitude.x", "latitude.y", "longitude.x", "longitude.y")))
+      dplyr::mutate(
+        name = dplyr::coalesce(.data$name_meta, .data$name_sun),
+        date = dplyr::coalesce(.data$date, sun_date)
+      ) %>%
+      dplyr::select(-dplyr::any_of(c("name_meta", "name_sun")))
   }
 } else {
   sun_today <- sun_today %>%
@@ -1114,6 +1120,7 @@ if (!"longitude" %in% names(sun_today)) {
 
 sun_today <- sun_today %>%
   dplyr::mutate(
+    name = dplyr::coalesce(name, paste0("Eisfall ", sprintf("%03d", uid))),
     sunrise_txt   = substr(as.character(sunrise_topo), 12, 16),
     sunset_txt    = substr(as.character(sunset_topo),  12, 16),
     sun_hours_txt = sprintf("%.1f", sun_hours_topo),
@@ -1178,6 +1185,15 @@ sun_today <- sun_today %>%
       )
     )
   )
+
+marker_data <- sun_today %>%
+  dplyr::filter(is.finite(latitude), is.finite(longitude))
+
+if (nrow(marker_data) == 0) {
+  message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
+} else {
+  message("✅ Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
+}
 
 # 12) Leaflet Map: nur 2 Overlays + Slider wechselt URL ----------------
 
@@ -1342,7 +1358,7 @@ m <- m |>
        }
 
        var group = getGroup();
-       if (!group || typeof group.getLayers !== 'function') {
+       if (!group || typeof group.getLayers !== 'function' || typeof group.addLayer !== 'function' || typeof group.clearLayers !== 'function') {
          status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
        }
@@ -1450,9 +1466,21 @@ m <- m |>
        }
 
        function collectMarkers(){
-         return (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
-           return l && typeof l.getLatLng === 'function';
-         });
+         var out = [];
+         function visit(layer){
+           if (!layer) return;
+           if (typeof layer.getLatLng === 'function') {
+             out.push(layer);
+             return;
+           }
+           if (typeof layer.getLayers === 'function') {
+             var children = layer.getLayers() || [];
+             children.forEach(visit);
+           }
+         }
+         var roots = group.getLayers ? group.getLayers() : [];
+         (roots || []).forEach(visit);
+         return out;
        }
 
        var allMarkers = collectMarkers();
@@ -1589,7 +1617,7 @@ m <- m |>
     position  = "bottomleft"
   ) |>
   addCircleMarkers(
-    data        = sun_today,
+    data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
     radius      = 5,
