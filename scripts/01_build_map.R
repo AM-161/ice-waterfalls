@@ -1487,7 +1487,9 @@ m <- m |>
 
        function inRange(v, min, max, minEl, maxEl){
          if (!isFinite(min) && !isFinite(max)) return true;
-         if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
+         // Unbekannte Werte (NA/NaN) nicht hart ausfiltern:
+         // Ein versehentlich leicht verschobener Slider darf nicht nahezu alle Marker verstecken.
+         if (!isFinite(v)) return true;
          if (isFinite(min) && v < min) return false;
          if (isFinite(max) && v > max) return false;
          return true;
