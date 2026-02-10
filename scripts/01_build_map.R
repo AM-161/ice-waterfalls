@@ -1297,6 +1297,15 @@ m <- m |>
       "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
+  addControl(
+    position = "bottomleft",
+    html = htmltools::HTML(
+      "<details id='map-debug' style='background:rgba(255,255,255,0.96);padding:6px 8px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:230px;max-width:320px;'>
+         <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Debug Marker</summary>
+         <div id='mapDebugStatus' style='margin-top:6px;font-size:12px;line-height:1.35;color:#374151;'></div>
+       </details>"
+    )
+  ) |>
   htmlwidgets::onRender(
     "function(el, x) {
        var style = document.createElement('style');
@@ -1333,6 +1342,7 @@ m <- m |>
        var rRangeTxt = el.querySelector('#mapRRangeTxt');
        var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
        var resetBtn = el.querySelector('#mapFilterReset');
+       var debugStatus = el.querySelector('#mapDebugStatus');
        if (!input || !status) return;
        if (typeof L !== 'undefined') {
          var filterBox = el.querySelector('#map-filter');
@@ -1486,6 +1496,27 @@ m <- m |>
 
        var allMarkers = collectMarkers();
 
+       function updateDebugInfo(filteredVisible) {
+         if (!debugStatus) return;
+         var zoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : NaN;
+         var b = (map && typeof map.getBounds === 'function') ? map.getBounds() : null;
+         var boundsTxt = 'Bounds: n/a';
+         if (b && b.getSouthWest && b.getNorthEast) {
+           var sw = b.getSouthWest();
+           var ne = b.getNorthEast();
+           boundsTxt = 'Bounds: ' + [sw.lat.toFixed(3), sw.lng.toFixed(3), ne.lat.toFixed(3), ne.lng.toFixed(3)].join(', ');
+         }
+         var groupLayers = (group && typeof group.getLayers === 'function') ? group.getLayers() : [];
+         var groupCount = (groupLayers && groupLayers.length) ? groupLayers.length : 0;
+         var vis = (typeof filteredVisible === 'number' && isFinite(filteredVisible)) ? filteredVisible : groupCount;
+         debugStatus.innerHTML =
+           '<div><b>Marker total:</b> ' + allMarkers.length + '</div>' +
+           '<div><b>Marker sichtbar:</b> ' + vis + '</div>' +
+           '<div><b>Group layers:</b> ' + groupCount + '</div>' +
+           '<div><b>Zoom:</b> ' + (isFinite(zoom) ? zoom : 'n/a') + '</div>' +
+           '<div style="margin-top:4px;word-break:break-word;">' + boundsTxt + '</div>';
+       }
+
        function inRange(v, min, max, minEl, maxEl){
          if (!isFinite(min) && !isFinite(max)) return true;
          // Unbekannte Werte (NA/NaN) nicht hart ausfiltern:
@@ -1510,6 +1541,7 @@ m <- m |>
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
+           updateDebugInfo(0);
            if (!map._filterRetry) {
              map._filterRetry = true;
              setTimeout(function(){
@@ -1529,6 +1561,7 @@ m <- m |>
 
          if (!filterActive) {
            status.textContent = allMarkers.length + ' / ' + allMarkers.length + ' Eisfälle';
+           updateDebugInfo(allMarkers.length);
            return;
          }
 
@@ -1575,6 +1608,7 @@ m <- m |>
          parts.push(formatRange('R', rTxt, ''));
          parts.push('Sonne ' + sunTxt);
          status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
+         updateDebugInfo(visible);
        }
 
        input.addEventListener('input', applyFilter);
@@ -1596,6 +1630,11 @@ m <- m |>
        resetFilters();
        updateRangeLabels();
        applyFilter();
+       if (map && typeof map.on === 'function') {
+         map.on('moveend zoomend overlayadd overlayremove', function(){
+           updateDebugInfo();
+         });
+       }
 
        if (geoBtn) {
          geoBtn.addEventListener('click', function(){
@@ -1657,8 +1696,7 @@ m <- m |>
     fillColor   = "#ffd166",
     fillOpacity = 0.9,
     popup       = ~popup,
-    group       = "Eisfälle",
-    clusterOptions = markerClusterOptions()
+    group       = "Eisfälle"
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
