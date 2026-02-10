@@ -688,8 +688,8 @@ for (i in seq_len(nrow(out))) {
     
     # diagram full width
     "    .plotWrap{margin-top:12px;}",
-    "    .plotOpenLink{display:block;text-decoration:none;color:inherit;cursor:pointer;}",
-    "    .plotOpenLink:hover{background:#fafafa;}",
+    "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;}",
+    "    .plotImgLink{display:block;}",
     
     "    #map{height:240px;border-radius:16px;border:1px solid #eee;}",
     "    @media(max-width:720px){",
@@ -735,12 +735,13 @@ for (i in seq_len(nrow(out))) {
     "    </div>",
     "  </div>",
     
-    # full-width plot card (open directly in large view)
-    paste0("  <a class='card plotWrap plotOpenLink' href='../", plot_rel, "' target='_blank' rel='noopener'>"),
+    # full-width plot card (click image to open large view)
+    "  <div class='card plotWrap'>",
     "    <h2>Diagramm</h2>",
-    "    <div class='muted' style='margin-bottom:8px;'>Diagramm ist auf der Detailseite ausgeblendet.</div>",
-    "    <div><span class='btn'>gro&szlig; &ouml;ffnen</span></div>",
-    "  </a>",
+    paste0("    <a class='plotImgLink' href='../", plot_rel, "' target='_blank' rel='noopener' title='Diagramm groß öffnen'>"),
+        paste0("      <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
+    "    </a>",
+    "  </div>",
     
     # upload + map row
     "  <div class='grid2' style='margin-top:12px;'>",
