@@ -528,6 +528,12 @@ html_lines <- c(
   '              <input id="sunMax" type="range" min="0" max="12" step="0.25" value="12" title="Sonnendauer (Topographie)">',
   '              <span class="muted" id="sunRangeTxt">0.0 – 12.0 h</span>',
   '            </div>',
+  '            <div class="row">',
+  '              <label>H&ouml;he (m)</label>',
+  '              <input id="elevMin" type="range" min="0" max="4000" step="50" value="0" title="Hoehe der Eisfaelle in m">',
+  '              <input id="elevMax" type="range" min="0" max="4000" step="50" value="4000" title="Hoehe der Eisfaelle in m">',
+  '              <span class="muted" id="elevRangeTxt">0 – 4000 m</span>',
+  '            </div>',
   '          </div>',
   '        </div>',
   '      </details>',
@@ -682,7 +688,8 @@ for (i in seq_len(nrow(out))) {
     
     # diagram full width
     "    .plotWrap{margin-top:12px;}",
-    "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;}",
+    "    .plotOpenLink{display:block;text-decoration:none;color:inherit;cursor:pointer;}",
+    "    .plotOpenLink:hover{background:#fafafa;}",
     
     "    #map{height:240px;border-radius:16px;border:1px solid #eee;}",
     "    @media(max-width:720px){",
@@ -728,12 +735,12 @@ for (i in seq_len(nrow(out))) {
     "    </div>",
     "  </div>",
     
-    # full-width plot card
-    "  <div class='card plotWrap'>",
+    # full-width plot card (open directly in large view)
+    paste0("  <a class='card plotWrap plotOpenLink' href='../", plot_rel, "' target='_blank' rel='noopener'>"),
     "    <h2>Diagramm</h2>",
-    paste0("    <div style='margin-bottom:8px;'><a class='btn' href='../", plot_rel, "' target='_blank' rel='noopener'>gro&szlig; &ouml;ffnen</a></div>"),
-    paste0("    <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
-    "  </div>",
+    "    <div class='muted' style='margin-bottom:8px;'>Diagramm ist auf der Detailseite ausgeblendet.</div>",
+    "    <div><span class='btn'>gro&szlig; &ouml;ffnen</span></div>",
+    "  </a>",
     
     # upload + map row
     "  <div class='grid2' style='margin-top:12px;'>",
