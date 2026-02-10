@@ -3,7 +3,7 @@
 # Build list page (summary table) for GitHub Pages + offline viewing
 # - meta:        data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv
 # - assignments: data/AWS/icefalls_nearest_station.csv (optional)
-# - sun:         data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv (optional)
+# - sun:         data/suntime/sun_uid_<uid>.csv (optional)
 # - model runs:  data/ModelRuns/model_uid<uid>.csv
 # - outputs:     site/icefalls_table.json + site/list.html
 #   plus copies to repo root: icefalls_table.json + list.html
@@ -27,7 +27,7 @@ tomorrow <- as.Date(with_tz(Sys.time(), TZ_LOCAL) + days(1))
 # ----------------------------
 PATH_ASSIGN <- "data/AWS/icefalls_nearest_station.csv"
 PATH_META   <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
-PATH_SUN    <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
+DIR_SUN     <- "data/suntime"
 DIR_MODELS  <- "data/ModelRuns"
 
 OUT_DIR  <- "site"
@@ -61,6 +61,41 @@ read_any_delim <- function(path) {
   x <- tryCatch(readr::read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
   readr::read_csv(path, show_col_types = FALSE, progress = FALSE)
+}
+
+find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
+  uid_i <- suppressWarnings(as.integer(uid))
+  if (!is.finite(uid_i)) return(NA_character_)
+  cand <- c(
+    file.path(dir_sun, sprintf("sun_uid_%03d.csv", uid_i)),
+    file.path(dir_sun, sprintf("sun_uid_%d.csv", uid_i))
+  )
+  hit <- cand[file.exists(cand)]
+  if (length(hit) == 0) return(NA_character_)
+  hit[[1]]
+}
+
+load_sun_for_uids <- function(uids, dir_sun = DIR_SUN) {
+  out <- vector("list", length(uids))
+  missing_uids <- integer(0)
+  for (i in seq_along(uids)) {
+    uid <- as.integer(uids[[i]])
+    f <- find_sun_file_for_uid(uid, dir_sun = dir_sun)
+    if (is.na(f)) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    df <- tryCatch(read_any_delim(f), error = function(e) NULL)
+    if (is.null(df) || nrow(df) == 0) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    out[[i]] <- df
+  }
+  list(
+    data = dplyr::bind_rows(out),
+    missing_uids = sort(unique(missing_uids))
+  )
 }
 
 get_chr <- function(df, ...) {
@@ -208,8 +243,16 @@ if (file.exists(PATH_ASSIGN)) {
 # 3) Sun horizons (optional)
 # ----------------------------
 sun <- NULL
-if (file.exists(PATH_SUN)) {
-  sun_raw <- read_any_delim(PATH_SUN) %>%
+if (dir.exists(DIR_SUN)) {
+  sun_loaded <- load_sun_for_uids(unique(meta$uid), dir_sun = DIR_SUN)
+  if (length(sun_loaded$missing_uids) > 0) {
+    message(
+      "⚠️ Fehlende Sun-Dateien für UIDs: ",
+      paste(sprintf("%03d", sun_loaded$missing_uids), collapse = ", ")
+    )
+  }
+
+  sun_raw <- sun_loaded$data %>%
     rename_with(tolower) %>%
     mutate(
       uid = parse_uid(uid),
@@ -243,6 +286,8 @@ if (file.exists(PATH_SUN)) {
         sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h)
       )
   }
+} else {
+  message("⚠️ Sun-Verzeichnis fehlt: ", DIR_SUN)
 }
 
 # ----------------------------

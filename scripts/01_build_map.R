@@ -53,6 +53,7 @@ base_url_inca <- "https://dataset.api.hub.geosphere.at/v1/grid/historical/inca-v
 out_dir <- "data/inca_nordtirol"
 out_dir_nwp <- "data/nwp_2500m_forecast"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+dir.create(out_dir_nwp, showWarnings = FALSE, recursive = TRUE)
 
 nc_files <- character(length(chunk_starts))
 
@@ -923,10 +924,42 @@ for (i in seq_len(n_steps)) {
 
 # 11) Eisfall-Sonnendaten + Topo-URLs ---------------------------------
 
-sun_df <- readr::read_csv(
-  "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv",
-  show_col_types = FALSE
-)
+DIR_SUN <- "data/suntime"
+
+find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
+  uid_i <- suppressWarnings(as.integer(uid))
+  if (!is.finite(uid_i)) return(NA_character_)
+  cand <- c(
+    file.path(dir_sun, sprintf("sun_uid_%03d.csv", uid_i)),
+    file.path(dir_sun, sprintf("sun_uid_%d.csv", uid_i))
+  )
+  hit <- cand[file.exists(cand)]
+  if (length(hit) == 0) return(NA_character_)
+  hit[[1]]
+}
+
+load_sun_for_uids <- function(uids, dir_sun = DIR_SUN) {
+  out <- vector("list", length(uids))
+  missing_uids <- integer(0)
+  for (i in seq_along(uids)) {
+    uid <- as.integer(uids[[i]])
+    f <- find_sun_file_for_uid(uid, dir_sun = dir_sun)
+    if (is.na(f)) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    df <- tryCatch(readr::read_csv(f, show_col_types = FALSE), error = function(e) NULL)
+    if (is.null(df) || nrow(df) == 0) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    out[[i]] <- df
+  }
+  list(
+    data = dplyr::bind_rows(out),
+    missing_uids = sort(unique(missing_uids))
+  )
+}
 
 # Optional meta (difficulty) for map filters
 PATH_META <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
@@ -952,12 +985,19 @@ if (file.exists(PATH_META)) {
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
+    name = get_chr(meta_raw, "name", "eisfall", "icefall"),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
     latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
     longitude = to_num(get_chr(meta_raw, "longitude", "lon"))
   )
 }
+
+sun_df <- sun_df %>%
+  dplyr::mutate(
+    uid  = as.integer(readr::parse_number(as.character(uid))),
+    date = as.Date(date)
+  )
 
 if (!inherits(sun_df$sunrise_topo, "POSIXt")) {
   sun_df <- sun_df %>%
@@ -974,7 +1014,7 @@ sun_df <- sun_df %>%
     sun_hours_topo = as.numeric(difftime(sunset_topo, sunrise_topo, units = "hours"))
   )
 
-sun_date <- Sys.Date()
+sun_date <- as.Date(Sys.time(), tz = "Europe/Vienna")
 
 sun_today <- sun_df %>% dplyr::filter(date == sun_date)
 
@@ -985,24 +1025,32 @@ if (nrow(sun_today) == 0) {
 }
 
 if (nrow(sun_today) == 0) {
-  stop("sun_today ist leer – prüfe icefalls_sun_horizon.csv (Spaltennamen / date-Typ).")
+  message("⚠️ sun_today ist leer – es werden keine Sonnenzeiten angezeigt.")
 }
 
 if (!is.null(meta_map)) {
-  sun_today <- sun_today %>%
-    dplyr::left_join(meta_map, by = "uid")
-  if ("topo_url.x" %in% names(sun_today) || "topo_url.y" %in% names(sun_today)) {
-    sun_today <- sun_today %>%
-      mutate(topo_url = dplyr::coalesce(.data$topo_url.x, .data$topo_url.y)) %>%
-      select(-dplyr::any_of(c("topo_url.x", "topo_url.y")))
-  }
-  if ("latitude.x" %in% names(sun_today) || "latitude.y" %in% names(sun_today)) {
-    sun_today <- sun_today %>%
-      mutate(
-        latitude = dplyr::coalesce(.data$latitude.x, .data$latitude.y),
-        longitude = dplyr::coalesce(.data$longitude.x, .data$longitude.y)
+  marker_base <- meta_map %>%
+    dplyr::filter(is.finite(uid)) %>%
+    dplyr::select(uid, name, latitude, longitude, topo_url, difficulty) %>%
+    dplyr::arrange(uid) %>%
+    dplyr::distinct(uid, .keep_all = TRUE)
+
+  if (nrow(marker_base) == 0) {
+    message("⚠️ Meta-Daten enthalten keine gültigen UIDs – verwende Sun-Daten als Markerbasis.")
+    sun_today <- sun_today
+  } else {
+    sun_today <- marker_base %>%
+      dplyr::left_join(
+        sun_today %>%
+          dplyr::select(uid, name, date, sunrise_topo, sunset_topo, sun_hours_topo),
+        by = "uid",
+        suffix = c("_meta", "_sun")
       ) %>%
-      select(-dplyr::any_of(c("latitude.x", "latitude.y", "longitude.x", "longitude.y")))
+      dplyr::mutate(
+        name = dplyr::coalesce(.data$name_meta, .data$name_sun),
+        date = dplyr::coalesce(.data$date, sun_date)
+      ) %>%
+      dplyr::select(-dplyr::any_of(c("name_meta", "name_sun")))
   }
 } else {
   sun_today <- sun_today %>%
@@ -1021,6 +1069,7 @@ if (!"longitude" %in% names(sun_today)) {
 
 sun_today <- sun_today %>%
   dplyr::mutate(
+    name = dplyr::coalesce(name, paste0("Eisfall ", sprintf("%03d", uid))),
     sunrise_txt   = substr(as.character(sunrise_topo), 12, 16),
     sunset_txt    = substr(as.character(sunset_topo),  12, 16),
     sun_hours_txt = sprintf("%.1f", sun_hours_topo),
@@ -1085,6 +1134,15 @@ sun_today <- sun_today %>%
       )
     )
   )
+
+marker_data <- sun_today %>%
+  dplyr::filter(is.finite(latitude), is.finite(longitude))
+
+if (nrow(marker_data) == 0) {
+  message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
+} else {
+  message("✅ Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
+}
 
 # 12) Leaflet Map: nur 2 Overlays + Slider wechselt URL ----------------
 
@@ -1179,13 +1237,13 @@ m <- m |>
   addControl(
     position = "bottomright",
     html = htmltools::HTML(
-      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;'></div>\n        </div>\n      </details>"
+      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <button id='mapFilterReset' type='button' style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>Filter zurücksetzen</button>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;'></div>\n        </div>\n      </details>"
     )
   )  |>
   addControl(
-    position = "topright",
+    position = "bottomright",
     html = htmltools::HTML(
-      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;'>📍</button>"
+      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
   htmlwidgets::onRender(
@@ -1223,7 +1281,19 @@ m <- m |>
        var wiRangeTxt = el.querySelector('#mapWIRangeTxt');
        var rRangeTxt = el.querySelector('#mapRRangeTxt');
        var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
+       var resetBtn = el.querySelector('#mapFilterReset');
        if (!input || !status) return;
+       if (typeof L !== 'undefined') {
+         var filterBox = el.querySelector('#map-filter');
+         if (filterBox) {
+           L.DomEvent.disableClickPropagation(filterBox);
+           L.DomEvent.disableScrollPropagation(filterBox);
+         }
+         if (geoBtn) {
+           L.DomEvent.disableClickPropagation(geoBtn);
+           L.DomEvent.disableScrollPropagation(geoBtn);
+         }
+       }
 
        function getGroup() {
          if (map.layerManager) {
@@ -1238,7 +1308,7 @@ m <- m |>
        }
 
        var group = getGroup();
-       if (!group || typeof group.getLayers !== 'function') {
+       if (!group || typeof group.getLayers !== 'function' || typeof group.addLayer !== 'function' || typeof group.clearLayers !== 'function') {
          status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
        }
@@ -1346,19 +1416,42 @@ m <- m |>
        }
 
        function collectMarkers(){
-         return (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
-           return l && typeof l.getLatLng === 'function';
-         });
+         var out = [];
+         function visit(layer){
+           if (!layer) return;
+           if (typeof layer.getLatLng === 'function') {
+             out.push(layer);
+             return;
+           }
+           if (typeof layer.getLayers === 'function') {
+             var children = layer.getLayers() || [];
+             children.forEach(visit);
+           }
+         }
+         var roots = group.getLayers ? group.getLayers() : [];
+         (roots || []).forEach(visit);
+         return out;
        }
 
        var allMarkers = collectMarkers();
 
        function inRange(v, min, max, minEl, maxEl){
          if (!isFinite(min) && !isFinite(max)) return true;
-         if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
+         // Unbekannte Werte (NA/NaN) nicht hart ausfiltern:
+         // Ein versehentlich leicht verschobener Slider darf nicht nahezu alle Marker verstecken.
+         if (!isFinite(v)) return true;
          if (isFinite(min) && v < min) return false;
          if (isFinite(max) && v > max) return false;
          return true;
+       }
+
+       function resetFilters(){
+         input.value = '';
+         [[aMin, aMax], [mMin, mMax], [wiMin, wiMax], [rMin, rMax], [sunMin, sunMax]].forEach(function(pair){
+           var mn = pair[0], mx = pair[1];
+           if (mn && mn.min !== undefined) mn.value = mn.min;
+           if (mx && mx.max !== undefined) mx.value = mx.max;
+         });
        }
 
        function applyFilter() {
@@ -1366,8 +1459,28 @@ m <- m |>
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
+           if (!map._filterRetry) {
+             map._filterRetry = true;
+             setTimeout(function(){
+               map._filterRetry = false;
+               applyFilter();
+             }, 300);
+           }
            return;
          }
+
+         var filterActive = !!term ||
+           !isDefaultRange(aMin, aMax) ||
+           !isDefaultRange(mMin, mMax) ||
+           !isDefaultRange(wiMin, wiMax) ||
+           !isDefaultRange(rMin, rMax) ||
+           !isDefaultRange(sunMin, sunMax);
+
+         if (!filterActive) {
+           status.textContent = allMarkers.length + ' / ' + allMarkers.length + ' Eisfälle';
+           return;
+         }
+
          updateRangeLabels();
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
@@ -1400,11 +1513,11 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
-         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/\\s+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
-         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/\\s+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
-         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/\\s+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
-         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/\\s+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
-         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/\\s+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
+         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
+         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
+         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
+         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
+         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
          parts.push(formatRange('A', aTxt, ''));
          parts.push(formatRange('M', mTxt, ''));
          parts.push(formatRange('WI', wiTxt, ''));
@@ -1424,6 +1537,12 @@ m <- m |>
        if (rMax) rMax.addEventListener('input', applyFilter);
        if (sunMin) sunMin.addEventListener('input', applyFilter);
        if (sunMax) sunMax.addEventListener('input', applyFilter);
+       if (resetBtn) resetBtn.addEventListener('click', function(){
+         resetFilters();
+         updateRangeLabels();
+         applyFilter();
+       });
+       resetFilters();
        updateRangeLabels();
        applyFilter();
 
@@ -1478,7 +1597,7 @@ m <- m |>
     position  = "bottomleft"
   ) |>
   addCircleMarkers(
-    data        = sun_today,
+    data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
     radius      = 5,
@@ -1504,7 +1623,6 @@ if (length(time_labels) > 0L) {
 
   m <- htmlwidgets::onRender(m, js_code)
 }
-
 
 # 13) Output: NICHT selfcontained, in site/ ----------------------------
 
