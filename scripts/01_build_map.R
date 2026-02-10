@@ -1710,7 +1710,7 @@ m <- m |>
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle", "Debug Referenz"),
     options       = layersControlOptions(collapsed = FALSE)
   )
 
