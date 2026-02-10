@@ -988,8 +988,8 @@ if (file.exists(PATH_META)) {
     name = get_chr(meta_raw, "name", "eisfall", "icefall"),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
-    latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
-    longitude = to_num(get_chr(meta_raw, "longitude", "lon"))
+    latitude = to_num(get_chr(meta_raw, "latitude")),
+    longitude = to_num(get_chr(meta_raw, "longitude"))
   )
 }
 
@@ -1188,12 +1188,6 @@ sun_today <- sun_today %>%
 
 marker_data <- sun_today %>%
   dplyr::filter(is.finite(latitude), is.finite(longitude))
-
-debug_reference_points <- tibble::tibble(
-  latitude = c(47.2692),
-  longitude = c(11.4041),
-  label = c("Debug-Referenz Innsbruck")
-)
 
 if (nrow(marker_data) == 0) {
   message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
@@ -1549,34 +1543,12 @@ m <- m |>
          var groupLayers = (group && typeof group.getLayers === 'function') ? group.getLayers() : [];
          var groupCount = (groupLayers && groupLayers.length) ? groupLayers.length : 0;
          var vis = (typeof filteredVisible === 'number' && isFinite(filteredVisible)) ? filteredVisible : groupCount;
-         var inView = 0;
-         var mapBounds = (map && typeof map.getBounds === 'function') ? map.getBounds() : null;
-         var latMin = Infinity, latMax = -Infinity, lonMin = Infinity, lonMax = -Infinity;
-         allMarkers.forEach(function(mk){
-           if (!mk || typeof mk.getLatLng !== 'function') return;
-           var ll = mk.getLatLng();
-           if (!ll) return;
-           if (mapBounds && typeof mapBounds.contains === 'function' && mapBounds.contains(ll)) inView += 1;
-           if (isFinite(ll.lat)) {
-             if (ll.lat < latMin) latMin = ll.lat;
-             if (ll.lat > latMax) latMax = ll.lat;
-           }
-           if (isFinite(ll.lng)) {
-             if (ll.lng < lonMin) lonMin = ll.lng;
-             if (ll.lng > lonMax) lonMax = ll.lng;
-           }
-         });
-         var markerBoundsTxt = (isFinite(latMin) && isFinite(latMax) && isFinite(lonMin) && isFinite(lonMax))
-           ? ('Marker bounds: ' + [latMin.toFixed(3), lonMin.toFixed(3), latMax.toFixed(3), lonMax.toFixed(3)].join(', '))
-           : 'Marker bounds: n/a';
          debugStatus.innerHTML =
            '<div><b>Marker total:</b> ' + allMarkers.length + '</div>' +
            '<div><b>Marker sichtbar:</b> ' + vis + '</div>' +
-           '<div><b>Marker im View:</b> ' + inView + '</div>' +
            '<div><b>Group layers:</b> ' + groupCount + '</div>' +
            '<div><b>Zoom:</b> ' + (isFinite(zoom) ? zoom : 'n/a') + '</div>' +
-           '<div>' + boundsTxt + '</div>' +
-           '<div>' + markerBoundsTxt + '</div>';
+           '<div>' + boundsTxt + '</div>';
        }
 
        function inRange(v, min, max, minEl, maxEl){
@@ -1694,8 +1666,6 @@ m <- m |>
        applyFilter();
        if (map && typeof map.on === 'function') {
          map.on('moveend zoomend overlayadd overlayremove', function(){
-           ensureGroupVisible('Eisfälle', group);
-           if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
            updateDebugInfo();
          });
        }
@@ -1762,18 +1732,6 @@ m <- m |>
     options     = pathOptions(pane = "icefallsPane"),
     popup       = ~popup,
     group       = "Eisfälle"
-  ) |>
-  addCircleMarkers(
-    data        = debug_reference_points,
-    lng         = ~longitude,
-    lat         = ~latitude,
-    radius      = 8,
-    color       = "#b91c1c",
-    weight      = 2,
-    fillColor   = "#ef4444",
-    fillOpacity = 0.95,
-    popup       = ~label,
-    group       = "Debug Referenz"
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
