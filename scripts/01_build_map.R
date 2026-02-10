@@ -1358,7 +1358,7 @@ m <- m |>
        }
 
        var group = getGroup();
-       if (!group || typeof group.getLayers !== 'function') {
+       if (!group || typeof group.getLayers !== 'function' || typeof group.addLayer !== 'function' || typeof group.clearLayers !== 'function') {
          status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
        }
@@ -1466,9 +1466,21 @@ m <- m |>
        }
 
        function collectMarkers(){
-         return (group.getLayers ? group.getLayers().slice() : []).filter(function(l){
-           return l && typeof l.getLatLng === 'function';
-         });
+         var out = [];
+         function visit(layer){
+           if (!layer) return;
+           if (typeof layer.getLatLng === 'function') {
+             out.push(layer);
+             return;
+           }
+           if (typeof layer.getLayers === 'function') {
+             var children = layer.getLayers() || [];
+             children.forEach(visit);
+           }
+         }
+         var roots = group.getLayers ? group.getLayers() : [];
+         (roots || []).forEach(visit);
+         return out;
        }
 
        var allMarkers = collectMarkers();
