@@ -1519,6 +1519,19 @@ m <- m |>
            }
            return;
          }
+
+         var filterActive = !!term ||
+           !isDefaultRange(aMin, aMax) ||
+           !isDefaultRange(mMin, mMax) ||
+           !isDefaultRange(wiMin, wiMax) ||
+           !isDefaultRange(rMin, rMax) ||
+           !isDefaultRange(sunMin, sunMax);
+
+         if (!filterActive) {
+           status.textContent = allMarkers.length + ' / ' + allMarkers.length + ' Eisfälle';
+           return;
+         }
+
          updateRangeLabels();
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
