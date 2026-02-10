@@ -1514,7 +1514,7 @@ m <- m |>
            '<div><b>Marker sichtbar:</b> ' + vis + '</div>' +
            '<div><b>Group layers:</b> ' + groupCount + '</div>' +
            '<div><b>Zoom:</b> ' + (isFinite(zoom) ? zoom : 'n/a') + '</div>' +
-           '<div style=\'margin-top:4px;word-break:break-word;\'>' + boundsTxt + '</div>';
+           '<div style="margin-top:4px;word-break:break-word;">' + boundsTxt + '</div>';
        }
 
        function inRange(v, min, max, minEl, maxEl){
