@@ -46,7 +46,7 @@ END_DATE_EXT <- as.Date(NOW_LOCAL + hours(FORECAST_HOURS))
 
 PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
-PATH_SUN      <- "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv"
+DIR_SUN       <- "data/suntime"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
@@ -549,7 +549,7 @@ get_station_tlrf <- function(start_date, end_date, station_id, source) {
 # =====================================================================
 # 1) Inputs laden (nur benötigte Spalten -> schneller)
 # =====================================================================
-stopifnot(file.exists(PATH_ASSIGN), file.exists(PATH_STATIONS), file.exists(PATH_SUN), file.exists(PATH_WINDLUT))
+stopifnot(file.exists(PATH_ASSIGN), file.exists(PATH_STATIONS), dir.exists(DIR_SUN), file.exists(PATH_WINDLUT))
 
 assign <- readr::read_csv(
   PATH_ASSIGN, show_col_types = FALSE, progress = FALSE
@@ -558,12 +558,37 @@ stations_all <- readr::read_csv(
   PATH_STATIONS, show_col_types = FALSE, progress = FALSE,
   col_select = dplyr::any_of(c("station_id","altitude_m"))
 )
-sun_all <- readr::read_csv(
-  PATH_SUN, show_col_types = FALSE, progress = FALSE,
-  col_select = dplyr::any_of(c("uid","name","date","sunrise_topo","sunset_topo","sun_hours_topo"))
-)
-if (!"sun_hours_topo" %in% names(sun_all)) {
-  sun_all$sun_hours_topo <- NA_real_
+find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
+  uid_i <- suppressWarnings(as.integer(uid))
+  if (!is.finite(uid_i)) return(NA_character_)
+  cand <- c(
+    file.path(dir_sun, sprintf("sun_uid_%03d.csv", uid_i)),
+    file.path(dir_sun, sprintf("sun_uid_%d.csv", uid_i))
+  )
+  hit <- cand[file.exists(cand)]
+  if (length(hit) == 0) return(NA_character_)
+  hit[[1]]
+}
+
+sun_file <- find_sun_file_for_uid(UID_TEST)
+if (is.na(sun_file)) {
+  message("⚠️ Fehlende Sun-Dateien für UIDs: ", sprintf("%03d", UID_TEST))
+  sun_all <- tibble(
+    uid = integer(),
+    name = character(),
+    date = as.Date(character()),
+    sunrise_topo = character(),
+    sunset_topo = character(),
+    sun_hours_topo = numeric()
+  )
+} else {
+  sun_all <- readr::read_csv(
+    sun_file, show_col_types = FALSE, progress = FALSE,
+    col_select = dplyr::any_of(c("uid","name","date","sunrise_topo","sunset_topo","sun_hours_topo"))
+  )
+  if (!"sun_hours_topo" %in% names(sun_all)) {
+    sun_all$sun_hours_topo <- NA_real_
+  }
 }
 wind_lut <- readr::read_csv(
   PATH_WINDLUT, show_col_types = FALSE, progress = FALSE,
@@ -617,7 +642,7 @@ if (all(is.na(sun_uid$sun_hours_topo))) {
     )
 }
 
-if (nrow(sun_uid) == 0) stop("Keine Sun-Daten für uid ", UID_TEST)
+if (nrow(sun_uid) == 0) message("⚠️ Keine Sun-Daten für uid ", UID_TEST, " (topo_sun_fac bleibt 0)")
 
 wind_uid <- wind_lut %>%
   filter(uid == UID_TEST) %>%

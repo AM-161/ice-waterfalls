@@ -924,17 +924,42 @@ for (i in seq_len(n_steps)) {
 
 # 11) Eisfall-Sonnendaten + Topo-URLs ---------------------------------
 
-sun_df <- readr::read_csv(
-  "data/Koordinaten_Wasserfaelle/icefalls_sun_horizon.csv",
-  show_col_types = FALSE
-)
+DIR_SUN <- "data/suntime"
 
-# --- PATCH: uid + date richtig typisieren (sonst ist sun_today oft leer) ---
-sun_df <- sun_df %>%
-  dplyr::mutate(
-    uid  = as.integer(readr::parse_number(as.character(uid))),
-    date = as.Date(date)
+find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
+  uid_i <- suppressWarnings(as.integer(uid))
+  if (!is.finite(uid_i)) return(NA_character_)
+  cand <- c(
+    file.path(dir_sun, sprintf("sun_uid_%03d.csv", uid_i)),
+    file.path(dir_sun, sprintf("sun_uid_%d.csv", uid_i))
   )
+  hit <- cand[file.exists(cand)]
+  if (length(hit) == 0) return(NA_character_)
+  hit[[1]]
+}
+
+load_sun_for_uids <- function(uids, dir_sun = DIR_SUN) {
+  out <- vector("list", length(uids))
+  missing_uids <- integer(0)
+  for (i in seq_along(uids)) {
+    uid <- as.integer(uids[[i]])
+    f <- find_sun_file_for_uid(uid, dir_sun = dir_sun)
+    if (is.na(f)) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    df <- tryCatch(readr::read_csv(f, show_col_types = FALSE), error = function(e) NULL)
+    if (is.null(df) || nrow(df) == 0) {
+      missing_uids <- c(missing_uids, uid)
+      next
+    }
+    out[[i]] <- df
+  }
+  list(
+    data = dplyr::bind_rows(out),
+    missing_uids = sort(unique(missing_uids))
+  )
+}
 
 # Optional meta (difficulty) for map filters
 PATH_META <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
@@ -967,6 +992,63 @@ if (file.exists(PATH_META)) {
   )
 }
 
+if (!dir.exists(DIR_SUN)) {
+  message("⚠️ Sun-Verzeichnis fehlt: ", DIR_SUN)
+}
+
+expected_uids <- if (!is.null(meta_map) && "uid" %in% names(meta_map)) {
+  sort(unique(meta_map$uid[is.finite(meta_map$uid)]))
+} else {
+  integer(0)
+}
+
+if (length(expected_uids) > 0) {
+  if (dir.exists(DIR_SUN)) {
+    sun_loaded <- load_sun_for_uids(expected_uids, dir_sun = DIR_SUN)
+    if (length(sun_loaded$missing_uids) > 0) {
+      message(
+        "⚠️ Fehlende Sun-Dateien für UIDs: ",
+        paste(sprintf("%03d", sun_loaded$missing_uids), collapse = ", ")
+      )
+    }
+    sun_df <- sun_loaded$data
+  } else {
+    message(
+      "⚠️ Fehlende Sun-Dateien für UIDs: ",
+      paste(sprintf("%03d", expected_uids), collapse = ", ")
+    )
+    sun_df <- tibble::tibble()
+  }
+} else {
+  if (dir.exists(DIR_SUN)) {
+    sun_files <- sort(list.files(DIR_SUN, pattern = "^sun_uid_\\d+\\.csv$", full.names = TRUE))
+    if (length(sun_files) == 0) {
+      message("⚠️ Keine Sun-Dateien gefunden in: ", DIR_SUN)
+      sun_df <- tibble::tibble()
+    } else {
+      sun_df <- dplyr::bind_rows(lapply(sun_files, function(f) readr::read_csv(f, show_col_types = FALSE)))
+    }
+  } else {
+    sun_df <- tibble::tibble()
+  }
+}
+
+if (nrow(sun_df) == 0) {
+  sun_df <- tibble::tibble(
+    uid = integer(),
+    date = as.Date(character()),
+    sunrise_topo = as.POSIXct(character(), tz = "UTC"),
+    sunset_topo = as.POSIXct(character(), tz = "UTC"),
+    sun_hours_topo = numeric()
+  )
+}
+
+sun_df <- sun_df %>%
+  dplyr::mutate(
+    uid  = as.integer(readr::parse_number(as.character(uid))),
+    date = as.Date(date)
+  )
+
 if (!inherits(sun_df$sunrise_topo, "POSIXt")) {
   sun_df <- sun_df %>%
     mutate(
@@ -993,7 +1075,7 @@ if (nrow(sun_today) == 0) {
 }
 
 if (nrow(sun_today) == 0) {
-  stop("sun_today ist leer – prüfe icefalls_sun_horizon.csv (Spaltennamen / date-Typ).")
+  message("⚠️ sun_today ist leer – es werden keine Sonnenzeiten angezeigt.")
 }
 
 if (!is.null(meta_map)) {
