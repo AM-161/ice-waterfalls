@@ -1383,6 +1383,31 @@ m <- m |>
          return;
        }
 
+       function ensureGroupVisible(groupName, layerGroup){
+         try {
+           if (map.layerManager && typeof map.layerManager.showGroup === 'function' && groupName) {
+             map.layerManager.showGroup(groupName);
+           }
+         } catch(e) {}
+         try {
+           if (layerGroup && typeof layerGroup.addTo === 'function' && typeof map.hasLayer === 'function' && !map.hasLayer(layerGroup)) {
+             layerGroup.addTo(map);
+           }
+         } catch(e) {}
+       }
+
+       ensureGroupVisible('Eisfälle', group);
+       var debugGroup = null;
+       try {
+         if (map.layerManager && typeof map.layerManager.getLayerGroup === 'function') {
+           debugGroup = map.layerManager.getLayerGroup('Debug Referenz');
+         }
+         if (!debugGroup && map.layerManager && map.layerManager._byGroup) {
+           debugGroup = map.layerManager._byGroup['Debug Referenz'];
+         }
+       } catch(e) {}
+       if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
+
        function num(x){
          var n = Number(x);
          return isFinite(n) ? n : NaN;
