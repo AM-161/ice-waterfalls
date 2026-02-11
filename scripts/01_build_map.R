@@ -1601,8 +1601,8 @@ m <- m |>
            var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
            if (term && blob.indexOf(term) === -1) return;
            if (diffTerm) {
-             var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\s+/g, '');
-             var diffNeedle = diffTerm.replace(/\s+/g, '');
+            var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\\s+/g, '');
+            var diffNeedle = diffTerm.replace(/\\s+/g, '');
              if (diffBlob.indexOf(diffNeedle) === -1) {
                var parsedSearch = parseDifficulty(diffTerm);
                var match = false;
