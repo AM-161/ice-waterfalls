@@ -992,8 +992,8 @@ if (file.exists(PATH_META)) {
     name = get_chr(meta_raw, "name", "eisfall", "icefall"),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
     topo_url = get_chr(meta_raw, "topo_url"),
-    latitude = to_num(get_chr(meta_raw, "latitude", "lat")),
-    longitude = to_num(get_chr(meta_raw, "longitude", "lon"))
+    latitude = to_num(get_chr(meta_raw, "latitude")),
+    longitude = to_num(get_chr(meta_raw, "longitude"))
   )
 }
 
@@ -1310,6 +1310,15 @@ m <- m |>
       "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
+  addControl(
+    position = "bottomleft",
+    html = htmltools::HTML(
+      "<details id='map-debug' style='background:rgba(255,255,255,0.96);padding:6px 8px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:230px;max-width:320px;'>
+         <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Debug Marker</summary>
+         <div id='mapDebugStatus' style='margin-top:6px;font-size:12px;line-height:1.35;color:#374151;'></div>
+       </details>"
+    )
+  ) |>
   htmlwidgets::onRender(
     "function(el, x) {
        var style = document.createElement('style');
@@ -1514,6 +1523,57 @@ m <- m |>
 
        var allMarkers = collectMarkers();
 
+       function updateDebugInfo(filteredVisible) {
+         if (!debugStatus) return;
+         var zoom = (map && typeof map.getZoom === 'function') ? map.getZoom() : NaN;
+         var b = (map && typeof map.getBounds === 'function') ? map.getBounds() : null;
+         var boundsTxt = 'Bounds: n/a';
+         if (b && b.getSouthWest && b.getNorthEast) {
+           var sw = b.getSouthWest();
+           var ne = b.getNorthEast();
+           boundsTxt = 'Bounds: ' + [sw.lat.toFixed(3), sw.lng.toFixed(3), ne.lat.toFixed(3), ne.lng.toFixed(3)].join(', ');
+         }
+         var groupLayers = (group && typeof group.getLayers === 'function') ? group.getLayers() : [];
+         var groupCount = (groupLayers && groupLayers.length) ? groupLayers.length : 0;
+         var vis = (typeof filteredVisible === 'number' && isFinite(filteredVisible)) ? filteredVisible : groupCount;
+         var inView = 0;
+         var mapBounds = (map && typeof map.getBounds === 'function') ? map.getBounds() : null;
+         var latMin = Infinity, latMax = -Infinity, lonMin = Infinity, lonMax = -Infinity;
+         allMarkers.forEach(function(mk){
+           if (!mk || typeof mk.getLatLng !== 'function') return;
+           var ll = mk.getLatLng();
+           if (!ll) return;
+           if (mapBounds && typeof mapBounds.contains === 'function' && mapBounds.contains(ll)) inView += 1;
+           if (isFinite(ll.lat)) {
+             if (ll.lat < latMin) latMin = ll.lat;
+             if (ll.lat > latMax) latMax = ll.lat;
+           }
+           if (isFinite(ll.lng)) {
+             if (ll.lng < lonMin) lonMin = ll.lng;
+             if (ll.lng > lonMax) lonMax = ll.lng;
+           }
+         });
+         var markerBoundsTxt = (isFinite(latMin) && isFinite(latMax) && isFinite(lonMin) && isFinite(lonMax))
+           ? ('Marker bounds: ' + [latMin.toFixed(3), lonMin.toFixed(3), latMax.toFixed(3), lonMax.toFixed(3)].join(', '))
+           : 'Marker bounds: n/a';
+         var firstMarkerTxt = 'First marker: n/a';
+         if (allMarkers.length > 0 && allMarkers[0] && typeof allMarkers[0].getLatLng === 'function') {
+           var fll = allMarkers[0].getLatLng();
+           if (fll && isFinite(fll.lat) && isFinite(fll.lng)) {
+             firstMarkerTxt = 'First marker: ' + fll.lat.toFixed(4) + ', ' + fll.lng.toFixed(4);
+           }
+         }
+         debugStatus.innerHTML =
+           '<div><b>Marker total:</b> ' + allMarkers.length + '</div>' +
+           '<div><b>Marker sichtbar:</b> ' + vis + '</div>' +
+           '<div><b>Marker im View:</b> ' + inView + '</div>' +
+           '<div><b>Group layers:</b> ' + groupCount + '</div>' +
+           '<div><b>Zoom:</b> ' + (isFinite(zoom) ? zoom : 'n/a') + '</div>' +
+           '<div>' + boundsTxt + '</div>' +
+           '<div>' + markerBoundsTxt + '</div>' +
+           '<div>' + firstMarkerTxt + '</div>';
+       }
+
        function inRange(v, min, max, minEl, maxEl){
          if (!isFinite(min) && !isFinite(max)) return true;
          // Unbekannte Werte (NA/NaN) nicht hart ausfiltern:
@@ -1538,6 +1598,7 @@ m <- m |>
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
+           updateDebugInfo(0);
            if (!map._filterRetry) {
              map._filterRetry = true;
              setTimeout(function(){
@@ -1603,6 +1664,7 @@ m <- m |>
          parts.push(formatRange('R', rTxt, ''));
          parts.push('Sonne ' + sunTxt);
          status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
+         updateDebugInfo(visible);
        }
 
        input.addEventListener('input', applyFilter);
@@ -1695,7 +1757,7 @@ m <- m |>
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle", "Debug Referenz", "Debug Eisfall-Sample"),
     options       = layersControlOptions(collapsed = FALSE)
   )
 
