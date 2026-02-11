@@ -1543,15 +1543,13 @@ m <- m |>
 
        var allMarkers = collectMarkers();
 
-       function inRange(v, min, max, minEl, maxEl){
-         if (!isFinite(min) && !isFinite(max)) return true;
-         // Unbekannte Werte (NA/NaN) nicht hart ausfiltern:
-         // Ein versehentlich leicht verschobener Slider darf nicht nahezu alle Marker verstecken.
-         if (!isFinite(v)) return true;
-         if (isFinite(min) && v < min) return false;
-         if (isFinite(max) && v > max) return false;
-         return true;
-       }
+      function inRange(v, min, max, minEl, maxEl){
+        if (!isFinite(min) && !isFinite(max)) return true;
+        if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
+        if (isFinite(min) && v < min) return false;
+        if (isFinite(max) && v > max) return false;
+        return true;
+      }
 
        function resetFilters(){
          input.value = '';
@@ -1577,19 +1575,7 @@ m <- m |>
            return;
          }
 
-         var filterActive = !!term ||
-           !isDefaultRange(aMin, aMax) ||
-           !isDefaultRange(mMin, mMax) ||
-           !isDefaultRange(wiMin, wiMax) ||
-           !isDefaultRange(rMin, rMax) ||
-           !isDefaultRange(sunMin, sunMax);
-
-         if (!filterActive) {
-           status.textContent = allMarkers.length + ' / ' + allMarkers.length + ' Eisfälle';
-           return;
-         }
-
-         updateRangeLabels();
+        updateRangeLabels();
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
          var w = clampMinMax(wiMin, wiMax);
@@ -1629,7 +1615,7 @@ m <- m |>
          parts.push(formatRange('A', aTxt, ''));
          parts.push(formatRange('M', mTxt, ''));
          parts.push(formatRange('WI', wiTxt, ''));
-         parts.push(formatRange('R', rTxt, ''));
+         parts.push(formatRange('Fels', rTxt, ''));
          parts.push('Sonne ' + sunTxt);
          status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
        }
