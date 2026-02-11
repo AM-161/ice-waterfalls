@@ -1357,6 +1357,7 @@ m <- m |>
        var map = this;
        var input = el.querySelector('#mapFilterInput');
        var status = el.querySelector('#mapFilterStatus');
+       var diffInput = el.querySelector('#mapDifficultyInput');
        var geoBtn = el.querySelector('#mapUseGeo');
        var geoStatus = el.querySelector('#mapGeoStatus');
        var aMin = el.querySelector('#mapAmin');
@@ -1553,6 +1554,7 @@ m <- m |>
 
        function resetFilters(){
          input.value = '';
+         if (diffInput) diffInput.value = '';
          [[aMin, aMax], [mMin, mMax], [wiMin, wiMax], [rMin, rMax], [sunMin, sunMax]].forEach(function(pair){
            var mn = pair[0], mx = pair[1];
            if (mn && mn.min !== undefined) mn.value = mn.min;
@@ -1562,6 +1564,7 @@ m <- m |>
 
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
+         var diffTerm = diffInput ? diffInput.value.trim().toLowerCase() : '';
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
@@ -1597,6 +1600,20 @@ m <- m |>
            var meta = layerMeta(layer);
            var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
            if (term && blob.indexOf(term) === -1) return;
+           if (diffTerm) {
+             var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\s+/g, '');
+             var diffNeedle = diffTerm.replace(/\s+/g, '');
+             if (diffBlob.indexOf(diffNeedle) === -1) {
+               var parsedSearch = parseDifficulty(diffTerm);
+               var match = false;
+               function sameGrade(v, q){ return isFinite(v) && isFinite(q) && Math.abs(v - q) <= 0.26; }
+               if (isFinite(parsedSearch.a) && sameGrade(meta.grades.a, parsedSearch.a)) match = true;
+               if (isFinite(parsedSearch.m) && sameGrade(meta.grades.m, parsedSearch.m)) match = true;
+               if (isFinite(parsedSearch.wi) && sameGrade(meta.grades.wi, parsedSearch.wi)) match = true;
+               if (isFinite(parsedSearch.r) && sameGrade(meta.grades.r, parsedSearch.r)) match = true;
+               if (!match) return;
+             }
+           }
            if (!inRange(meta.grades.a, aMinVal, aMaxVal, aMin, aMax)) return;
            if (!inRange(meta.grades.m, mMinVal, mMaxVal, mMin, mMax)) return;
            if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal, wiMin, wiMax)) return;
@@ -1607,6 +1624,7 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
+         if (diffTerm) parts.push('Grad: ' + diffTerm);
          var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
          var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
          var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
@@ -1621,6 +1639,7 @@ m <- m |>
        }
 
        input.addEventListener('input', applyFilter);
+       if (diffInput) diffInput.addEventListener('input', applyFilter);
        if (aMin) aMin.addEventListener('input', applyFilter);
        if (aMax) aMax.addEventListener('input', applyFilter);
        if (mMin) mMin.addEventListener('input', applyFilter);
