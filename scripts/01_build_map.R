@@ -1330,7 +1330,7 @@ m <- m |>
   addControl(
     position = "bottomright",
     html = htmltools::HTML(
-      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <button id='mapFilterReset' type='button' style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>Filter zurücksetzen</button>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'></div>\n        </div>\n      </details>"
+      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;width:340px;max-width:calc(100vw - 24px);box-sizing:border-box;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <button id='mapFilterReset' type='button' style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>Filter zurücksetzen</button>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;'></div>\n        </div>\n      </details>"
     )
   )  |>
   addControl(
@@ -1357,6 +1357,7 @@ m <- m |>
        var map = this;
        var input = el.querySelector('#mapFilterInput');
        var status = el.querySelector('#mapFilterStatus');
+       var diffInput = el.querySelector('#mapDifficultyInput');
        var geoBtn = el.querySelector('#mapUseGeo');
        var geoStatus = el.querySelector('#mapGeoStatus');
        var aMin = el.querySelector('#mapAmin');
@@ -1553,6 +1554,7 @@ m <- m |>
 
        function resetFilters(){
          input.value = '';
+         if (diffInput) diffInput.value = '';
          [[aMin, aMax], [mMin, mMax], [wiMin, wiMax], [rMin, rMax], [sunMin, sunMax]].forEach(function(pair){
            var mn = pair[0], mx = pair[1];
            if (mn && mn.min !== undefined) mn.value = mn.min;
@@ -1562,6 +1564,7 @@ m <- m |>
 
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
+         var diffTerm = diffInput ? diffInput.value.trim().toLowerCase() : '';
          if (!allMarkers.length) allMarkers = collectMarkers();
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
@@ -1597,6 +1600,20 @@ m <- m |>
            var meta = layerMeta(layer);
            var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
            if (term && blob.indexOf(term) === -1) return;
+           if (diffTerm) {
+             var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\s+/g, '');
+             var diffNeedle = diffTerm.replace(/\s+/g, '');
+             if (diffBlob.indexOf(diffNeedle) === -1) {
+               var parsedSearch = parseDifficulty(diffTerm);
+               var match = false;
+               function sameGrade(v, q){ return isFinite(v) && isFinite(q) && Math.abs(v - q) <= 0.26; }
+               if (isFinite(parsedSearch.a) && sameGrade(meta.grades.a, parsedSearch.a)) match = true;
+               if (isFinite(parsedSearch.m) && sameGrade(meta.grades.m, parsedSearch.m)) match = true;
+               if (isFinite(parsedSearch.wi) && sameGrade(meta.grades.wi, parsedSearch.wi)) match = true;
+               if (isFinite(parsedSearch.r) && sameGrade(meta.grades.r, parsedSearch.r)) match = true;
+               if (!match) return;
+             }
+           }
            if (!inRange(meta.grades.a, aMinVal, aMaxVal, aMin, aMax)) return;
            if (!inRange(meta.grades.m, mMinVal, mMaxVal, mMin, mMax)) return;
            if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal, wiMin, wiMax)) return;
@@ -1607,6 +1624,7 @@ m <- m |>
          });
          var parts = [];
          if (term) parts.push('Suche: ' + term);
+         if (diffTerm) parts.push('Grad: ' + diffTerm);
          var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
          var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
          var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
@@ -1621,6 +1639,7 @@ m <- m |>
        }
 
        input.addEventListener('input', applyFilter);
+       if (diffInput) diffInput.addEventListener('input', applyFilter);
        if (aMin) aMin.addEventListener('input', applyFilter);
        if (aMax) aMax.addEventListener('input', applyFilter);
        if (mMin) mMin.addEventListener('input', applyFilter);
@@ -1699,6 +1718,12 @@ m <- m |>
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
+    radius      = 5,
+    color       = "#0b3d91",
+    weight      = 2,
+    fillColor   = "#ffd166",
+    fillOpacity = 0.9,
+    options     = pathOptions(pane = "icefallsPane"),
     clusterOptions = markerClusterOptions(
       showCoverageOnHover = FALSE,
       spiderfyOnMaxZoom = TRUE,
