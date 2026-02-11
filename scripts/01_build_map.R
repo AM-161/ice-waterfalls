@@ -1718,11 +1718,6 @@ m <- m |>
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
-    radius      = 5,
-    color       = "#0b3d91",
-    weight      = 2,
-    fillColor   = "#ffd166",
-    fillOpacity = 0.9,
     options     = pathOptions(pane = "icefallsPane"),
     clusterOptions = markerClusterOptions(
       showCoverageOnHover = FALSE,
