@@ -975,13 +975,17 @@ if (file.exists(PATH_META)) {
   }
   to_num <- function(x) {
     if (is.null(x)) return(NA_real_)
-    if (is.numeric(x)) return(x)
     x <- as.character(x)
     x[x %in% c("", "NA", "NaN", "NULL")] <- NA_character_
     x <- gsub(",", ".", x, fixed = TRUE)
     suppressWarnings(as.numeric(x))
   }
-  meta_raw <- readr::read_delim(PATH_META, delim = ";", show_col_types = FALSE) %>%
+  meta_raw <- readr::read_delim(
+    PATH_META,
+    delim = ";",
+    col_types = readr::cols(.default = readr::col_character()),
+    show_col_types = FALSE
+  ) %>%
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
