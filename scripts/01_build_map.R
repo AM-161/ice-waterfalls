@@ -1705,6 +1705,12 @@ m <- m |>
     fillColor   = "#ffd166",
     fillOpacity = 0.9,
     options     = pathOptions(pane = "icefallsPane"),
+    clusterOptions = markerClusterOptions(
+      showCoverageOnHover = FALSE,
+      spiderfyOnMaxZoom = TRUE,
+      zoomToBoundsOnClick = TRUE,
+      disableClusteringAtZoom = 12
+    ),
     popup       = ~popup,
     group       = "Eisfälle"
   ) |>
