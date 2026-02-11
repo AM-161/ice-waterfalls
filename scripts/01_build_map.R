@@ -1245,8 +1245,16 @@ if (isTRUE(preview_mode)) {
          var iceUrl   = 'img/ice_'   + pad3(%d) + '.png';
          var climbUrl = 'img/climb_' + pad3(%d) + '.png';
 
-         var ice   = L.imageOverlay(iceUrl,   bounds, {opacity: 0.8, layerId: 'ice_overlay'});
-         var climb = L.imageOverlay(climbUrl, bounds, {opacity: 0.7, layerId: 'climb_overlay'});
+         var rasterPane = map.getPane('iceRasterPane');
+         if (!rasterPane && typeof map.createPane === 'function') {
+           rasterPane = map.createPane('iceRasterPane');
+         }
+         if (rasterPane && rasterPane.style) {
+           rasterPane.style.zIndex = 250;
+         }
+
+         var ice   = L.imageOverlay(iceUrl,   bounds, {opacity: 0.8, layerId: 'ice_overlay', pane: 'iceRasterPane'});
+         var climb = L.imageOverlay(climbUrl, bounds, {opacity: 0.7, layerId: 'climb_overlay', pane: 'iceRasterPane'});
 
          try {
            if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
@@ -1276,6 +1284,7 @@ if (isTRUE(preview_mode)) {
 }
 
 m <- m |>
+  addMapPane("icefallsPane", zIndex = 650) |>
   addControl(
     position = "topleft",
     html = htmltools::HTML(
@@ -1373,6 +1382,31 @@ m <- m |>
          status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
        }
+
+       function ensureGroupVisible(groupName, layerGroup){
+         try {
+           if (map.layerManager && typeof map.layerManager.showGroup === 'function' && groupName) {
+             map.layerManager.showGroup(groupName);
+           }
+         } catch(e) {}
+         try {
+           if (layerGroup && typeof layerGroup.addTo === 'function' && typeof map.hasLayer === 'function' && !map.hasLayer(layerGroup)) {
+             layerGroup.addTo(map);
+           }
+         } catch(e) {}
+       }
+
+       ensureGroupVisible('Eisfälle', group);
+       var debugGroup = null;
+       try {
+         if (map.layerManager && typeof map.layerManager.getLayerGroup === 'function') {
+           debugGroup = map.layerManager.getLayerGroup('Debug Referenz');
+         }
+         if (!debugGroup && map.layerManager && map.layerManager._byGroup) {
+           debugGroup = map.layerManager._byGroup['Debug Referenz'];
+         }
+       } catch(e) {}
+       if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
 
        function num(x){
          var n = Number(x);
@@ -1695,12 +1729,13 @@ m <- m |>
     weight      = 2,
     fillColor   = "#ffd166",
     fillOpacity = 0.9,
+    options     = pathOptions(pane = "icefallsPane"),
     popup       = ~popup,
     group       = "Eisfälle"
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle", "Debug Referenz"),
     options       = layersControlOptions(collapsed = FALSE)
   )
 
