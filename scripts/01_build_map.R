@@ -1310,15 +1310,6 @@ m <- m |>
       "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
     )
   ) |>
-  addControl(
-    position = "bottomleft",
-    html = htmltools::HTML(
-      "<details id='map-debug' style='background:rgba(255,255,255,0.96);padding:6px 8px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:230px;max-width:320px;'>
-         <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Debug Marker</summary>
-         <div id='mapDebugStatus' style='margin-top:6px;font-size:12px;line-height:1.35;color:#374151;'></div>
-       </details>"
-    )
-  ) |>
   htmlwidgets::onRender(
     "function(el, x) {
        var style = document.createElement('style');
