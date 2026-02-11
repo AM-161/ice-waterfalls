@@ -243,8 +243,10 @@ if (file.exists(PATH_ASSIGN)) {
 # 3) Sun horizons (optional)
 # ----------------------------
 sun <- NULL
+sun_missing_uids <- integer(0)
 if (dir.exists(DIR_SUN)) {
   sun_loaded <- load_sun_for_uids(unique(meta$uid), dir_sun = DIR_SUN)
+  sun_missing_uids <- sun_loaded$missing_uids
   if (length(sun_loaded$missing_uids) > 0) {
     message(
       "⚠️ Fehlende Sun-Dateien für UIDs: ",
@@ -387,6 +389,20 @@ if (!is.null(sun)) {
   out$sun_hours_tomorrow_h <- NA_real_
   out$sun_duration_tomorrow_txt <- NA_character_
 }
+
+out <- out %>%
+  mutate(
+    sun_status = dplyr::case_when(
+      uid %in% sun_missing_uids ~ "missing_file",
+      is.finite(sun_hours_tomorrow_h) & !is.na(sun_tomorrow_range_txt) ~ "has_values",
+      TRUE ~ "no_values_day"
+    ),
+    sun_tomorrow_range_txt = dplyr::case_when(
+      sun_status == "missing_file" ~ "KEINE SONNENDATEN",
+      sun_status == "no_values_day" ~ "keine direkte Sonneneinstrahlung",
+      TRUE ~ sun_tomorrow_range_txt
+    )
+  )
 
 if ("topo_url.y" %in% names(out) || "topo_slug.y" %in% names(out)) {
   out <- out %>%

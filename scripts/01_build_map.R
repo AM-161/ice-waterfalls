@@ -1038,6 +1038,12 @@ if (length(expected_uids) > 0) {
   }
 }
 
+sun_missing_uids <- if (length(expected_uids) > 0) {
+  setdiff(expected_uids, unique(sun_df$uid[is.finite(sun_df$uid)]))
+} else {
+  integer(0)
+}
+
 if (nrow(sun_df) == 0) {
   sun_df <- tibble::tibble(
     uid = integer(),
@@ -1103,13 +1109,25 @@ if (!is.null(meta_map)) {
       ) %>%
       dplyr::mutate(
         name = dplyr::coalesce(.data$name_meta, .data$name_sun),
-        date = dplyr::coalesce(.data$date, sun_date)
+        date = dplyr::coalesce(.data$date, sun_date),
+        sun_status = dplyr::case_when(
+          uid %in% sun_missing_uids ~ "missing_file",
+          is.finite(sun_hours_topo) & !is.na(sunrise_topo) & !is.na(sunset_topo) ~ "has_values",
+          TRUE ~ "no_values_day"
+        )
       ) %>%
       dplyr::select(-dplyr::any_of(c("name_meta", "name_sun")))
   }
 } else {
   sun_today <- sun_today %>%
-    dplyr::mutate(difficulty = NA_character_)
+    dplyr::mutate(
+      difficulty = NA_character_,
+      sun_status = dplyr::if_else(
+        is.finite(sun_hours_topo) & !is.na(sunrise_topo) & !is.na(sunset_topo),
+        "has_values",
+        "no_values_day"
+      )
+    )
 }
 
 if (!"topo_url" %in% names(sun_today)) {
@@ -1170,22 +1188,33 @@ sun_today <- sun_today %>%
     ),
     
     popup = ifelse(
-      is.na(sun_hours_topo) | is.na(sunrise_topo) | is.na(sunset_topo),
+      sun_status == "missing_file",
       paste0(
         map_meta,
         sprintf(
-          "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung<br/>%s",
+          "<b>%s</b><br/>Sonne am %s: KEINE SONNENDATEN<br/>%s",
           name, date_txt, link_txt
         ),
         plot_block
       ),
-      paste0(
-        map_meta,
-        sprintf(
-          "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)<br/>%s",
-          name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, link_txt
+      ifelse(
+        is.na(sun_hours_topo) | is.na(sunrise_topo) | is.na(sunset_topo),
+        paste0(
+          map_meta,
+          sprintf(
+          "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung<br/>%s",
+          name, date_txt, link_txt
+          ),
+          plot_block
         ),
-        plot_block
+        paste0(
+          map_meta,
+          sprintf(
+            "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)<br/>%s",
+            name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, link_txt
+          ),
+          plot_block
+        )
       )
     )
   )
