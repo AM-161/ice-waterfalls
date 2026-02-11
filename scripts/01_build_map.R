@@ -1714,7 +1714,7 @@ m <- m |>
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addCircleMarkers(
+  addMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
