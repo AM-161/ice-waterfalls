@@ -338,8 +338,8 @@
           <td>${rTxt}</td>
           <td>${isFinite(num(r.elev_m)) ? Math.round(num(r.elev_m)) : "<span class=muted>&mdash;</span>"}</td>
           <td>${isFinite(num(r._dist_km)) ? (num(r._dist_km).toFixed(1) + " km") : "<span class=muted>&mdash;</span>"}</td>
-          <td>${str(r.sun_tomorrow_range_txt) || "<span class=muted>&mdash;</span>"}</td>
-          <td>${isFinite(num(r.sun_hours_tomorrow_h)) ? (num(r.sun_hours_tomorrow_h).toFixed(1) + " h") : "<span class=muted>&mdash;</span>"}</td>
+          <td>${str(r.sun_tomorrow_range_txt) || "Keine Sonnendaten"}</td>
+          <td>${isFinite(num(r.sun_hours_tomorrow_h)) ? (num(r.sun_hours_tomorrow_h).toFixed(1) + " h") : "Keine Sonnendaten"}</td>
           <td>${r.thickness_tomorrow_07_txt || "<span class=muted>&mdash;</span>"}</td>
           <td>${r.climb_max_tomorrow_txt || "<span class=muted>&mdash;</span>"}</td>
           <td>${str(r.climb_max_time_local) || "<span class=muted>&mdash;</span>"}</td>
@@ -589,7 +589,7 @@
         render();
         return;
       }
-    } catch(e) { console.error("Embedded Base64 parse failed", e); }
+    } catch(e) {}
 
     status.textContent = "Kein embedded JSON gefunden. Versuche fetch() ...";
     const candidates = ["icefalls_table.json", "./icefalls_table.json", "../icefalls_table.json", "site/icefalls_table.json", "./site/icefalls_table.json", "../site/icefalls_table.json"];
@@ -609,5 +609,5 @@
         status.textContent = `Daten geladen: ${rows.length} Eintraege (Quelle: ${res.url})`;
         render();
       })
-      .catch(err => { status.textContent = "Fehler beim Laden: " + err; console.error(err); });
+      .catch(err => { status.textContent = "Fehler beim Laden: " + err; });
   })();
