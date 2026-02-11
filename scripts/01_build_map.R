@@ -1601,8 +1601,8 @@ m <- m |>
            var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
            if (term && blob.indexOf(term) === -1) return;
            if (diffTerm) {
-             var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\s+/g, '');
-             var diffNeedle = diffTerm.replace(/\s+/g, '');
+            var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\\s+/g, '');
+            var diffNeedle = diffTerm.replace(/\\s+/g, '');
              if (diffBlob.indexOf(diffNeedle) === -1) {
                var parsedSearch = parseDifficulty(diffTerm);
                var match = false;
@@ -1714,7 +1714,7 @@ m <- m |>
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addMarkers(
+  addCircleMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
@@ -1732,12 +1732,23 @@ m <- m |>
     ),
     popup       = ~popup,
     group       = "Eisfälle"
-  ) |>
-  addLayersControl(
-    baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
-    options       = layersControlOptions(collapsed = FALSE)
   )
+
+if (isTRUE(preview_mode)) {
+  m <- m |>
+    addLayersControl(
+      baseGroups    = c("OSM", "Gelände (Topo)"),
+      overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+      options       = layersControlOptions(collapsed = FALSE)
+    )
+} else {
+  m <- m |>
+    addLayersControl(
+      baseGroups    = c("OSM", "Gelände (Topo)"),
+      overlayGroups = c("Eisfälle"),
+      options       = layersControlOptions(collapsed = FALSE)
+    )
+}
 
 # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
 m <- m |>
