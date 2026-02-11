@@ -1193,19 +1193,6 @@ sun_today <- sun_today %>%
 marker_data <- sun_today %>%
   dplyr::filter(is.finite(latitude), is.finite(longitude))
 
-debug_reference_points <- tibble::tibble(
-  latitude = c(47.2692),
-  longitude = c(11.4041),
-  label = c("Debug-Referenz Innsbruck")
-)
-
-debug_sample_points <- marker_data %>%
-  dplyr::filter(is.finite(latitude), is.finite(longitude)) %>%
-  dplyr::slice_head(n = 40) %>%
-  dplyr::mutate(
-    debug_label = paste0("Debug Sample · UID ", uid, ifelse(!is.na(name) & name != "", paste0(" · ", name), ""))
-  )
-
 if (nrow(marker_data) == 0) {
   message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
 } else {
@@ -1368,7 +1355,6 @@ m <- m |>
        var rRangeTxt = el.querySelector('#mapRRangeTxt');
        var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
        var resetBtn = el.querySelector('#mapFilterReset');
-       var debugStatus = el.querySelector('#mapDebugStatus');
        if (!input || !status) return;
        if (typeof L !== 'undefined') {
          var filterBox = el.querySelector('#map-filter');
@@ -1414,26 +1400,6 @@ m <- m |>
        }
 
        ensureGroupVisible('Eisfälle', group);
-       var debugGroup = null;
-       try {
-         if (map.layerManager && typeof map.layerManager.getLayerGroup === 'function') {
-           debugGroup = map.layerManager.getLayerGroup('Debug Referenz');
-         }
-         if (!debugGroup && map.layerManager && map.layerManager._byGroup) {
-           debugGroup = map.layerManager._byGroup['Debug Referenz'];
-         }
-       } catch(e) {}
-       if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
-       var debugSampleGroup = null;
-       try {
-         if (map.layerManager && typeof map.layerManager.getLayerGroup === 'function') {
-           debugSampleGroup = map.layerManager.getLayerGroup('Debug Eisfall-Sample');
-         }
-         if (!debugSampleGroup && map.layerManager && map.layerManager._byGroup) {
-           debugSampleGroup = map.layerManager._byGroup['Debug Eisfall-Sample'];
-         }
-       } catch(e) {}
-       if (debugSampleGroup) ensureGroupVisible('Debug Eisfall-Sample', debugSampleGroup);
 
        function num(x){
          var n = Number(x);
@@ -1652,7 +1618,6 @@ m <- m |>
 
          if (!filterActive) {
            status.textContent = allMarkers.length + ' / ' + allMarkers.length + ' Eisfälle';
-           updateDebugInfo(allMarkers.length);
            return;
          }
 
@@ -1724,9 +1689,6 @@ m <- m |>
        if (map && typeof map.on === 'function') {
          map.on('moveend zoomend overlayadd overlayremove', function(){
            ensureGroupVisible('Eisfälle', group);
-           if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
-           if (debugSampleGroup) ensureGroupVisible('Debug Eisfall-Sample', debugSampleGroup);
-           updateDebugInfo();
          });
        }
 
@@ -1792,30 +1754,6 @@ m <- m |>
     options     = pathOptions(pane = "icefallsPane"),
     popup       = ~popup,
     group       = "Eisfälle"
-  ) |>
-  addCircleMarkers(
-    data        = debug_reference_points,
-    lng         = ~longitude,
-    lat         = ~latitude,
-    radius      = 8,
-    color       = "#b91c1c",
-    weight      = 2,
-    fillColor   = "#ef4444",
-    fillOpacity = 0.95,
-    popup       = ~label,
-    group       = "Debug Referenz"
-  ) |>
-  addCircleMarkers(
-    data        = debug_sample_points,
-    lng         = ~longitude,
-    lat         = ~latitude,
-    radius      = 9,
-    color       = "#7e22ce",
-    weight      = 2,
-    fillColor   = "#d946ef",
-    fillOpacity = 0.95,
-    popup       = ~debug_label,
-    group       = "Debug Eisfall-Sample"
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
