@@ -1189,6 +1189,19 @@ sun_today <- sun_today %>%
 marker_data <- sun_today %>%
   dplyr::filter(is.finite(latitude), is.finite(longitude))
 
+debug_reference_points <- tibble::tibble(
+  latitude = c(47.2692),
+  longitude = c(11.4041),
+  label = c("Debug-Referenz Innsbruck")
+)
+
+debug_sample_points <- marker_data %>%
+  dplyr::filter(is.finite(latitude), is.finite(longitude)) %>%
+  dplyr::slice_head(n = 40) %>%
+  dplyr::mutate(
+    debug_label = paste0("Debug Sample · UID ", uid, ifelse(!is.na(name) & name != "", paste0(" · ", name), ""))
+  )
+
 if (nrow(marker_data) == 0) {
   message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
 } else {
@@ -1407,6 +1420,16 @@ m <- m |>
          }
        } catch(e) {}
        if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
+       var debugSampleGroup = null;
+       try {
+         if (map.layerManager && typeof map.layerManager.getLayerGroup === 'function') {
+           debugSampleGroup = map.layerManager.getLayerGroup('Debug Eisfall-Sample');
+         }
+         if (!debugSampleGroup && map.layerManager && map.layerManager._byGroup) {
+           debugSampleGroup = map.layerManager._byGroup['Debug Eisfall-Sample'];
+         }
+       } catch(e) {}
+       if (debugSampleGroup) ensureGroupVisible('Debug Eisfall-Sample', debugSampleGroup);
 
        function num(x){
          var n = Number(x);
@@ -1543,12 +1566,42 @@ m <- m |>
          var groupLayers = (group && typeof group.getLayers === 'function') ? group.getLayers() : [];
          var groupCount = (groupLayers && groupLayers.length) ? groupLayers.length : 0;
          var vis = (typeof filteredVisible === 'number' && isFinite(filteredVisible)) ? filteredVisible : groupCount;
+         var inView = 0;
+         var mapBounds = (map && typeof map.getBounds === 'function') ? map.getBounds() : null;
+         var latMin = Infinity, latMax = -Infinity, lonMin = Infinity, lonMax = -Infinity;
+         allMarkers.forEach(function(mk){
+           if (!mk || typeof mk.getLatLng !== 'function') return;
+           var ll = mk.getLatLng();
+           if (!ll) return;
+           if (mapBounds && typeof mapBounds.contains === 'function' && mapBounds.contains(ll)) inView += 1;
+           if (isFinite(ll.lat)) {
+             if (ll.lat < latMin) latMin = ll.lat;
+             if (ll.lat > latMax) latMax = ll.lat;
+           }
+           if (isFinite(ll.lng)) {
+             if (ll.lng < lonMin) lonMin = ll.lng;
+             if (ll.lng > lonMax) lonMax = ll.lng;
+           }
+         });
+         var markerBoundsTxt = (isFinite(latMin) && isFinite(latMax) && isFinite(lonMin) && isFinite(lonMax))
+           ? ('Marker bounds: ' + [latMin.toFixed(3), lonMin.toFixed(3), latMax.toFixed(3), lonMax.toFixed(3)].join(', '))
+           : 'Marker bounds: n/a';
+         var firstMarkerTxt = 'First marker: n/a';
+         if (allMarkers.length > 0 && allMarkers[0] && typeof allMarkers[0].getLatLng === 'function') {
+           var fll = allMarkers[0].getLatLng();
+           if (fll && isFinite(fll.lat) && isFinite(fll.lng)) {
+             firstMarkerTxt = 'First marker: ' + fll.lat.toFixed(4) + ', ' + fll.lng.toFixed(4);
+           }
+         }
          debugStatus.innerHTML =
            '<div><b>Marker total:</b> ' + allMarkers.length + '</div>' +
            '<div><b>Marker sichtbar:</b> ' + vis + '</div>' +
+           '<div><b>Marker im View:</b> ' + inView + '</div>' +
            '<div><b>Group layers:</b> ' + groupCount + '</div>' +
            '<div><b>Zoom:</b> ' + (isFinite(zoom) ? zoom : 'n/a') + '</div>' +
-           '<div>' + boundsTxt + '</div>';
+           '<div>' + boundsTxt + '</div>' +
+           '<div>' + markerBoundsTxt + '</div>' +
+           '<div>' + firstMarkerTxt + '</div>';
        }
 
        function inRange(v, min, max, minEl, maxEl){
@@ -1666,6 +1719,9 @@ m <- m |>
        applyFilter();
        if (map && typeof map.on === 'function') {
          map.on('moveend zoomend overlayadd overlayremove', function(){
+           ensureGroupVisible('Eisfälle', group);
+           if (debugGroup) ensureGroupVisible('Debug Referenz', debugGroup);
+           if (debugSampleGroup) ensureGroupVisible('Debug Eisfall-Sample', debugSampleGroup);
            updateDebugInfo();
          });
        }
@@ -1733,9 +1789,33 @@ m <- m |>
     popup       = ~popup,
     group       = "Eisfälle"
   ) |>
+  addCircleMarkers(
+    data        = debug_reference_points,
+    lng         = ~longitude,
+    lat         = ~latitude,
+    radius      = 8,
+    color       = "#b91c1c",
+    weight      = 2,
+    fillColor   = "#ef4444",
+    fillOpacity = 0.95,
+    popup       = ~label,
+    group       = "Debug Referenz"
+  ) |>
+  addCircleMarkers(
+    data        = debug_sample_points,
+    lng         = ~longitude,
+    lat         = ~latitude,
+    radius      = 9,
+    color       = "#7e22ce",
+    weight      = 2,
+    fillColor   = "#d946ef",
+    fillOpacity = 0.95,
+    popup       = ~debug_label,
+    group       = "Debug Eisfall-Sample"
+  ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle", "Debug Referenz"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle", "Debug Referenz", "Debug Eisfall-Sample"),
     options       = layersControlOptions(collapsed = FALSE)
   )
 
