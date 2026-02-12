@@ -1402,6 +1402,21 @@ m <- m |>
        }
 
        var group = getGroup();
+       // --- FIX: Wenn 'Eisfälle' geclustert ist, steckt der echte Marker-Container
+//          in einem MarkerClusterGroup-Layer. Den müssen wir filtern.
+if (group && typeof group.getLayers === 'function') {
+  var layers = group.getLayers() || [];
+  for (var i = 0; i < layers.length; i++) {
+    var l = layers[i];
+    // MarkerClusterGroup hat typischerweise getAllChildMarkers()
+    if (l && typeof l.getAllChildMarkers === 'function' &&
+        typeof l.clearLayers === 'function' &&
+        typeof l.addLayer === 'function') {
+      group = l; // ab jetzt filtern wir direkt den Cluster
+      break;
+    }
+  }
+}
        if (!group || typeof group.getLayers !== 'function' || typeof group.addLayer !== 'function' || typeof group.clearLayers !== 'function') {
          status.textContent = 'Filter derzeit nicht verfügbar.';
          return;
@@ -1714,10 +1729,15 @@ m <- m |>
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addCircleMarkers(
+  addMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
+    radius      = 5,
+    color       = "#0b3d91",
+    weight      = 2,
+    fillColor   = "#ffd166",
+    fillOpacity = 0.9,
     options     = pathOptions(pane = "icefallsPane"),
     clusterOptions = markerClusterOptions(
       showCoverageOnHover = FALSE,
@@ -1727,23 +1747,12 @@ m <- m |>
     ),
     popup       = ~popup,
     group       = "Eisfälle"
+  ) |>
+  addLayersControl(
+    baseGroups    = c("OSM", "Gelände (Topo)"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    options       = layersControlOptions(collapsed = FALSE)
   )
-
-if (isTRUE(preview_mode)) {
-  m <- m |>
-    addLayersControl(
-      baseGroups    = c("OSM", "Gelände (Topo)"),
-      overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
-      options       = layersControlOptions(collapsed = FALSE)
-    )
-} else {
-  m <- m |>
-    addLayersControl(
-      baseGroups    = c("OSM", "Gelände (Topo)"),
-      overlayGroups = c("Eisfälle"),
-      options       = layersControlOptions(collapsed = FALSE)
-    )
-}
 
 # Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
 m <- m |>
