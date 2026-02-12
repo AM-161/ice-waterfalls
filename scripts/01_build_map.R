@@ -1729,7 +1729,7 @@ if (group && typeof group.getLayers === 'function') {
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addMarkers(
+  addCircleMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
