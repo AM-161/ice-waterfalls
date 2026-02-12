@@ -1729,24 +1729,26 @@ if (group && typeof group.getLayers === 'function') {
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addCircleMarkers(
+  addMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
-    radius      = 5,
-    color       = "#0b3d91",
-    weight      = 2,
-    fillColor   = "#ffd166",
-    fillOpacity = 0.9,
-    options     = pathOptions(pane = "icefallsPane"),
+    popup       = ~popup,
+    group       = "Eisfälle",
     clusterOptions = markerClusterOptions(
       showCoverageOnHover = FALSE,
       spiderfyOnMaxZoom = TRUE,
       zoomToBoundsOnClick = TRUE,
-      disableClusteringAtZoom = 12
-    ),
-    popup       = ~popup,
-    group       = "Eisfälle"
+      disableClusteringAtZoom = 12,
+      iconCreateFunction = JS("function(cluster) {
+        var count = cluster.getChildCount();
+        return new L.DivIcon({
+          html: '<div style=\"background:#163b7a;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);\">' + count + '</div>',
+          className: 'marker-cluster-custom',
+          iconSize: new L.Point(42, 42)
+        });
+      }")
+    )
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
