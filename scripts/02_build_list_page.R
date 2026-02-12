@@ -702,6 +702,39 @@ for (i in seq_len(nrow(out))) {
   lon <- r$longitude[[1]]
   lat_txt <- if (is.finite(lat)) sprintf("%.6f", lat) else ""
   lon_txt <- if (is.finite(lon)) sprintf("%.6f", lon) else ""
+
+  sun_range_txt <- as.character(r$sun_tomorrow_range_txt[[1]])
+  if (is.na(sun_range_txt) || sun_range_txt == "") sun_range_txt <- "&mdash;"
+  sun_duration_txt <- as.character(r$sun_duration_tomorrow_txt[[1]])
+  if (is.na(sun_duration_txt) || sun_duration_txt == "") sun_duration_txt <- "&mdash;"
+
+  sun_series_json <- "[]"
+  sun_file <- find_sun_file_for_uid(uid)
+  if (!is.na(sun_file)) {
+    sun_df_uid <- tryCatch(read_any_delim(sun_file), error = function(e) NULL)
+    if (!is.null(sun_df_uid) && nrow(sun_df_uid) > 0) {
+      sun_df_uid <- sun_df_uid %>%
+        rename_with(tolower)
+      if (all(c("date", "sun_hours_topo") %in% names(sun_df_uid))) {
+        sun_df_uid <- sun_df_uid %>%
+          transmute(
+            date = as.Date(as.character(date)),
+            sun_hours = to_num(sun_hours_topo)
+          ) %>%
+          filter(!is.na(date), is.finite(sun_hours)) %>%
+          arrange(date)
+        if (nrow(sun_df_uid) > 0) {
+          sun_df_uid$date <- format(sun_df_uid$date, "%Y-%m-%d")
+          sun_series_json <- jsonlite::toJSON(
+            sun_df_uid,
+            dataframe = "rows",
+            auto_unbox = TRUE,
+            na = "null"
+          )
+        }
+      }
+    }
+  }
   
   # plot png relative to site root
   plot_rel <- sprintf("plots/uid_%03d.png", uid)
@@ -750,6 +783,9 @@ for (i in seq_len(nrow(out))) {
     # diagram full width
     "    .plotWrap{margin-top:12px;}",
     "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;cursor:zoom-in;}",
+    "    .chartWrap{margin-top:12px;}",
+    "    .chartCanvas{width:100%;height:280px;display:block;border:1px solid #eee;border-radius:16px;background:#fff;}",
+    "    .chartHint{margin-top:8px;font-size:12px;color:#666;}",
     
     "    #map{height:240px;border-radius:16px;border:1px solid #eee;}",
     "    @media(max-width:720px){",
@@ -781,6 +817,7 @@ for (i in seq_len(nrow(out))) {
     "      <div class='kv'>",
     paste0("        <div class='k'>Schwierigkeit</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
     paste0("        <div class='k'>H&ouml;he &uuml;. NN</div><div><b>", elev_txt, "</b></div>"),
+    paste0("        <div class='k'>Sonneneinstrahlung morgen</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
     paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),
     "      </div>",
     "    </div>",
@@ -801,6 +838,11 @@ for (i in seq_len(nrow(out))) {
     paste0("    <a href='../", plot_rel, "' target='_blank' rel='noopener' title='Diagramm gro&szlig; &ouml;ffnen'>"),
     paste0("      <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
     "    </a>",
+    "    <div class='chartWrap'>",
+    "      <h2>Saisonale Sonneneinstrahlung</h2>",
+    "      <canvas id='sunSeasonChart' class='chartCanvas' width='1200' height='280'></canvas>",
+    "      <div id='sunChartHover' class='chartHint'>Hover: Datum wird angezeigt.</div>",
+    "    </div>",
     "  </div>",
     
     # upload + map row
@@ -854,6 +896,7 @@ for (i in seq_len(nrow(out))) {
     paste0("  const ICE_NAME = ", jsonlite::toJSON(as.character(r$name[[1]]), auto_unbox = TRUE), ";"),
     paste0("  const ICE_LAT = ", ifelse(is.finite(lat), format(lat, scientific = FALSE), "null"), ";"),
     paste0("  const ICE_LON = ", ifelse(is.finite(lon), format(lon, scientific = FALSE), "null"), ";"),
+    paste0("  const SUN_SERIES = ", sun_series_json, ";"),
     
     "  const elGal = document.getElementById('gallery');",
     "  const elImgStatus = document.getElementById('imgStatus');",
@@ -863,6 +906,7 @@ for (i in seq_len(nrow(out))) {
     "  const elDate = document.getElementById('shotDate');",
     "  const elComment = document.getElementById('comment');",
     "  const btn = document.getElementById('btnUpload');",
+    "  const elSunChartHover = document.getElementById('sunChartHover');",
     
     "  function escHtml(s){",
     "    s = (s===null || s===undefined) ? '' : String(s);",
@@ -890,6 +934,116 @@ for (i in seq_len(nrow(out))) {
     "      return `${dd}.${mm}.${yyyy}`;",
     "    }",
     "    return s;",
+    "  }",
+    "",
+    "  function drawSunChart(){",
+    "    const canvas = document.getElementById('sunSeasonChart');",
+    "    if (!canvas) return;",
+    "    const ctx = canvas.getContext('2d');",
+    "    if (!ctx) return;",
+    "",
+    "    const data = Array.isArray(SUN_SERIES) ? SUN_SERIES.slice() : [];",
+    "    if (!data.length){",
+    "      ctx.clearRect(0, 0, canvas.width, canvas.height);",
+    "      ctx.fillStyle = '#666';",
+    "      ctx.font = '14px system-ui, sans-serif';",
+    "      ctx.fillText('Keine saisonalen Sonnendaten verf\u00fcgbar.', 18, 30);",
+    "      if (elSunChartHover) elSunChartHover.textContent = 'Keine Daten verf\u00fcgbar.';",
+    "      return;",
+    "    }",
+    "",
+    "    const w = canvas.width;",
+    "    const h = canvas.height;",
+    "    const pad = { t: 16, r: 20, b: 34, l: 40 };",
+    "    const xMin = 0;",
+    "    const xMax = data.length - 1;",
+    "    const maxVal = Math.max(0.25, ...data.map(d => Number(d.sun_hours) || 0));",
+    "",
+    "    const xPos = (i) => {",
+    "      if (xMax <= xMin) return pad.l;",
+    "      return pad.l + ((i - xMin) / (xMax - xMin)) * (w - pad.l - pad.r);",
+    "    };",
+    "    const yPos = (v) => pad.t + (1 - (v / maxVal)) * (h - pad.t - pad.b);",
+    "",
+    "    ctx.clearRect(0, 0, w, h);",
+    "",
+    "    ctx.strokeStyle = '#e6e6e6';",
+    "    ctx.lineWidth = 1;",
+    "    for (let i = 0; i <= 4; i++){",
+    "      const y = pad.t + (i / 4) * (h - pad.t - pad.b);",
+    "      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();",
+    "    }",
+    "",
+    "    ctx.strokeStyle = '#f1b900';",
+    "    ctx.lineWidth = 2;",
+    "    ctx.beginPath();",
+    "    data.forEach((d, i) => {",
+    "      const x = xPos(i);",
+    "      const y = yPos(Number(d.sun_hours) || 0);",
+    "      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);",
+    "    });",
+    "    ctx.stroke();",
+    "",
+    "    ctx.fillStyle = '#333';",
+    "    ctx.font = '12px system-ui, sans-serif';",
+    "    ctx.fillText('0 h', 8, h - pad.b + 4);",
+    "    ctx.fillText(`${maxVal.toFixed(1)} h`, 8, pad.t + 4);",
+    "",
+    "    const drawHover = (idx) => {",
+    "      ctx.clearRect(0, 0, w, h);",
+    "      ctx.strokeStyle = '#e6e6e6';",
+    "      ctx.lineWidth = 1;",
+    "      for (let i = 0; i <= 4; i++){",
+    "        const y = pad.t + (i / 4) * (h - pad.t - pad.b);",
+    "        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();",
+    "      }",
+    "      ctx.strokeStyle = '#f1b900';",
+    "      ctx.lineWidth = 2;",
+    "      ctx.beginPath();",
+    "      data.forEach((d, i) => {",
+    "        const x = xPos(i);",
+    "        const y = yPos(Number(d.sun_hours) || 0);",
+    "        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);",
+    "      });",
+    "      ctx.stroke();",
+    "      ctx.fillStyle = '#333';",
+    "      ctx.font = '12px system-ui, sans-serif';",
+    "      ctx.fillText('0 h', 8, h - pad.b + 4);",
+    "      ctx.fillText(`${maxVal.toFixed(1)} h`, 8, pad.t + 4);",
+    "      if (idx < 0 || idx >= data.length) return;",
+    "      const x = xPos(idx);",
+    "      const y = yPos(Number(data[idx].sun_hours) || 0);",
+    "      ctx.strokeStyle = '#999';",
+    "      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();",
+    "      ctx.fillStyle = '#f1b900';",
+    "      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();",
+    "    };",
+    "",
+    "    let lastIdx = -1;",
+    "    const onMove = (evt) => {",
+    "      const rect = canvas.getBoundingClientRect();",
+    "      const px = evt.clientX - rect.left;",
+    "      const rel = Math.min(1, Math.max(0, px / rect.width));",
+    "      const idx = Math.round(rel * (data.length - 1));",
+    "      if (idx === lastIdx) return;",
+    "      lastIdx = idx;",
+    "      drawHover(idx);",
+    "      const d = data[idx];",
+    "      if (d && elSunChartHover) {",
+    "        const hrs = Number(d.sun_hours);",
+    "        elSunChartHover.textContent = `${d.date}: ${Number.isFinite(hrs) ? hrs.toFixed(2) : '0.00'} h Sonne`;",
+    "      }",
+    "    };",
+    "",
+    "    const onLeave = () => {",
+    "      lastIdx = -1;",
+    "      drawHover(-1);",
+    "      if (elSunChartHover) elSunChartHover.textContent = 'Hover: Datum wird angezeigt.';",
+    "    };",
+    "",
+    "    drawHover(-1);",
+    "    canvas.addEventListener('mousemove', onMove);",
+    "    canvas.addEventListener('mouseleave', onLeave);",
     "  }",
     "",
     "  async function loadImages(){",
@@ -1043,6 +1197,7 @@ for (i in seq_len(nrow(out))) {
     "  initDateDefault();",
     "  initMap();",
     "  loadImages();",
+    "  drawSunChart();",
     "  </script>",
     
     "</div>",
