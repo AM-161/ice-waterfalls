@@ -806,9 +806,7 @@ if (file.exists(outfile_fc)) {
 
 # 9) Controls / HTML Summary (wie bei dir) -----------------------------
 # NOTE: Die "Kletterbarkeit – Tagesübersicht"-Box wurde auf Wunsch entfernt.
-#       Der Code zur Berechnung bleibt hier ggf. stehen, wird aber NICHT mehr als Control eingebunden.
-
-best_html <- NULL
+#       Es gibt hierfür keinen aktiven Berechnungspfad/Control-Einbindung mehr.
 
 # 10) Zeit-Layer zusammenbauen (wie bei dir; Steps bleiben identisch) ---
 
@@ -1234,12 +1232,6 @@ init_i <- n_steps
 m <- leaflet() |>
   addProviderTiles(providers$OpenStreetMap, group = "OSM") |>
   addProviderTiles(providers$OpenTopoMap,   group = "Gelände (Topo)")
-
-# ✅ (Entfernt) Kletterbarkeit – Tagesübersicht (Prognose)
-# if (!is.null(best_html)) {
-#   m <- m |>
-#     addControl(position = "bottomright", html = best_html)
-# }
 
 preview_mode <- interactive()
 
