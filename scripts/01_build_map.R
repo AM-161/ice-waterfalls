@@ -13,7 +13,7 @@
 # Eine Nutzung über das reine Lesen und Nachvollziehen im Kontext
 # dieser Masterarbeit hinaus ist nicht gestattet. Bei Rückfragen
 # oder einer gewünschten Nutzung bitte vorher Kontakt mit dem Autor
-# aufnehmen.
+# aufnehmen...
 # =====================================================================
 
 suppressPackageStartupMessages({
