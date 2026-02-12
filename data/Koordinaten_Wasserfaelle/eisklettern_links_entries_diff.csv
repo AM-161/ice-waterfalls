@@ -375,7 +375,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 387;Der gespaltene König - Pflerscher Tribulaun Südwand;46,98350595;11,33628379;2641.81201171875;;WI4 / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/der-gespaltene-koenig-pflerscher-tribulaun-suedwand-1/;;N
 388;Der gespaltene König - Pflerscher Tribulaun Südwand;46,98360000;11,33610000;2648.201171875;;85°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/der-gespaltene-koenig-pflerscher-tribulaun-suedwand/;;N
 389;Der Pilz - Zillergrund;;;;;WI6;;;;;;https://www.bergsteigen.com/touren/eisklettern/der-pilz-zillergrund/;;
-390;;;;;;;;;;;;https://www.bergsteigen.com/touren/eisklettern/der-seltene-heinrich-wildgall-nordostwand/;;
+390;Der seltene Heinrich - Wildgall Nordostwand;46,903364;12,138297;2854;;M5;;;;;;https://www.bergsteigen.com/touren/eisklettern/der-seltene-heinrich-wildgall-nordostwand/;;
 391;Der weiße Pinguin - Außergschlöß;47,12525260;12,46096210;1685.143798828125;;WI5 / M4;;;;;355;https://www.bergsteigen.com/touren/eisklettern/der-weisse-pinguin-aussergschloess/;;N
 392;Desni Slap - Prisank;46,43206600;13,76164600;;;WI5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/desni-slap-prisnak/;;N
 393;Devils Dance - Grünseefälle;47,15740000;12,61600000;1884.055419921875;;WI4;;;;;58;https://www.bergsteigen.com/touren/eisklettern/devils-dance-gruenseefaelle/;;NO
@@ -773,7 +773,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 785;Übungsfälle Grüner See - Seetal;47,58532260;15,30092620;845.23480224609375;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/uebungsfaelle-gruener-see-seetal/;;N
 786;Ultima Minuta - Langental;46,57032000;11,80343000;;;M8- / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ultima-minuta-langental/;;N
 787;Unterer Teil / Thun-Klamm;47,25882305;12,73826122;793.690185546875;;WI4 / M10;;;;;15;https://www.bergsteigen.com/touren/eisklettern/unterer-teil-thun-klamm/;;N
-788;;;;;;;;;;;;https://www.bergsteigen.com/touren/eisklettern/utopia-reintas-taufers/;;
+788;;;;;;;;;;;;https://www.bergsteigen.com/touren/eisklettern/knecht-ruprecht-reintal-taufers/;;
 789;Venediger NO-Flanke;47,11210000;12,34450000;3340.105224609375;;55° / 3+;;;;;48;https://www.bergsteigen.com/touren/eisklettern/venediger-no-flanke/;;NO
 790;Vergissmeinnicht;47,11186067;12,98064709;1358.6156005859375;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vergissmeinnicht-1/;;N
 791;Vertainspitze Nordwand;46,54250000;10,63670000;;;80°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vertainspitze-nordwand/;;N
