@@ -1401,41 +1401,20 @@ m <- m |>
          return null;
        }
 
-       var group = getGroup();
-       // --- FIX: Wenn 'Eisfälle' geclustert ist, steckt der echte Marker-Container
-//          in einem MarkerClusterGroup-Layer. Den müssen wir filtern.
-if (group && typeof group.getLayers === 'function') {
-  var layers = group.getLayers() || [];
-  for (var i = 0; i < layers.length; i++) {
-    var l = layers[i];
-    // MarkerClusterGroup hat typischerweise getAllChildMarkers()
-    if (l && typeof l.getAllChildMarkers === 'function' &&
-        typeof l.clearLayers === 'function' &&
-        typeof l.addLayer === 'function') {
-      group = l; // ab jetzt filtern wir direkt den Cluster
-      break;
-    }
-  }
-}
-       if (!group || typeof group.getLayers !== 'function' || typeof group.addLayer !== 'function' || typeof group.clearLayers !== 'function') {
-         status.textContent = 'Filter derzeit nicht verfügbar.';
-         return;
+       var markerGroup = null;
+       var markerLoadRetries = 0;
+
+       function getMarkerGroup() {
+         if (markerGroup) return markerGroup;
+         var group = getGroup();
+         if (!group) return null;
+         markerGroup = group;
+         return markerGroup;
        }
 
-       function ensureGroupVisible(groupName, layerGroup){
-         try {
-           if (map.layerManager && typeof map.layerManager.showGroup === 'function' && groupName) {
-             map.layerManager.showGroup(groupName);
-           }
-         } catch(e) {}
-         try {
-           if (layerGroup && typeof layerGroup.addTo === 'function' && typeof map.hasLayer === 'function' && !map.hasLayer(layerGroup)) {
-             layerGroup.addTo(map);
-           }
-         } catch(e) {}
+       function isUsableMarkerGroup(group){
+         return !!(group && typeof group.getLayers === 'function' && typeof group.addLayer === 'function' && typeof group.clearLayers === 'function');
        }
-
-       ensureGroupVisible('Eisfälle', group);
 
        function num(x){
          var n = Number(x);
@@ -1539,7 +1518,11 @@ if (group && typeof group.getLayers === 'function') {
          return meta;
        }
 
-       function collectMarkers(){
+       function collectMarkers(group){
+         if (!group) return [];
+         if (typeof group.getAllChildMarkers === 'function') {
+           return group.getAllChildMarkers() || [];
+         }
          var out = [];
          function visit(layer){
            if (!layer) return;
@@ -1557,7 +1540,7 @@ if (group && typeof group.getLayers === 'function') {
          return out;
        }
 
-       var allMarkers = collectMarkers();
+       var allMarkers = [];
 
       function inRange(v, min, max, minEl, maxEl){
         if (!isFinite(min) && !isFinite(max)) return true;
@@ -1580,20 +1563,23 @@ if (group && typeof group.getLayers === 'function') {
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
          var diffTerm = diffInput ? diffInput.value.trim().toLowerCase() : '';
-         if (!allMarkers.length) allMarkers = collectMarkers();
+         var group = getMarkerGroup();
+         if (!isUsableMarkerGroup(group)) {
+           status.textContent = 'Filter derzeit nicht verfügbar.';
+           return;
+         }
+         if (!allMarkers.length) allMarkers = collectMarkers(group);
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
-           if (!map._filterRetry) {
-             map._filterRetry = true;
-             setTimeout(function(){
-               map._filterRetry = false;
-               applyFilter();
-             }, 300);
+           if (markerLoadRetries < 20) {
+             markerLoadRetries += 1;
+             setTimeout(applyFilter, 250);
            }
            return;
          }
 
-        updateRangeLabels();
+         markerLoadRetries = 0;
+         updateRangeLabels();
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
          var w = clampMinMax(wiMin, wiMax);
@@ -1673,11 +1659,6 @@ if (group && typeof group.getLayers === 'function') {
        resetFilters();
        updateRangeLabels();
        applyFilter();
-       if (map && typeof map.on === 'function') {
-         map.on('moveend zoomend overlayadd overlayremove', function(){
-           ensureGroupVisible('Eisfälle', group);
-         });
-       }
 
        if (geoBtn) {
          geoBtn.addEventListener('click', function(){
@@ -1729,24 +1710,26 @@ if (group && typeof group.getLayers === 'function') {
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addCircleMarkers(
+  addMarkers(
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
-    radius      = 5,
-    color       = "#0b3d91",
-    weight      = 2,
-    fillColor   = "#ffd166",
-    fillOpacity = 0.9,
-    options     = pathOptions(pane = "icefallsPane"),
+    popup       = ~popup,
+    group       = "Eisfälle",
     clusterOptions = markerClusterOptions(
       showCoverageOnHover = FALSE,
       spiderfyOnMaxZoom = TRUE,
       zoomToBoundsOnClick = TRUE,
-      disableClusteringAtZoom = 12
-    ),
-    popup       = ~popup,
-    group       = "Eisfälle"
+      disableClusteringAtZoom = 12,
+      iconCreateFunction = JS("function(cluster) {
+        var count = cluster.getChildCount();
+        return new L.DivIcon({
+          html: '<div style=\"background:#163b7a;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);\">' + count + '</div>',
+          className: 'marker-cluster-custom',
+          iconSize: new L.Point(42, 42)
+        });
+      }")
+    )
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
