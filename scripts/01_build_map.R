@@ -1729,18 +1729,20 @@ if (group && typeof group.getLayers === 'function') {
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   ) |>
-  addMarkers(
+  addCircleMarkers(
+    # Kein clusterOptions hier: ältere leaflet-Versionen routen sonst intern
+    # auf addMarkers() und brechen bei CircleMarker-Parametern ab.
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
+    radius      = 5,
+    color       = "#0b3d91",
+    weight      = 2,
+    fillColor   = "#ffd166",
+    fillOpacity = 0.9,
+    options     = pathOptions(pane = "icefallsPane"),
     popup       = ~popup,
-    group       = "Eisfälle",
-    clusterOptions = markerClusterOptions(
-      showCoverageOnHover = FALSE,
-      spiderfyOnMaxZoom = TRUE,
-      zoomToBoundsOnClick = TRUE,
-      disableClusteringAtZoom = 12
-    )
+    group       = "Eisfälle"
   ) |>
   addLayersControl(
     baseGroups    = c("OSM", "Gelände (Topo)"),
