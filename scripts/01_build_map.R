@@ -1393,45 +1393,20 @@ m <- m |>
          return null;
        }
 
-       var overlayGroup = getGroup();
+       var markerGroup = null;
+       var markerLoadRetries = 0;
 
-       function resolveMarkerGroup(root) {
-         if (!root) return null;
-         if (typeof root.getAllChildMarkers === 'function' &&
-             typeof root.clearLayers === 'function' &&
-             typeof root.addLayer === 'function') {
-           return root;
-         }
-         if (typeof root.getLayers === 'function') {
-           var layers = root.getLayers() || [];
-           for (var i = 0; i < layers.length; i++) {
-             var l = resolveMarkerGroup(layers[i]);
-             if (l) return l;
-           }
-         }
-         return null;
+       function getMarkerGroup() {
+         if (markerGroup) return markerGroup;
+         var group = getGroup();
+         if (!group) return null;
+         markerGroup = group;
+         return markerGroup;
        }
 
-       var markerGroup = resolveMarkerGroup(overlayGroup) || overlayGroup;
-       if (!markerGroup || typeof markerGroup.getLayers !== 'function' || typeof markerGroup.addLayer !== 'function' || typeof markerGroup.clearLayers !== 'function') {
-         status.textContent = 'Filter derzeit nicht verfügbar.';
-         return;
+       function isUsableMarkerGroup(group){
+         return !!(group && typeof group.getLayers === 'function' && typeof group.addLayer === 'function' && typeof group.clearLayers === 'function');
        }
-
-       function ensureGroupVisible(groupName){
-         try {
-           if (map.layerManager && typeof map.layerManager.showGroup === 'function' && groupName) {
-             map.layerManager.showGroup(groupName);
-           }
-         } catch(e) {}
-         try {
-           if (overlayGroup && typeof overlayGroup.addTo === 'function' && typeof map.hasLayer === 'function' && !map.hasLayer(overlayGroup)) {
-             overlayGroup.addTo(map);
-           }
-         } catch(e) {}
-       }
-
-       ensureGroupVisible('Eisfälle');
 
        function num(x){
          var n = Number(x);
@@ -1556,7 +1531,7 @@ m <- m |>
          return out;
        }
 
-       var allMarkers = collectMarkers();
+       var allMarkers = [];
 
       function inRange(v, min, max, minEl, maxEl){
         if (!isFinite(min) && !isFinite(max)) return true;
@@ -1579,20 +1554,23 @@ m <- m |>
        function applyFilter() {
          var term = input.value.trim().toLowerCase();
          var diffTerm = diffInput ? diffInput.value.trim().toLowerCase() : '';
-         if (!allMarkers.length) allMarkers = collectMarkers();
+         var group = getMarkerGroup();
+         if (!isUsableMarkerGroup(group)) {
+           status.textContent = 'Filter derzeit nicht verfügbar.';
+           return;
+         }
+         if (!allMarkers.length) allMarkers = collectMarkers(group);
          if (!allMarkers.length) {
            status.textContent = 'Filter wird geladen...';
-           if (!map._filterRetry) {
-             map._filterRetry = true;
-             setTimeout(function(){
-               map._filterRetry = false;
-               applyFilter();
-             }, 300);
+           if (markerLoadRetries < 20) {
+             markerLoadRetries += 1;
+             setTimeout(applyFilter, 250);
            }
            return;
          }
 
-        updateRangeLabels();
+         markerLoadRetries = 0;
+         updateRangeLabels();
          var a = clampMinMax(aMin, aMax);
          var m = clampMinMax(mMin, mMax);
          var w = clampMinMax(wiMin, wiMax);
@@ -1672,11 +1650,6 @@ m <- m |>
        resetFilters();
        updateRangeLabels();
        applyFilter();
-       if (map && typeof map.on === 'function') {
-         map.on('moveend zoomend overlayadd overlayremove', function(){
-           ensureGroupVisible('Eisfälle');
-         });
-       }
 
        if (geoBtn) {
          geoBtn.addEventListener('click', function(){
