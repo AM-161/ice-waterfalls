@@ -989,6 +989,8 @@ if (file.exists(PATH_META)) {
     uid = parse_uid(meta_raw$uid),
     name = get_chr(meta_raw, "name", "eisfall", "icefall"),
     difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
+    elev_m = to_num(get_chr(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m")),
+    icefall_height_m = to_num(get_chr(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m")),
     topo_url = get_chr(meta_raw, "topo_url"),
     latitude = to_num(get_chr(meta_raw, "latitude")),
     longitude = to_num(get_chr(meta_raw, "longitude"))
@@ -1090,7 +1092,7 @@ if (nrow(sun_today) == 0) {
 if (!is.null(meta_map)) {
   marker_base <- meta_map %>%
     dplyr::filter(is.finite(uid)) %>%
-    dplyr::select(uid, name, latitude, longitude, topo_url, difficulty) %>%
+    dplyr::select(uid, name, latitude, longitude, topo_url, difficulty, elev_m, icefall_height_m) %>%
     dplyr::arrange(uid) %>%
     dplyr::distinct(uid, .keep_all = TRUE)
 
@@ -1120,6 +1122,8 @@ if (!is.null(meta_map)) {
   sun_today <- sun_today %>%
     dplyr::mutate(
       difficulty = NA_character_,
+      elev_m = NA_real_,
+      icefall_height_m = NA_real_,
       sun_status = dplyr::if_else(
         is.finite(sun_hours_topo) & !is.na(sunrise_topo) & !is.na(sunset_topo),
         "has_values",
@@ -1155,7 +1159,23 @@ sun_today <- sun_today %>%
     plot_png = paste0("plots/uid_", uid_pad, ".png"),
     
     detail_url = paste0("icefalls/uid_", uid_pad, ".html"),
-    
+
+    difficulty_txt = dplyr::if_else(
+      !is.na(difficulty) & difficulty != "",
+      difficulty,
+      "k. A."
+    ),
+    height_txt = dplyr::case_when(
+      is.finite(icefall_height_m) ~ paste0(round(icefall_height_m), " m"),
+      is.finite(elev_m) ~ paste0(round(elev_m), " m"),
+      TRUE ~ "k. A."
+    ),
+    info_block = sprintf(
+      "<div style='margin-top:4px;font-size:12px;line-height:1.35;'><b>Schwierigkeit:</b> %s<br/><b>H&ouml;he:</b> %s</div>",
+      htmltools::htmlEscape(difficulty_txt),
+      htmltools::htmlEscape(height_txt)
+    ),
+
     map_meta = paste0(
       "<span class='map-meta' data-uid='", uid,
       "' data-name='", htmltools::htmlEscape(ifelse(is.na(name), "", name), attribute = TRUE),
@@ -1190,8 +1210,8 @@ sun_today <- sun_today %>%
       paste0(
         map_meta,
         sprintf(
-          "<b>%s</b><br/>Sonne am %s: KEINE SONNENDATEN<br/>%s",
-          name, date_txt, link_txt
+          "<b>%s</b><br/>Sonne am %s: KEINE SONNENDATEN%s<br/>%s",
+          name, date_txt, info_block, link_txt
         ),
         plot_block
       ),
@@ -1200,16 +1220,16 @@ sun_today <- sun_today %>%
         paste0(
           map_meta,
           sprintf(
-          "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung<br/>%s",
-          name, date_txt, link_txt
+          "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung%s<br/>%s",
+          name, date_txt, info_block, link_txt
           ),
           plot_block
         ),
         paste0(
           map_meta,
           sprintf(
-            "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)<br/>%s",
-            name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, link_txt
+            "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)%s<br/>%s",
+            name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, info_block, link_txt
           ),
           plot_block
         )
