@@ -806,9 +806,7 @@ if (file.exists(outfile_fc)) {
 
 # 9) Controls / HTML Summary (wie bei dir) -----------------------------
 # NOTE: Die "Kletterbarkeit – Tagesübersicht"-Box wurde auf Wunsch entfernt.
-#       Der Code zur Berechnung bleibt hier ggf. stehen, wird aber NICHT mehr als Control eingebunden.
-
-best_html <- NULL
+#       Es gibt hierfür keinen aktiven Berechnungspfad/Control-Einbindung mehr.
 
 # 10) Zeit-Layer zusammenbauen (wie bei dir; Steps bleiben identisch) ---
 
@@ -1235,12 +1233,6 @@ m <- leaflet() |>
   addProviderTiles(providers$OpenStreetMap, group = "OSM") |>
   addProviderTiles(providers$OpenTopoMap,   group = "Gelände (Topo)")
 
-# ✅ (Entfernt) Kletterbarkeit – Tagesübersicht (Prognose)
-# if (!is.null(best_html)) {
-#   m <- m |>
-#     addControl(position = "bottomright", html = best_html)
-# }
-
 preview_mode <- interactive()
 
 if (isTRUE(preview_mode)) {
@@ -1518,10 +1510,9 @@ m <- m |>
          return meta;
        }
 
-       function collectMarkers(group){
-         if (!group) return [];
-         if (typeof group.getAllChildMarkers === 'function') {
-           return group.getAllChildMarkers() || [];
+       function collectMarkers(){
+         if (markerGroup && typeof markerGroup.getAllChildMarkers === 'function') {
+           return markerGroup.getAllChildMarkers() || [];
          }
          var out = [];
          function visit(layer){
@@ -1535,7 +1526,7 @@ m <- m |>
              children.forEach(visit);
            }
          }
-         var roots = group.getLayers ? group.getLayers() : [];
+         var roots = markerGroup && markerGroup.getLayers ? markerGroup.getLayers() : [];
          (roots || []).forEach(visit);
          return out;
        }
@@ -1595,7 +1586,7 @@ m <- m |>
          var rMaxVal = r[1];
          var sunMinVal = s[0];
          var sunMaxVal = s[1];
-         group.clearLayers();
+         markerGroup.clearLayers();
          var visible = 0;
          allMarkers.forEach(function(layer) {
            var meta = layerMeta(layer);
@@ -1620,7 +1611,7 @@ m <- m |>
            if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal, wiMin, wiMax)) return;
            if (!inRange(meta.grades.r, rMinVal, rMaxVal, rMin, rMax)) return;
            if (!inRange(meta.sun, sunMinVal, sunMaxVal, sunMin, sunMax)) return;
-             group.addLayer(layer);
+             markerGroup.addLayer(layer);
              visible += 1;
          });
          var parts = [];
