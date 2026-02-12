@@ -55,12 +55,13 @@ to_num <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
-read_any_delim <- function(path) {
-  x <- tryCatch(readr::read_delim(path, delim = "\t", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
+read_any_delim <- function(path, force_character = FALSE) {
+  col_spec <- if (isTRUE(force_character)) readr::cols(.default = readr::col_character()) else readr::cols()
+  x <- tryCatch(readr::read_delim(path, delim = "\t", col_types = col_spec, show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
-  x <- tryCatch(readr::read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
+  x <- tryCatch(readr::read_delim(path, delim = ";", col_types = col_spec, show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
-  readr::read_csv(path, show_col_types = FALSE, progress = FALSE)
+  readr::read_csv(path, col_types = col_spec, show_col_types = FALSE, progress = FALSE)
 }
 
 find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
@@ -190,7 +191,7 @@ normalize_text <- function(x) {
 # ----------------------------
 if (!file.exists(PATH_META)) stop("Fehlt: ", PATH_META)
 
-meta_raw <- read_any_delim(PATH_META) %>%
+meta_raw <- read_any_delim(PATH_META, force_character = TRUE) %>%
   rename_with(tolower)
 
 if (!"uid" %in% names(meta_raw)) stop("META CSV hat keine Spalte 'uid'.")
@@ -964,6 +965,36 @@ for (i in seq_len(nrow(out))) {
     "      return pad.l + ((i - xMin) / (xMax - xMin)) * (w - pad.l - pad.r);",
     "    };",
     "    const yPos = (v) => pad.t + (1 - (v / maxVal)) * (h - pad.t - pad.b);",
+    "    const fmtMonth = (isoDate) => {",
+    "      const d = new Date(String(isoDate || ''));",
+    "      if (Number.isNaN(d.getTime())) return '';",
+    "      return d.toLocaleDateString('de-AT', { month: 'short' });",
+    "    };",
+    "",
+    "    const drawAxisLabels = () => {",
+    "      ctx.fillStyle = '#666';",
+    "      ctx.font = '11px system-ui, sans-serif';",
+    "      ctx.fillText('0 h', 8, h - pad.b + 4);",
+    "      ctx.fillText(`${maxVal.toFixed(1)} h`, 8, pad.t + 4);",
+    "",
+    "      ctx.fillStyle = '#777';",
+    "      ctx.font = '10px system-ui, sans-serif';",
+    "      ctx.fillText('Sonne (h)', 8, h / 2);",
+    "      ctx.textAlign = 'center';",
+    "      ctx.fillText('Datum', (pad.l + (w - pad.r)) / 2, h - 8);",
+    "",
+    "      const tickCount = Math.min(6, Math.max(2, data.length));",
+    "      const used = new Set();",
+    "      for (let i = 0; i < tickCount; i++) {",
+    "        const idx = Math.round((i / (tickCount - 1 || 1)) * (data.length - 1));",
+    "        if (used.has(idx)) continue;",
+    "        used.add(idx);",
+    "        const x = xPos(idx);",
+    "        const m = fmtMonth(data[idx] && data[idx].date);",
+    "        if (m) ctx.fillText(m, x, h - pad.b + 14);",
+    "      }",
+    "      ctx.textAlign = 'start';",
+    "    };",
     "",
     "    ctx.clearRect(0, 0, w, h);",
     "",
@@ -984,10 +1015,7 @@ for (i in seq_len(nrow(out))) {
     "    });",
     "    ctx.stroke();",
     "",
-    "    ctx.fillStyle = '#333';",
-    "    ctx.font = '12px system-ui, sans-serif';",
-    "    ctx.fillText('0 h', 8, h - pad.b + 4);",
-    "    ctx.fillText(`${maxVal.toFixed(1)} h`, 8, pad.t + 4);",
+    "    drawAxisLabels();",
     "",
     "    const drawHover = (idx) => {",
     "      ctx.clearRect(0, 0, w, h);",
@@ -1006,10 +1034,7 @@ for (i in seq_len(nrow(out))) {
     "        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);",
     "      });",
     "      ctx.stroke();",
-    "      ctx.fillStyle = '#333';",
-    "      ctx.font = '12px system-ui, sans-serif';",
-    "      ctx.fillText('0 h', 8, h - pad.b + 4);",
-    "      ctx.fillText(`${maxVal.toFixed(1)} h`, 8, pad.t + 4);",
+    "      drawAxisLabels();",
     "      if (idx < 0 || idx >= data.length) return;",
     "      const x = xPos(idx);",
     "      const y = yPos(Number(data[idx].sun_hours) || 0);",
