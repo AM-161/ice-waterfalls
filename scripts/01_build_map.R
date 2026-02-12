@@ -1226,15 +1226,18 @@ if (nrow(marker_data) == 0) {
   message("✅ Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
 }
 
-# 12) Leaflet Map: nur 2 Overlays + Slider wechselt URL ----------------
+
+# 12) Leaflet Map: stabile ClusterGroup + Filter (struktureller Fix) ----
 
 init_i <- n_steps
+
 m <- leaflet() |>
   addProviderTiles(providers$OpenStreetMap, group = "OSM") |>
   addProviderTiles(providers$OpenTopoMap,   group = "Gelände (Topo)")
 
 preview_mode <- interactive()
 
+# Raster-Overlays (wie gehabt)
 if (isTRUE(preview_mode)) {
   m <- m |>
     addRasterImage(
@@ -1242,20 +1245,19 @@ if (isTRUE(preview_mode)) {
       colors  = pal_h,
       opacity = 0.8,
       project = TRUE,
-      method  = 'bilinear',
-      group   = 'Eisdicke',
-      layerId = 'ice_preview'
+      method  = "bilinear",
+      group   = "Eisdicke",
+      layerId = "ice_preview"
     ) |>
     addRasterImage(
       climb_time_layers[[init_i]],
       colors  = pal_ci,
       opacity = 0.7,
       project = TRUE,
-      method  = 'bilinear',
-      group   = 'Climbability',
-      layerId = 'climb_preview'
+      method  = "bilinear",
+      group   = "Climbability",
+      layerId = "climb_preview"
     )
-  
 } else {
   bounds_js <- sprintf("[[%f,%f],[%f,%f]]", ext@ymin, ext@xmin, ext@ymax, ext@xmax)
   
@@ -1274,25 +1276,21 @@ if (isTRUE(preview_mode)) {
          if (!rasterPane && typeof map.createPane === 'function') {
            rasterPane = map.createPane('iceRasterPane');
          }
-         if (rasterPane && rasterPane.style) {
-           rasterPane.style.zIndex = 250;
-         }
+         if (rasterPane && rasterPane.style) rasterPane.style.zIndex = 250;
 
-         var ice   = L.imageOverlay(iceUrl,   bounds, {opacity: 0.8, layerId: 'ice_overlay', pane: 'iceRasterPane'});
+         var ice   = L.imageOverlay(iceUrl,   bounds, {opacity: 0.8, layerId: 'ice_overlay',   pane: 'iceRasterPane'});
          var climb = L.imageOverlay(climbUrl, bounds, {opacity: 0.7, layerId: 'climb_overlay', pane: 'iceRasterPane'});
 
          try {
            if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
              map.layerManager.addLayer(ice,   'image', 'ice_overlay',   'Eisdicke',     null, null);
              map.layerManager.addLayer(climb, 'image', 'climb_overlay', 'Climbability', null, null);
-
              if (typeof map.layerManager.showGroup === 'function') {
                map.layerManager.showGroup('Eisdicke');
                map.layerManager.showGroup('Climbability');
              }
            } else {
-             ice.addTo(map);
-             climb.addTo(map);
+             ice.addTo(map); climb.addTo(map);
            }
          } catch(e) {
            try { ice.addTo(map); climb.addTo(map); } catch(e2) {}
@@ -1301,13 +1299,12 @@ if (isTRUE(preview_mode)) {
          window._iceOverlay   = ice;
          window._climbOverlay = climb;
        }",
-      bounds_js,
-      init_i,
-      init_i
+      bounds_js, init_i, init_i
     )
   )
 }
 
+# UI / Controls (wie gehabt)
 m <- m |>
   addMapPane("icefallsPane", zIndex = 650) |>
   addControl(
@@ -1318,373 +1315,106 @@ m <- m |>
          <a href='list.html' class='map-list-link' style='font-size:14px;font-weight:bold;'>📋 Eisfall-Liste</a>
        </div>"
     )
-  )  |>
+  ) |>
   addControl(
     position = "bottomright",
     html = htmltools::HTML(
-      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;width:340px;max-width:calc(100vw - 24px);box-sizing:border-box;'>\n        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>\n        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>\n          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off' style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>\n            <div style='display:flex;flex-direction:column;gap:6px;'>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Technisch (A)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/><span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Mixed (M)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/><span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Wassereis (WI)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/><span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span></div></div>\n              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Fels (UIAA)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/><input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/><span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span></div></div>\n            </div>\n          </div>\n          <div style='display:flex;flex-direction:column;gap:6px;'>\n            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>\n            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'><span>Sonne morgen (h)</span><div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'><input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/><input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/><span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span></div></div>\n          </div>\n          <button id='mapFilterReset' type='button' style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>Filter zurücksetzen</button>\n          <div id='mapFilterStatus' style='font-size:12px;color:#666;line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;'></div>\n        </div>\n      </details>"
+      "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;width:340px;max-width:calc(100vw - 24px);box-sizing:border-box;'>
+        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>
+        <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>
+          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off'
+                 style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>
+          <div style='display:flex;flex-direction:column;gap:6px;'>
+            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>
+            <div style='display:flex;flex-direction:column;gap:6px;'>
+              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
+                <span>Technisch (A)</span>
+                <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+                  <input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
+                  <input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/>
+                  <span id='mapARangeTxt' style='font-size:11px;color:#666;min-width:90px;'>A1- – A4+</span>
+                </div>
+              </div>
+
+              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
+                <span>Mixed (M)</span>
+                <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+                  <input id='mapMmin' type='range' min='0.75' max='13.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
+                  <input id='mapMmax' type='range' min='0.75' max='13.25' step='0.25' value='13.25' style='flex:1;min-width:120px;'/>
+                  <span id='mapMRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>M1- – M13+</span>
+                </div>
+              </div>
+
+              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
+                <span>Wassereis (WI)</span>
+                <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+                  <input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
+                  <input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/>
+                  <span id='mapWIRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>WI1- – WI7+</span>
+                </div>
+              </div>
+
+              <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
+                <span>Fels (UIAA)</span>
+                <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+                  <input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
+                  <input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/>
+                  <span id='mapRRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>1- – 12+</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style='display:flex;flex-direction:column;gap:6px;'>
+            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>
+            <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
+              <span>Sonne morgen (h)</span>
+              <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
+                <input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/>
+                <input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/>
+                <span id='mapSunRangeTxt' style='font-size:11px;color:#666;min-width:90px;'>0.0 – 12.0 h</span>
+              </div>
+            </div>
+          </div>
+
+          <button id='mapFilterReset' type='button'
+                  style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>
+            Filter zurücksetzen
+          </button>
+          <div id='mapFilterStatus' style='font-size:12px;color:#666;line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;'></div>
+        </div>
+      </details>"
     )
-  )  |>
+  ) |>
   addControl(
     position = "bottomright",
     html = htmltools::HTML(
-      "<button id='mapUseGeo' type='button' title='GPS' style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>📍</button>"
+      "<button id='mapUseGeo' type='button' title='GPS'
+              style='width:34px;height:34px;border-radius:999px;border:1px solid #d1d5db;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,0.12);font-size:16px;cursor:pointer;margin-top:8px;'>
+         📍
+       </button>"
     )
-  ) |>
-  htmlwidgets::onRender(
-    "function(el, x) {
-       var style = document.createElement('style');
-       style.textContent = \"@media (max-width: 720px){\" +
-         \".leaflet-control .map-list-link,.leaflet-control .map-home-link{display:inline-flex;justify-content:center;width:100%;font-size:13px;padding:8px 10px;}\" +
-         \"#map-filter{min-width:180px;}\" +
-         \".leaflet-control{max-width:calc(100vw - 24px);}\" +
-         \"}\" +
-         \"#map-filter summary{list-style:none;}\" +
-         \"#map-filter summary::-webkit-details-marker{display:none;}\";
-       el.appendChild(style);
-     }"
-  ) |>
-  htmlwidgets::onRender(
-    "function(el, x) {
-       var map = this;
-       var input = el.querySelector('#mapFilterInput');
-       var status = el.querySelector('#mapFilterStatus');
-       var diffInput = el.querySelector('#mapDifficultyInput');
-       var geoBtn = el.querySelector('#mapUseGeo');
-       var geoStatus = el.querySelector('#mapGeoStatus');
-       var aMin = el.querySelector('#mapAmin');
-       var aMax = el.querySelector('#mapAmax');
-       var mMin = el.querySelector('#mapMmin');
-       var mMax = el.querySelector('#mapMmax');
-       var wiMin = el.querySelector('#mapWImin');
-       var wiMax = el.querySelector('#mapWImax');
-       var rMin = el.querySelector('#mapRmin');
-       var rMax = el.querySelector('#mapRmax');
-       var sunMin = el.querySelector('#mapSunMin');
-       var sunMax = el.querySelector('#mapSunMax');
-       var aRangeTxt = el.querySelector('#mapARangeTxt');
-       var mRangeTxt = el.querySelector('#mapMRangeTxt');
-       var wiRangeTxt = el.querySelector('#mapWIRangeTxt');
-       var rRangeTxt = el.querySelector('#mapRRangeTxt');
-       var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
-       var resetBtn = el.querySelector('#mapFilterReset');
-       if (!input || !status) return;
-       if (typeof L !== 'undefined') {
-         var filterBox = el.querySelector('#map-filter');
-         if (filterBox) {
-           L.DomEvent.disableClickPropagation(filterBox);
-           L.DomEvent.disableScrollPropagation(filterBox);
-         }
-         if (geoBtn) {
-           L.DomEvent.disableClickPropagation(geoBtn);
-           L.DomEvent.disableScrollPropagation(geoBtn);
-         }
-       }
+  )
 
-       function getGroup() {
-         if (map.layerManager) {
-           if (typeof map.layerManager.getLayerGroup === 'function') {
-             return map.layerManager.getLayerGroup('Eisfälle');
-           }
-           if (map.layerManager._byGroup && map.layerManager._byGroup['Eisfälle']) {
-             return map.layerManager._byGroup['Eisfälle'];
-           }
-         }
-         return null;
-       }
+# WICHTIG: Marker werden bewusst NICHT geclustert hinzugefügt.
+# Sie kommen als Roh-Marker in "EisfälleRaw", JS baut daraus eine stabile ClusterGroup "Eisfälle".
+m <- m |>
+  addMarkers(
+    data   = marker_data,
+    lng    = ~longitude,
+    lat    = ~latitude,
+    popup  = ~popup,
+    group  = "EisfälleRaw",
+    options = markerOptions(pane = "icefallsPane"),
+    layerId = ~uid
+  )
 
-       var markerGroup = null;
-       var markerLoadRetries = 0;
-
-       function getMarkerGroup() {
-         if (markerGroup) return markerGroup;
-         var group = getGroup();
-         if (!group) return null;
-         markerGroup = group;
-         return markerGroup;
-       }
-
-       function isUsableMarkerGroup(group){
-         return !!(group && typeof group.getLayers === 'function' && typeof group.addLayer === 'function' && typeof group.clearLayers === 'function');
-       }
-
-       function num(x){
-         var n = Number(x);
-         return isFinite(n) ? n : NaN;
-       }
-
-       function fmtGrade(v){
-         var x = num(v);
-         if (!isFinite(x)) return '';
-         var base = Math.round(x);
-         var diff = x - base;
-         if (diff > 0.10) return String(base) + '+';
-         if (diff < -0.10) return String(base) + '-';
-         return String(base);
-       }
-
-       function clampMinMax(minEl, maxEl){
-         if (!minEl || !maxEl) return [NaN, NaN];
-         var a = Number(minEl.value);
-         var b = Number(maxEl.value);
-         if (!isFinite(a) || !isFinite(b)) return [NaN, NaN];
-         if (a > b) { var t = a; a = b; b = t; minEl.value = a; maxEl.value = b; }
-         return [a, b];
-       }
-
-       function isDefaultRange(minEl, maxEl){
-         if (!minEl || !maxEl) return true;
-         var minVal = Number(minEl.value);
-         var maxVal = Number(maxEl.value);
-         var minDefault = Number(minEl.min);
-         var maxDefault = Number(maxEl.max);
-         if (!isFinite(minVal) || !isFinite(maxVal)) return true;
-         return Math.abs(minVal - minDefault) < 1e-6 && Math.abs(maxVal - maxDefault) < 1e-6;
-       }
-
-       function updateRangeLabels(){
-         var a = clampMinMax(aMin, aMax);
-         var m = clampMinMax(mMin, mMax);
-         var w = clampMinMax(wiMin, wiMax);
-         var r = clampMinMax(rMin, rMax);
-         var s = clampMinMax(sunMin, sunMax);
-         if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' – A' + fmtGrade(a[1]);
-         if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' – M' + fmtGrade(m[1]);
-         if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' – WI' + fmtGrade(w[1]);
-         if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' – ' + fmtGrade(r[1]);
-         if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' – ' + s[1].toFixed(1) + ' h';
-       }
-
-       function formatRange(label, text, fallback){
-         var out = text || fallback || '';
-         if (!out) return label;
-         if (out.indexOf(label) === 0) return out;
-         return label + ' ' + out;
-       }
-
-       function parseDifficulty(d){
-         var s = String(d || '').toUpperCase();
-         s = s.replace(/SCHWIERIGKEIT|DIFFICULTY|GRADE|GRAD/g, ' ');
-         var out = { a: NaN, m: NaN, wi: NaN, r: NaN };
-         function signed(base, sign){
-           var n = Number(base);
-           if (!isFinite(n)) return NaN;
-           if (sign === '+') return n + 0.25;
-           if (sign === '-') return n - 0.25;
-           return n;
-         }
-         var m = s.match(/(?:^|[^A-Z])A\\s*(\\d{1,2})\\s*([+\\-])?/);
-         if (m) out.a = signed(m[1], m[2]);
-         m = s.match(/(?:^|[^A-Z])M\\s*(\\d{1,2})\\s*([+\\-])?/);
-         if (m) out.m = signed(m[1], m[2]);
-         m = s.match(/(?:^|[^A-Z])WI\\s*(\\d{1,2})\\s*([+\\-])?/);
-         if (m) out.wi = signed(m[1], m[2]);
-         var re = /(?:^|[^A-Z0-9])(1[0-2]|[1-9])\\s*([+\\-])?(?=\\b|[^0-9])/g;
-         var best = NaN;
-         while ((m = re.exec(s)) !== null) {
-           var v = signed(m[1], m[2]);
-           if (isFinite(v)) best = isFinite(best) ? Math.max(best, v) : v;
-         }
-         out.r = best;
-         return out;
-       }
-
-       function layerMeta(layer){
-         if (layer && layer._mapMeta) return layer._mapMeta;
-         var meta = { name: '', uid: '', difficulty: '', sun: NaN, grades: {a:NaN,m:NaN,wi:NaN,r:NaN} };
-         var popup = layer && layer.getPopup ? layer.getPopup() : null;
-         var content = popup && popup.getContent ? popup.getContent() : '';
-         if (content) {
-           var wrapper = document.createElement('div');
-           wrapper.innerHTML = content;
-           var node = wrapper.querySelector('.map-meta');
-           if (node && node.dataset) {
-             meta.name = node.dataset.name || '';
-             meta.uid = node.dataset.uid || '';
-             meta.difficulty = node.dataset.difficulty || '';
-             meta.sun = num(node.dataset.sun);
-           }
-         }
-         meta.grades = parseDifficulty(meta.difficulty);
-         if (layer) layer._mapMeta = meta;
-         return meta;
-       }
-
-       function collectMarkers(){
-         if (markerGroup && typeof markerGroup.getAllChildMarkers === 'function') {
-           return markerGroup.getAllChildMarkers() || [];
-         }
-         var out = [];
-         function visit(layer){
-           if (!layer) return;
-           if (typeof layer.getLatLng === 'function') {
-             out.push(layer);
-             return;
-           }
-           if (typeof layer.getLayers === 'function') {
-             var children = layer.getLayers() || [];
-             children.forEach(visit);
-           }
-         }
-         var roots = markerGroup && markerGroup.getLayers ? markerGroup.getLayers() : [];
-         (roots || []).forEach(visit);
-         return out;
-       }
-
-       var allMarkers = [];
-
-      function inRange(v, min, max, minEl, maxEl){
-        if (!isFinite(min) && !isFinite(max)) return true;
-        if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
-        if (isFinite(min) && v < min) return false;
-        if (isFinite(max) && v > max) return false;
-        return true;
-      }
-
-       function resetFilters(){
-         input.value = '';
-         if (diffInput) diffInput.value = '';
-         [[aMin, aMax], [mMin, mMax], [wiMin, wiMax], [rMin, rMax], [sunMin, sunMax]].forEach(function(pair){
-           var mn = pair[0], mx = pair[1];
-           if (mn && mn.min !== undefined) mn.value = mn.min;
-           if (mx && mx.max !== undefined) mx.value = mx.max;
-         });
-       }
-
-       function applyFilter() {
-         var term = input.value.trim().toLowerCase();
-         var diffTerm = diffInput ? diffInput.value.trim().toLowerCase() : '';
-         var group = getMarkerGroup();
-         if (!isUsableMarkerGroup(group)) {
-           status.textContent = 'Filter derzeit nicht verfügbar.';
-           return;
-         }
-         if (!allMarkers.length) allMarkers = collectMarkers(group);
-         if (!allMarkers.length) {
-           status.textContent = 'Filter wird geladen...';
-           if (markerLoadRetries < 20) {
-             markerLoadRetries += 1;
-             setTimeout(applyFilter, 250);
-           }
-           return;
-         }
-
-         markerLoadRetries = 0;
-         updateRangeLabels();
-         var a = clampMinMax(aMin, aMax);
-         var m = clampMinMax(mMin, mMax);
-         var w = clampMinMax(wiMin, wiMax);
-         var r = clampMinMax(rMin, rMax);
-         var s = clampMinMax(sunMin, sunMax);
-         var aMinVal = a[0];
-         var aMaxVal = a[1];
-         var mMinVal = m[0];
-         var mMaxVal = m[1];
-         var wiMinVal = w[0];
-         var wiMaxVal = w[1];
-         var rMinVal = r[0];
-         var rMaxVal = r[1];
-         var sunMinVal = s[0];
-         var sunMaxVal = s[1];
-         markerGroup.clearLayers();
-         var visible = 0;
-         allMarkers.forEach(function(layer) {
-           var meta = layerMeta(layer);
-           var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
-           if (term && blob.indexOf(term) === -1) return;
-           if (diffTerm) {
-            var diffBlob = String(meta.difficulty || '').toLowerCase().replace(/\\s+/g, '');
-            var diffNeedle = diffTerm.replace(/\\s+/g, '');
-             if (diffBlob.indexOf(diffNeedle) === -1) {
-               var parsedSearch = parseDifficulty(diffTerm);
-               var match = false;
-               function sameGrade(v, q){ return isFinite(v) && isFinite(q) && Math.abs(v - q) <= 0.26; }
-               if (isFinite(parsedSearch.a) && sameGrade(meta.grades.a, parsedSearch.a)) match = true;
-               if (isFinite(parsedSearch.m) && sameGrade(meta.grades.m, parsedSearch.m)) match = true;
-               if (isFinite(parsedSearch.wi) && sameGrade(meta.grades.wi, parsedSearch.wi)) match = true;
-               if (isFinite(parsedSearch.r) && sameGrade(meta.grades.r, parsedSearch.r)) match = true;
-               if (!match) return;
-             }
-           }
-           if (!inRange(meta.grades.a, aMinVal, aMaxVal, aMin, aMax)) return;
-           if (!inRange(meta.grades.m, mMinVal, mMaxVal, mMin, mMax)) return;
-           if (!inRange(meta.grades.wi, wiMinVal, wiMaxVal, wiMin, wiMax)) return;
-           if (!inRange(meta.grades.r, rMinVal, rMaxVal, rMin, rMax)) return;
-           if (!inRange(meta.sun, sunMinVal, sunMaxVal, sunMin, sunMax)) return;
-             markerGroup.addLayer(layer);
-             visible += 1;
-         });
-         var parts = [];
-         if (term) parts.push('Suche: ' + term);
-         if (diffTerm) parts.push('Grad: ' + diffTerm);
-         var aTxt = aRangeTxt ? aRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('A' + fmtGrade(aMinVal) + ' – A' + fmtGrade(aMaxVal));
-         var mTxt = mRangeTxt ? mRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('M' + fmtGrade(mMinVal) + ' – M' + fmtGrade(mMaxVal));
-         var wiTxt = wiRangeTxt ? wiRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : ('WI' + fmtGrade(wiMinVal) + ' – WI' + fmtGrade(wiMaxVal));
-         var rTxt = rRangeTxt ? rRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (fmtGrade(rMinVal) + ' – ' + fmtGrade(rMaxVal));
-         var sunTxt = sunRangeTxt ? sunRangeTxt.textContent.replace(/[\\t\\n\\r ]+/g, ' ') : (sunMinVal.toFixed(1) + ' – ' + sunMaxVal.toFixed(1) + ' h');
-         parts.push(formatRange('A', aTxt, ''));
-         parts.push(formatRange('M', mTxt, ''));
-         parts.push(formatRange('WI', wiTxt, ''));
-         parts.push(formatRange('Fels', rTxt, ''));
-         parts.push('Sonne ' + sunTxt);
-         status.textContent = visible + ' / ' + allMarkers.length + ' Eisfälle · ' + parts.join(' · ');
-       }
-
-       input.addEventListener('input', applyFilter);
-       if (diffInput) diffInput.addEventListener('input', applyFilter);
-       if (aMin) aMin.addEventListener('input', applyFilter);
-       if (aMax) aMax.addEventListener('input', applyFilter);
-       if (mMin) mMin.addEventListener('input', applyFilter);
-       if (mMax) mMax.addEventListener('input', applyFilter);
-       if (wiMin) wiMin.addEventListener('input', applyFilter);
-       if (wiMax) wiMax.addEventListener('input', applyFilter);
-       if (rMin) rMin.addEventListener('input', applyFilter);
-       if (rMax) rMax.addEventListener('input', applyFilter);
-       if (sunMin) sunMin.addEventListener('input', applyFilter);
-       if (sunMax) sunMax.addEventListener('input', applyFilter);
-       if (resetBtn) resetBtn.addEventListener('click', function(){
-         resetFilters();
-         updateRangeLabels();
-         applyFilter();
-       });
-       resetFilters();
-       updateRangeLabels();
-       applyFilter();
-
-       if (geoBtn) {
-         geoBtn.addEventListener('click', function(){
-           if (!navigator.geolocation) {
-             if (geoStatus) geoStatus.textContent = 'GPS nicht verfügbar.';
-             return;
-           }
-           if (geoStatus) geoStatus.textContent = 'GPS wird ermittelt...';
-           navigator.geolocation.getCurrentPosition(function(pos){
-             var lat = pos.coords.latitude;
-             var lon = pos.coords.longitude;
-             if (geoStatus) geoStatus.textContent = 'GPS: ' + lat.toFixed(4) + ', ' + lon.toFixed(4);
-             if (typeof L !== 'undefined') {
-               if (!map._geoMarker) {
-                 map._geoMarker = L.circleMarker([lat, lon], {
-                   radius: 6,
-                   color: '#2563eb',
-                   weight: 2,
-                   fillColor: '#60a5fa',
-                   fillOpacity: 0.9
-                 }).addTo(map);
-               } else {
-                 map._geoMarker.setLatLng([lat, lon]);
-               }
-             }
-             if (typeof map.setView === 'function') {
-               var nextZoom = Math.max(map.getZoom ? map.getZoom() : 0, 11);
-               map.setView([lat, lon], nextZoom);
-             }
-           }, function(err){
-             if (geoStatus) geoStatus.textContent = 'GPS Fehler: ' + (err && err.message ? err.message : 'Unbekannt');
-           }, { enableHighAccuracy: true, timeout: 10000 });
-         });
-       }
-    }"
+# LayersControl: "Eisfälle" (Cluster) + "EisfälleRaw" NICHT anbieten.
+m <- m |>
+  addLayersControl(
+    baseGroups    = c("OSM", "Gelände (Topo)"),
+    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    options       = layersControlOptions(collapsed = FALSE)
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax) |>
   addLegend(
@@ -1700,35 +1430,269 @@ m <- m |>
     title     = "Eisdicke (m)",
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
-  ) |>
-  addMarkers(
-    data        = marker_data,
-    lng         = ~longitude,
-    lat         = ~latitude,
-    popup       = ~popup,
-    group       = "Eisfälle",
-    clusterOptions = markerClusterOptions(
-      showCoverageOnHover = FALSE,
-      spiderfyOnMaxZoom = TRUE,
-      zoomToBoundsOnClick = TRUE,
-      disableClusteringAtZoom = 12,
-      iconCreateFunction = JS("function(cluster) {
-        var count = cluster.getChildCount();
-        return new L.DivIcon({
-          html: '<div style=\"background:#163b7a;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);\">' + count + '</div>',
-          className: 'marker-cluster-custom',
-          iconSize: new L.Point(42, 42)
-        });
-      }")
-    )
-  ) |>
-  addLayersControl(
-    baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
-    options       = layersControlOptions(collapsed = FALSE)
   )
 
-# Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL
+# --- JS: 1) Roh-Marker -> stabile ClusterGroup "Eisfälle"
+#        2) Filter arbeitet NUR auf clusterGroup.clearLayers/addLayers
+m <- htmlwidgets::onRender(
+  m,
+  sprintf(
+    "function(el, x){
+  var map = this;
+
+  // --- helpers
+  function isFiniteNum(v){ return typeof v === 'number' && isFinite(v); }
+  function num(x){ var n = Number(x); return isFinite(n) ? n : NaN; }
+
+  function fmtGrade(v){
+    var x = num(v);
+    if (!isFinite(x)) return '';
+    var base = Math.round(x);
+    var diff = x - base;
+    if (diff > 0.10) return String(base) + '+';
+    if (diff < -0.10) return String(base) + '-';
+    return String(base);
+  }
+  function signed(base, sign){
+    var n = Number(base);
+    if (!isFinite(n)) return NaN;
+    if (sign === '+') return n + 0.25;
+    if (sign === '-') return n - 0.25;
+    return n;
+  }
+  function parseDifficulty(d){
+    var s = String(d || '').toUpperCase();
+    s = s.replace(/SCHWIERIGKEIT|DIFFICULTY|GRADE|GRAD/g, ' ');
+    var out = { a: NaN, m: NaN, wi: NaN, r: NaN };
+
+    var m = s.match(/(?:^|[^A-Z])A\\s*(\\d{1,2})\\s*([+\\-])?/);
+    if (m) out.a = signed(m[1], m[2]);
+    m = s.match(/(?:^|[^A-Z])M\\s*(\\d{1,2})\\s*([+\\-])?/);
+    if (m) out.m = signed(m[1], m[2]);
+    m = s.match(/(?:^|[^A-Z])WI\\s*(\\d{1,2})\\s*([+\\-])?/);
+    if (m) out.wi = signed(m[1], m[2]);
+
+    // UIAA: bestes Vorkommen 1..12
+    var re = /(?:^|[^A-Z0-9])(1[0-2]|[1-9])\\s*([+\\-])?(?=\\b|[^0-9])/g;
+    var best = NaN, mm;
+    while ((mm = re.exec(s)) !== null) {
+      var v = signed(mm[1], mm[2]);
+      if (isFinite(v)) best = isFinite(best) ? Math.max(best, v) : v;
+    }
+    out.r = best;
+    return out;
+  }
+
+  function clampMinMax(minEl, maxEl){
+    if (!minEl || !maxEl) return [NaN, NaN];
+    var a = Number(minEl.value), b = Number(maxEl.value);
+    if (!isFinite(a) || !isFinite(b)) return [NaN, NaN];
+    if (a > b) { var t=a; a=b; b=t; minEl.value=a; maxEl.value=b; }
+    return [a,b];
+  }
+  function isDefaultRange(minEl, maxEl){
+    if (!minEl || !maxEl) return true;
+    var minVal=Number(minEl.value), maxVal=Number(maxEl.value);
+    var minDef=Number(minEl.min),   maxDef=Number(maxEl.max);
+    if (!isFinite(minVal) || !isFinite(maxVal)) return true;
+    return Math.abs(minVal-minDef)<1e-6 && Math.abs(maxVal-maxDef)<1e-6;
+  }
+  function inRange(v, min, max, minEl, maxEl){
+    if (!isFinite(min) && !isFinite(max)) return true;
+    if (!isFinite(v)) return isDefaultRange(minEl, maxEl);
+    if (isFinite(min) && v < min) return false;
+    if (isFinite(max) && v > max) return false;
+    return true;
+  }
+
+  // --- step 1: resolve raw group from R leaflet layerManager
+  function getLayerGroup(name){
+    if (!map.layerManager) return null;
+    if (typeof map.layerManager.getLayerGroup === 'function') {
+      return map.layerManager.getLayerGroup(name);
+    }
+    if (map.layerManager._byGroup && map.layerManager._byGroup[name]) {
+      return map.layerManager._byGroup[name];
+    }
+    return null;
+  }
+
+  var rawGroup = getLayerGroup('EisfälleRaw');
+  if (!rawGroup || typeof rawGroup.getLayers !== 'function') {
+    console.warn('EisfälleRaw group not found yet.');
+    return;
+  }
+
+  var rawLayers = rawGroup.getLayers() || [];
+  // rawLayers may include markercluster internals? here it should be only Markers
+  var rawMarkers = rawLayers.filter(function(l){ return l && typeof l.getLatLng === 'function'; });
+
+  // build a stable marker list with cached meta (read from popup HTML)
+  function readMetaFromPopup(layer){
+    var meta = { name:'', uid:'', difficulty:'', sun:NaN, grades:{a:NaN,m:NaN,wi:NaN,r:NaN} };
+    try{
+      var popup = layer.getPopup ? layer.getPopup() : null;
+      var content = popup && popup.getContent ? popup.getContent() : '';
+      if (content){
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = content;
+        var node = wrapper.querySelector('.map-meta');
+        if (node && node.dataset){
+          meta.name = node.dataset.name || '';
+          meta.uid  = node.dataset.uid  || '';
+          meta.difficulty = node.dataset.difficulty || '';
+          meta.sun  = num(node.dataset.sun);
+        }
+      }
+    }catch(e){}
+    meta.grades = parseDifficulty(meta.difficulty);
+    return meta;
+  }
+
+  rawMarkers.forEach(function(m){
+    m._mapMeta = readMetaFromPopup(m);
+  });
+
+  // --- step 2: create ONE real ClusterGroup and register as overlay group 'Eisfälle'
+  var cluster = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: true,
+    zoomToBoundsOnClick: true,
+    disableClusteringAtZoom: 12,
+    iconCreateFunction: function(cluster){
+      var count = cluster.getChildCount();
+      return new L.DivIcon({
+        html: '<div style=\"background:#163b7a;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);\">' + count + '</div>',
+        className: 'marker-cluster-custom',
+        iconSize: new L.Point(42, 42)
+      });
+    }
+  });
+
+  cluster.addLayers(rawMarkers);
+
+  // Hide/remove raw group from map management (so it doesn't fight us)
+  try{
+    // remove each marker from raw group (prevents future clearLayers issues)
+    if (typeof rawGroup.clearLayers === 'function'){
+      rawGroup.clearLayers();
+    }
+  }catch(e){}
+
+  // Register the cluster group with leaflet's layerManager under overlay group 'Eisfälle'
+  try{
+    if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
+      map.layerManager.addLayer(cluster, 'markercluster', 'icefalls_cluster', 'Eisfälle', null, null);
+      if (typeof map.layerManager.showGroup === 'function') map.layerManager.showGroup('Eisfälle');
+    } else {
+      cluster.addTo(map);
+    }
+  }catch(e){
+    try{ cluster.addTo(map); }catch(e2){}
+  }
+
+  // Keep references
+  window._icefallsCluster = cluster;
+  window._icefallsAll = rawMarkers.slice(); // stable base set
+
+  // --- step 3: wire filter UI to ONLY rebuild the cluster content
+  var input   = el.querySelector('#mapFilterInput');
+  var status  = el.querySelector('#mapFilterStatus');
+  var aMin    = el.querySelector('#mapAmin');
+  var aMax    = el.querySelector('#mapAmax');
+  var mMin    = el.querySelector('#mapMmin');
+  var mMax    = el.querySelector('#mapMmax');
+  var wiMin   = el.querySelector('#mapWImin');
+  var wiMax   = el.querySelector('#mapWImax');
+  var rMin    = el.querySelector('#mapRmin');
+  var rMax    = el.querySelector('#mapRmax');
+  var sunMin  = el.querySelector('#mapSunMin');
+  var sunMax  = el.querySelector('#mapSunMax');
+  var aRangeTxt   = el.querySelector('#mapARangeTxt');
+  var mRangeTxt   = el.querySelector('#mapMRangeTxt');
+  var wiRangeTxt  = el.querySelector('#mapWIRangeTxt');
+  var rRangeTxt   = el.querySelector('#mapRRangeTxt');
+  var sunRangeTxt = el.querySelector('#mapSunRangeTxt');
+  var resetBtn = el.querySelector('#mapFilterReset');
+
+  if (typeof L !== 'undefined') {
+    var filterBox = el.querySelector('#map-filter');
+    if (filterBox) { L.DomEvent.disableClickPropagation(filterBox); L.DomEvent.disableScrollPropagation(filterBox); }
+  }
+
+  function updateRangeLabels(){
+    var a = clampMinMax(aMin,aMax);
+    var m = clampMinMax(mMin,mMax);
+    var w = clampMinMax(wiMin,wiMax);
+    var r = clampMinMax(rMin,rMax);
+    var s = clampMinMax(sunMin,sunMax);
+    if (aRangeTxt && isFinite(a[0]) && isFinite(a[1])) aRangeTxt.textContent = 'A' + fmtGrade(a[0]) + ' – A' + fmtGrade(a[1]);
+    if (mRangeTxt && isFinite(m[0]) && isFinite(m[1])) mRangeTxt.textContent = 'M' + fmtGrade(m[0]) + ' – M' + fmtGrade(m[1]);
+    if (wiRangeTxt && isFinite(w[0]) && isFinite(w[1])) wiRangeTxt.textContent = 'WI' + fmtGrade(w[0]) + ' – WI' + fmtGrade(w[1]);
+    if (rRangeTxt && isFinite(r[0]) && isFinite(r[1])) rRangeTxt.textContent = fmtGrade(r[0]) + ' – ' + fmtGrade(r[1]);
+    if (sunRangeTxt && isFinite(s[0]) && isFinite(s[1])) sunRangeTxt.textContent = s[0].toFixed(1) + ' – ' + s[1].toFixed(1) + ' h';
+  }
+
+  function resetFilters(){
+    if (input) input.value = '';
+    [[aMin,aMax],[mMin,mMax],[wiMin,wiMax],[rMin,rMax],[sunMin,sunMax]].forEach(function(pair){
+      var mn = pair[0], mx = pair[1];
+      if (mn && mn.min !== undefined) mn.value = mn.min;
+      if (mx && mx.max !== undefined) mx.value = mx.max;
+    });
+  }
+
+  function applyFilter(){
+    if (!input || !status || !window._icefallsCluster || !window._icefallsAll) return;
+
+    var term = input.value.trim().toLowerCase();
+
+    updateRangeLabels();
+
+    var a = clampMinMax(aMin,aMax);
+    var m = clampMinMax(mMin,mMax);
+    var w = clampMinMax(wiMin,wiMax);
+    var r = clampMinMax(rMin,rMax);
+    var s = clampMinMax(sunMin,sunMax);
+
+    var visible = [];
+    window._icefallsAll.forEach(function(layer){
+      var meta = layer._mapMeta || {name:'',uid:'',difficulty:'',sun:NaN,grades:{a:NaN,m:NaN,wi:NaN,r:NaN}};
+      var blob = (meta.name + ' ' + meta.uid + ' ' + meta.difficulty).toLowerCase();
+      if (term && blob.indexOf(term) === -1) return;
+
+      if (!inRange(meta.grades.a, a[0], a[1], aMin, aMax)) return;
+      if (!inRange(meta.grades.m, m[0], m[1], mMin, mMax)) return;
+      if (!inRange(meta.grades.wi,w[0], w[1], wiMin, wiMax)) return;
+      if (!inRange(meta.grades.r, r[0], r[1], rMin, rMax)) return;
+      if (!inRange(meta.sun,      s[0], s[1], sunMin, sunMax)) return;
+
+      visible.push(layer);
+    });
+
+    // ONLY rebuild cluster content (no LayerManager group hacking)
+    window._icefallsCluster.clearLayers();
+    window._icefallsCluster.addLayers(visible);
+
+    status.textContent = visible.length + ' / ' + window._icefallsAll.length + ' Eisfälle';
+  }
+
+  if (input) input.addEventListener('input', applyFilter);
+  [aMin,aMax,mMin,mMax,wiMin,wiMax,rMin,rMax,sunMin,sunMax].forEach(function(elm){
+    if (elm) elm.addEventListener('input', applyFilter);
+  });
+  if (resetBtn) resetBtn.addEventListener('click', function(){
+    resetFilters(); updateRangeLabels(); applyFilter();
+  });
+
+  resetFilters();
+  updateRangeLabels();
+  applyFilter();
+}"
+  )
+)
+
+# Zeit-Slider (dein Code; unverändert) --------------------------------
 m <- m |>
   (\(x) {
     if (length(time_labels) > 0L) {
@@ -1741,7 +1705,6 @@ m <- m |>
 
            var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
 
-           // UI scale
            var lc = el.getElementsByClassName('leaflet-control-layers-expanded')[0]
                     || el.getElementsByClassName('leaflet-control-layers')[0];
            if (lc) {
@@ -1784,7 +1747,7 @@ m <- m |>
              if (step < 0) step = 0;
              if (step >= nSteps) step = nSteps - 1;
 
-             var i = step + 1; // 1..nSteps
+             var i = step + 1;
              if (iceLayer)   iceLayer.setUrl('img/ice_' + pad3(i) + '.png');
              if (climbLayer) climbLayer.setUrl('img/climb_' + pad3(i) + '.png');
 
@@ -1808,8 +1771,6 @@ m <- m |>
              div.style.padding      = '8px 10px';
              div.style.borderRadius = '6px';
              div.style.minWidth     = isMobile ? '200px' : '260px';
-
-             // Mehr Abstand zur Layer-Control
              div.style.marginTop    = isMobile ? '110px' : '140px';
              div.style.marginRight  = isMobile ? '6px' : '10px';
 
@@ -1851,8 +1812,7 @@ m <- m |>
 
            setTimeout(function(){ setTimeStep(initial); }, 200);
          }",
-        labels_js,
-        n_steps_js
+        labels_js, n_steps_js
       )
       
       htmlwidgets::onRender(x, js_code)
