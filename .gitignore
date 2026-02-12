@@ -16,6 +16,8 @@ data/DEM/DGM_AT_5m_epsg31287.tif
 data/DEM/_cache_aspect
 data/_cache_sunapi
 data/nwp_3500m_forecast/nwp_metadata_cache.json
+data/_cache_inversion
+data/ModelRuns
 
 #Modell anpassen und Fehler suchen
 /adj_model
