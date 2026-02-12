@@ -55,12 +55,13 @@ to_num <- function(x) {
   suppressWarnings(as.numeric(x))
 }
 
-read_any_delim <- function(path) {
-  x <- tryCatch(readr::read_delim(path, delim = "\t", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
+read_any_delim <- function(path, force_character = FALSE) {
+  col_spec <- if (isTRUE(force_character)) readr::cols(.default = readr::col_character()) else readr::cols()
+  x <- tryCatch(readr::read_delim(path, delim = "\t", col_types = col_spec, show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
-  x <- tryCatch(readr::read_delim(path, delim = ";", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
+  x <- tryCatch(readr::read_delim(path, delim = ";", col_types = col_spec, show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
-  readr::read_csv(path, show_col_types = FALSE, progress = FALSE)
+  readr::read_csv(path, col_types = col_spec, show_col_types = FALSE, progress = FALSE)
 }
 
 find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
@@ -190,7 +191,7 @@ normalize_text <- function(x) {
 # ----------------------------
 if (!file.exists(PATH_META)) stop("Fehlt: ", PATH_META)
 
-meta_raw <- read_any_delim(PATH_META) %>%
+meta_raw <- read_any_delim(PATH_META, force_character = TRUE) %>%
   rename_with(tolower)
 
 if (!"uid" %in% names(meta_raw)) stop("META CSV hat keine Spalte 'uid'.")
