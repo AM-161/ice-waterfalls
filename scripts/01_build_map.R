@@ -1730,6 +1730,8 @@ if (group && typeof group.getLayers === 'function') {
     position  = "bottomleft"
   ) |>
   addCircleMarkers(
+    # Kein clusterOptions hier: ältere leaflet-Versionen routen sonst intern
+    # auf addMarkers() und brechen bei CircleMarker-Parametern ab.
     data        = marker_data,
     lng         = ~longitude,
     lat         = ~latitude,
@@ -1739,12 +1741,6 @@ if (group && typeof group.getLayers === 'function') {
     fillColor   = "#ffd166",
     fillOpacity = 0.9,
     options     = pathOptions(pane = "icefallsPane"),
-    clusterOptions = markerClusterOptions(
-      showCoverageOnHover = FALSE,
-      spiderfyOnMaxZoom = TRUE,
-      zoomToBoundsOnClick = TRUE,
-      disableClusteringAtZoom = 12
-    ),
     popup       = ~popup,
     group       = "Eisfälle"
   ) |>
