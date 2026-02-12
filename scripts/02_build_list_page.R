@@ -749,7 +749,7 @@ for (i in seq_len(nrow(out))) {
     
     # diagram full width
     "    .plotWrap{margin-top:12px;}",
-    "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;}",
+    "    .plotImg{width:100%;height:auto;display:block;border:1px solid #eee;border-radius:16px;cursor:zoom-in;}",
     
     "    #map{height:240px;border-radius:16px;border:1px solid #eee;}",
     "    @media(max-width:720px){",
@@ -798,8 +798,9 @@ for (i in seq_len(nrow(out))) {
     # full-width plot card
     "  <div class='card plotWrap'>",
     "    <h2>Diagramm</h2>",
-    paste0("    <div style='margin-bottom:8px;'><a class='btn' href='../", plot_rel, "' target='_blank' rel='noopener'>gro&szlig; &ouml;ffnen</a></div>"),
-    paste0("    <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
+    paste0("    <a href='../", plot_rel, "' target='_blank' rel='noopener' title='Diagramm gro&szlig; &ouml;ffnen'>"),
+    paste0("      <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
+    "    </a>",
     "  </div>",
     
     # upload + map row
