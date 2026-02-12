@@ -125,7 +125,7 @@ function(el, x){
     iconCreateFunction: function(cluster){
       var count = cluster.getChildCount();
       return new L.DivIcon({
-        html: '<div style="background:#163b7a;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);">' + count + '</div>',
+        html: '<div style="background:#ff4fa3;color:#fff;border-radius:999px;width:42px;height:42px;line-height:42px;text-align:center;font-weight:700;font-size:20px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);">' + count + '</div>',
   className: 'marker-cluster-custom',
 iconSize: new L.Point(42, 42)
 });
