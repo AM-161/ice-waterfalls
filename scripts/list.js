@@ -64,6 +64,13 @@
       ELEV:{ min: 0, max: 4000 }
     };
     const API_BASE = "https://icefalls-api.carlos-wydra.workers.dev";
+    const UPLOAD_LOOKUP_CONCURRENCY = 3;
+    const UPLOAD_LOOKUP_INITIAL_LIMIT = 40;
+    const UPLOAD_LOOKUP_SORT_LIMIT = 250;
+
+    const uploadQueue = [];
+    let uploadActive = 0;
+    let rerenderTimer = null;
 
     function num(x){
       if (x === null || x === undefined) return NaN;
@@ -310,6 +317,7 @@
       for (const r of rows) computeRowDistance(r);
       const query = q.value.trim();
       const view = rows.filter(r => matches(r, query)).sort(cmp);
+      ensureUploadsForView(view);
 
       tbody.innerHTML = "";
       for(const r of view){
@@ -508,7 +516,16 @@
         r._grade_r = g.r;
         r._last_upload_ts = NaN;
         r.last_upload_txt = "";
+        r._upload_lookup_started = false;
       }
+    }
+
+    function scheduleRender(){
+      if (rerenderTimer !== null) return;
+      rerenderTimer = setTimeout(() => {
+        rerenderTimer = null;
+        render();
+      }, 80);
     }
 
     async function fetchLastUploadForRow(r){
@@ -533,29 +550,33 @@
       }
     }
 
-    async function loadLatestUploads(){
-      const queue = rows.slice();
-      const concurrency = 4;
-      let active = 0;
-      return new Promise((resolve) => {
-        const next = () => {
-          if (!queue.length && active === 0) {
-            render();
-            resolve();
-            return;
-          }
-          while (active < concurrency && queue.length) {
-            const r = queue.shift();
-            active += 1;
-            fetchLastUploadForRow(r)
-              .finally(() => {
-                active -= 1;
-                next();
-              });
-          }
-        };
-        next();
-      });
+    function pumpUploadQueue(){
+      while (uploadActive < UPLOAD_LOOKUP_CONCURRENCY && uploadQueue.length) {
+        const r = uploadQueue.shift();
+        uploadActive += 1;
+        fetchLastUploadForRow(r)
+          .finally(() => {
+            uploadActive -= 1;
+            scheduleRender();
+            pumpUploadQueue();
+          });
+      }
+    }
+
+    function queueUploadLookup(r){
+      if (!r || r.uid === null || r.uid === undefined) return;
+      if (r._upload_lookup_started) return;
+      r._upload_lookup_started = true;
+      uploadQueue.push(r);
+      pumpUploadQueue();
+    }
+
+    function ensureUploadsForView(view){
+      if (!Array.isArray(view) || view.length === 0) return;
+      const cap = (sortKey === "_last_upload_ts") ? UPLOAD_LOOKUP_SORT_LIMIT : UPLOAD_LOOKUP_INITIAL_LIMIT;
+      for (let i = 0; i < view.length && i < cap; i += 1){
+        queueUploadLookup(view[i]);
+      }
     }
 
     function initSunSliderFromData(){
@@ -584,7 +605,6 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
-        loadLatestUploads();
         status.textContent = `Daten geladen (embedded): ${rows.length} Eintraege`;
         render();
         return;
@@ -605,7 +625,6 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
-        loadLatestUploads();
         status.textContent = `Daten geladen: ${rows.length} Eintraege (Quelle: ${res.url})`;
         render();
       })
