@@ -965,6 +965,7 @@ if (!has_fc) {
       name = "Legende",
       values = c("Eisdicke" = "black", "Climbability" = "red")
     ) +
+    guides(color = guide_legend(order = 1)) +
     labs(
       subtitle = paste(
         c(
@@ -1104,8 +1105,12 @@ if (!has_fc) {
       values = c("Eisdicke" = "black", "Climbability" = "red")
     ) +
     scale_fill_manual(
-      name = "Legende",
+      name = NULL,
       values = c("Sonneneinstrahlung" = "yellow")
+    ) +
+    guides(
+      color = guide_legend(order = 1),
+      fill = guide_legend(order = 2, title = NULL)
     ) +
     theme_minimal(base_size = 12) +
     theme(
