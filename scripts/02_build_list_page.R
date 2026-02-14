@@ -186,6 +186,40 @@ normalize_text <- function(x) {
 }
 
 
+normalize_cardinal <- function(x) {
+  x <- toupper(trimws(as.character(x)))
+  x <- gsub("Ö", "O", x, fixed = TRUE)
+  x <- gsub("OST", "O", x, fixed = TRUE)
+  x <- gsub("NORD", "N", x, fixed = TRUE)
+  x <- gsub("SUD", "S", x, fixed = TRUE)
+  x <- gsub("SUED", "S", x, fixed = TRUE)
+  x <- gsub("WEST", "W", x, fixed = TRUE)
+  x
+}
+
+cardinal_degree_centers <- c(
+  N = 0, NNO = 22.5, NO = 45, ONO = 67.5,
+  O = 90, OSO = 112.5, SO = 135, SSO = 157.5,
+  S = 180, SSW = 202.5, SW = 225, WSW = 247.5,
+  W = 270, WNW = 292.5, NW = 315, NNW = 337.5
+)
+
+cardinal_to_degree <- function(cardinal) {
+  c <- normalize_cardinal(cardinal)
+  if (length(c) == 0 || is.na(c) || !(c %in% names(cardinal_degree_centers))) return(NA_real_)
+  unname(cardinal_degree_centers[[c]])
+}
+
+# Return TRUE when degree is compatible with the cardinal direction.
+is_degree_consistent_with_cardinal <- function(deg, cardinal) {
+  if (!is.finite(deg)) return(FALSE)
+  center <- cardinal_to_degree(cardinal)
+  if (!is.finite(center)) return(TRUE)
+  delta <- abs((((deg - center) + 180) %% 360) - 180)
+  delta <= 22.5
+}
+
+
 # ----------------------------
 # 1) Load meta (CSV)
 # ----------------------------
@@ -207,6 +241,8 @@ meta <- tibble(
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
   aspect = get_chr(meta_raw, "ausrichtung", "aspect"),
+  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "ausrichtung_text"),
+  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),
   first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
@@ -693,6 +729,22 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
+  aspect_cardinal_raw <- as.character(r$aspect_cardinal[[1]])
+  aspect_cardinal_txt <- esc_html(aspect_cardinal_raw)
+  aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
+  if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
+  # If source degree does not fit the cardinal direction, derive degree from cardinal.
+  if (nchar(trimws(aspect_cardinal_raw)) > 0 &&
+      (!is.finite(aspect_deg) || !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw))) {
+    aspect_deg <- cardinal_to_degree(aspect_cardinal_raw)
+  }
+  aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
+  aspect_txt <- dplyr::case_when(
+    nchar(aspect_cardinal_txt) > 0 & nchar(aspect_deg_txt) > 0 ~ paste0(aspect_cardinal_txt, " (", aspect_deg_txt, ")"),
+    nchar(aspect_cardinal_txt) > 0 ~ aspect_cardinal_txt,
+    nchar(aspect_deg_txt) > 0 ~ aspect_deg_txt,
+    TRUE ~ "&mdash;"
+  )
   elev <- r$elev_m[[1]]
   elev_txt <- if (is.finite(elev)) paste0(round(elev), " m") else "&mdash;"
   
@@ -817,6 +869,7 @@ for (i in seq_len(nrow(out))) {
     "      <h2>Basic Infos</h2>",
     "      <div class='kv'>",
     paste0("        <div class='k'>Schwierigkeit</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
+    paste0("        <div class='k'>Ausrichtung</div><div><b>", aspect_txt, "</b></div>"),
     paste0("        <div class='k'>H&ouml;he &uuml;. NN</div><div><b>", elev_txt, "</b></div>"),
     paste0("        <div class='k'>Sonneneinstrahlung morgen</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
     paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),

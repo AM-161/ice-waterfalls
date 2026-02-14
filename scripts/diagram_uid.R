@@ -1062,6 +1062,10 @@ if (!has_fc) {
     coord_cartesian(xlim = c(x_min, forecast_start), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
     scale_y_continuous(name = "Eisdicke (m)") +
+    scale_color_manual(
+      name = "Legende",
+      values = c("Eisdicke" = "black", "Climbability" = "red")
+    ) +
     theme_minimal(base_size = 12) +
     theme(
       plot.margin = margin(5.5, 2, 5.5, 5.5),
