@@ -985,6 +985,7 @@ if (!has_fc) {
       legend.position = "bottom",
       legend.title = element_text(size = 10, face = "bold"),
       legend.text = element_text(size = 9),
+      legend.key = element_rect(fill = NA, colour = NA),
       legend.box = "horizontal"
     )
   
@@ -1114,8 +1115,8 @@ if (!has_fc) {
       drop = FALSE
     ) +
     guides(
-      color = guide_legend(order = 1),
-      fill = guide_legend(order = 2, title = NULL)
+      color = guide_legend(order = 1, override.aes = list(fill = NA)),
+      fill = guide_legend(order = 2, title = NULL, override.aes = list(colour = NA, linetype = 0))
     ) +
     theme_minimal(base_size = 12) +
     theme(
@@ -1161,6 +1162,7 @@ if (!has_fc) {
       legend.position = "bottom",
       legend.title = element_text(size = 10, face = "bold"),
       legend.text = element_text(size = 9),
+      legend.key = element_rect(fill = NA, colour = NA),
       legend.box = "horizontal"
     )
   
