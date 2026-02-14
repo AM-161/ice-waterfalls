@@ -186,39 +186,6 @@ normalize_text <- function(x) {
 }
 
 
-normalize_cardinal <- function(x) {
-  x <- toupper(trimws(as.character(x)))
-  x <- gsub("Ö", "O", x, fixed = TRUE)
-  x <- gsub("OST", "O", x, fixed = TRUE)
-  x <- gsub("NORD", "N", x, fixed = TRUE)
-  x <- gsub("SUD", "S", x, fixed = TRUE)
-  x <- gsub("SUED", "S", x, fixed = TRUE)
-  x <- gsub("WEST", "W", x, fixed = TRUE)
-  x
-}
-
-cardinal_degree_centers <- c(
-  N = 0, NNO = 22.5, NO = 45, ONO = 67.5,
-  O = 90, OSO = 112.5, SO = 135, SSO = 157.5,
-  S = 180, SSW = 202.5, SW = 225, WSW = 247.5,
-  W = 270, WNW = 292.5, NW = 315, NNW = 337.5
-)
-
-cardinal_to_degree <- function(cardinal) {
-  c <- normalize_cardinal(cardinal)
-  if (length(c) == 0 || is.na(c) || !(c %in% names(cardinal_degree_centers))) return(NA_real_)
-  unname(cardinal_degree_centers[[c]])
-}
-
-# Return TRUE when degree is compatible with the cardinal direction.
-is_degree_consistent_with_cardinal <- function(deg, cardinal) {
-  if (!is.finite(deg)) return(FALSE)
-  center <- cardinal_to_degree(cardinal)
-  if (!is.finite(center)) return(TRUE)
-  delta <- abs((((deg - center) + 180) %% 360) - 180)
-  delta <= 22.5
-}
-
 
 # ----------------------------
 # 1) Load meta (CSV)
@@ -240,9 +207,6 @@ meta <- tibble(
   elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
-  aspect = get_chr(meta_raw, "ausrichtung", "aspect"),
-  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "ausrichtung_text"),
-  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),
   first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
@@ -558,7 +522,7 @@ html_lines <- c(
   '',
   '  <div class="wrap">',
   '    <div class="controls">',
-  '      <input id="q" type="search" placeholder="Suchen: Name, Schwierigkeit, Ausrichtung, Station ...">',
+  '      <input id="q" type="search" placeholder="Suchen: Name, Schwierigkeit, Station ...">',
   '',
   '      <details id="filters">',
   '        <summary class="btn" type="button">Filter</summary>',
