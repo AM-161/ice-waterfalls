@@ -207,6 +207,8 @@ meta <- tibble(
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
   aspect = get_chr(meta_raw, "ausrichtung", "aspect"),
+  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "ausrichtung_text"),
+  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),
   first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
@@ -693,6 +695,16 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
+  aspect_cardinal_txt <- esc_html(r$aspect_cardinal[[1]])
+  aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
+  if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
+  aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
+  aspect_txt <- dplyr::case_when(
+    nchar(aspect_cardinal_txt) > 0 & nchar(aspect_deg_txt) > 0 ~ paste0(aspect_cardinal_txt, " (", aspect_deg_txt, ")"),
+    nchar(aspect_cardinal_txt) > 0 ~ aspect_cardinal_txt,
+    nchar(aspect_deg_txt) > 0 ~ aspect_deg_txt,
+    TRUE ~ "&mdash;"
+  )
   elev <- r$elev_m[[1]]
   elev_txt <- if (is.finite(elev)) paste0(round(elev), " m") else "&mdash;"
   
@@ -817,6 +829,7 @@ for (i in seq_len(nrow(out))) {
     "      <h2>Basic Infos</h2>",
     "      <div class='kv'>",
     paste0("        <div class='k'>Schwierigkeit</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
+    paste0("        <div class='k'>Ausrichtung</div><div><b>", aspect_txt, "</b></div>"),
     paste0("        <div class='k'>H&ouml;he &uuml;. NN</div><div><b>", elev_txt, "</b></div>"),
     paste0("        <div class='k'>Sonneneinstrahlung morgen</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
     paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),
