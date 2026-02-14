@@ -693,6 +693,8 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
+  aspect_txt <- esc_html(r$aspect[[1]])
+  if (nchar(aspect_txt) == 0) aspect_txt <- "&mdash;"
   elev <- r$elev_m[[1]]
   elev_txt <- if (is.finite(elev)) paste0(round(elev), " m") else "&mdash;"
   
@@ -817,6 +819,7 @@ for (i in seq_len(nrow(out))) {
     "      <h2>Basic Infos</h2>",
     "      <div class='kv'>",
     paste0("        <div class='k'>Schwierigkeit</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
+    paste0("        <div class='k'>Ausrichtung</div><div><b>", aspect_txt, "</b></div>"),
     paste0("        <div class='k'>H&ouml;he &uuml;. NN</div><div><b>", elev_txt, "</b></div>"),
     paste0("        <div class='k'>Sonneneinstrahlung morgen</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
     paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),
