@@ -186,6 +186,7 @@ normalize_text <- function(x) {
 }
 
 
+
 # ----------------------------
 # 1) Load meta (CSV)
 # ----------------------------
@@ -206,7 +207,6 @@ meta <- tibble(
   elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
-  aspect = get_chr(meta_raw, "ausrichtung", "aspect"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),
   first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
@@ -522,7 +522,7 @@ html_lines <- c(
   '',
   '  <div class="wrap">',
   '    <div class="controls">',
-  '      <input id="q" type="search" placeholder="Suchen: Name, Schwierigkeit, Ausrichtung, Station ...">',
+  '      <input id="q" type="search" placeholder="Suchen: Name, Schwierigkeit, Station ...">',
   '',
   '      <details id="filters">',
   '        <summary class="btn" type="button">Filter</summary>',
