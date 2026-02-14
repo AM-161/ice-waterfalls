@@ -947,14 +947,25 @@ if (!has_fc) {
   climb_hist_daily <- climb_hist_daily %>% mutate(climb_y = y_min + climbability * Y_DEN)
   
   plt <- ggplot(mod, aes(time, thickness_m)) +
-    geom_line(linewidth = 0.9) +
-    geom_line(data = climb_hist_daily, aes(time, climb_y), inherit.aes = FALSE, linewidth = 0.8, color = "red", na.rm = TRUE) +
+    geom_line(aes(color = "Eisdicke"), linewidth = 0.9) +
+    geom_line(
+      data = climb_hist_daily,
+      aes(time, climb_y, color = "Climbability"),
+      inherit.aes = FALSE,
+      linewidth = 0.8,
+      na.rm = TRUE
+    ) +
     coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
     scale_y_continuous(
       name = "Eisdicke (m)",
       sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
     ) +
+    scale_color_manual(
+      name = "Legende",
+      values = c("Eisdicke" = "black", "Climbability" = "red")
+    ) +
+    guides(color = guide_legend(order = 1)) +
     labs(
       subtitle = paste(
         c(
@@ -969,7 +980,13 @@ if (!has_fc) {
       x = "Zeit"
     ) +
     theme_minimal(base_size = 12) +
-    theme(axis.text.x = element_text(size = 9, lineheight = 0.95))
+    theme(
+      axis.text.x = element_text(size = 9, lineheight = 0.95),
+      legend.position = "bottom",
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 9),
+      legend.box = "horizontal"
+    )
   
 } else {
   
@@ -1032,8 +1049,16 @@ if (!has_fc) {
   
   # Links (Historie) – KEINE sec.axis (damit sie nicht zwischen Panels landet)
   p_hist <- ggplot(mod_hist, aes(time, thickness_m)) +
-    geom_line(linewidth = 0.9) +
-    geom_line(data = climb_hist_daily, aes(time, climb_y), inherit.aes = FALSE, linewidth = 0.85, color = "red", na.rm = TRUE) +
+    geom_line(color = "black", linewidth = 0.9, show.legend = FALSE) +
+    geom_line(
+      data = climb_hist_daily,
+      aes(time, climb_y),
+      inherit.aes = FALSE,
+      color = "red",
+      linewidth = 0.85,
+      na.rm = TRUE,
+      show.legend = FALSE
+    ) +
     coord_cartesian(xlim = c(x_min, forecast_start), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
     scale_y_continuous(name = "Eisdicke (m)") +
@@ -1050,16 +1075,15 @@ if (!has_fc) {
   # Rechts (Forecast) – sec.axis RECHTS AUSSEN + X-Breaks nur bei Peaks
   p_fc <- ggplot(mod_fc, aes(time, thickness_m)) +
     geom_rect(data = bg, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-              inherit.aes = FALSE, fill = "grey85", alpha = 0.6) +
+              inherit.aes = FALSE, fill = "grey85", alpha = 0.6, show.legend = FALSE) +
     geom_rect(
       data = sun_rects_fc,
-      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = "Sonneneinstrahlung"),
       inherit.aes = FALSE,
-      fill = "yellow",
       alpha = 0.25
     ) +
-    geom_line(linewidth = 0.9) +
-    geom_line(aes(y = climb_y), linewidth = 0.8, color = "red", na.rm = TRUE) +
+    geom_line(aes(color = "Eisdicke"), linewidth = 0.9) +
+    geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE) +
     coord_cartesian(xlim = c(forecast_start, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(
       breaks = peak_fc$peak_time,
@@ -1071,6 +1095,18 @@ if (!has_fc) {
     scale_y_continuous(
       name = NULL,
       sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
+    ) +
+    scale_color_manual(
+      name = "Legende",
+      values = c("Eisdicke" = "black", "Climbability" = "red")
+    ) +
+    scale_fill_manual(
+      name = NULL,
+      values = c("Sonneneinstrahlung" = "yellow")
+    ) +
+    guides(
+      color = guide_legend(order = 1),
+      fill = guide_legend(order = 2, title = NULL)
     ) +
     theme_minimal(base_size = 12) +
     theme(
@@ -1109,6 +1145,14 @@ if (!has_fc) {
         collapse = " | "
       ),
       caption = paste0("10-min Modell (dt=", MODEL_STEP_MIN, " min): FDH/PDH + SW(toposun) + Wind(vuln) + Dryness + Sättigung")
+    )
+
+  plt <- plt + patchwork::plot_layout(guides = "collect") &
+    theme(
+      legend.position = "bottom",
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 9),
+      legend.box = "horizontal"
     )
   
   }
