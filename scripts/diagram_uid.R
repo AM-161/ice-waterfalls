@@ -981,9 +981,10 @@ if (!has_fc) {
     theme_minimal(base_size = 12) +
     theme(
       axis.text.x = element_text(size = 9, lineheight = 0.95),
-      legend.position = "left",
+      legend.position = "bottom",
       legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 9)
+      legend.text = element_text(size = 9),
+      legend.box = "horizontal"
     )
   
 } else {
@@ -1047,17 +1048,23 @@ if (!has_fc) {
   
   # Links (Historie) – KEINE sec.axis (damit sie nicht zwischen Panels landet)
   p_hist <- ggplot(mod_hist, aes(time, thickness_m)) +
-    geom_line(aes(color = "Eisdicke"), linewidth = 0.9) +
+    geom_line(color = "black", linewidth = 0.9, show.legend = FALSE) +
     geom_line(
       data = climb_hist_daily,
-      aes(time, climb_y, color = "Climbability"),
+      aes(time, climb_y),
       inherit.aes = FALSE,
+      color = "red",
       linewidth = 0.85,
-      na.rm = TRUE
+      na.rm = TRUE,
+      show.legend = FALSE
     ) +
     coord_cartesian(xlim = c(x_min, forecast_start), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
     scale_y_continuous(name = "Eisdicke (m)") +
+    scale_color_manual(
+      name = "Legende",
+      values = c("Eisdicke" = "black", "Climbability" = "red")
+    ) +
     theme_minimal(base_size = 12) +
     theme(
       plot.margin = margin(5.5, 2, 5.5, 5.5),
@@ -1141,9 +1148,10 @@ if (!has_fc) {
 
   plt <- plt + patchwork::plot_layout(guides = "collect") &
     theme(
-      legend.position = "left",
+      legend.position = "bottom",
       legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 9)
+      legend.text = element_text(size = 9),
+      legend.box = "horizontal"
     )
   
   }
