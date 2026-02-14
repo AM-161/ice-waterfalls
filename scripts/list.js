@@ -64,6 +64,16 @@
       ELEV:{ min: 0, max: 4000 }
     };
     const API_BASE = "https://icefalls-api.carlos-wydra.workers.dev";
+    const UPLOAD_LOOKUP_CONCURRENCY = 6;
+    const UPLOAD_LOOKUP_INITIAL_LIMIT = 120;
+    const UPLOAD_LOOKUP_SORT_LIMIT = 400;
+    const UPLOAD_CACHE_KEY = "icefalls:last_upload_cache:v1";
+    const UPLOAD_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+    const uploadQueue = [];
+    let uploadActive = 0;
+    let rerenderTimer = null;
+    let backgroundQueued = false;
 
     function num(x){
       if (x === null || x === undefined) return NaN;
@@ -310,6 +320,7 @@
       for (const r of rows) computeRowDistance(r);
       const query = q.value.trim();
       const view = rows.filter(r => matches(r, query)).sort(cmp);
+      ensureUploadsForView(view);
 
       tbody.innerHTML = "";
       for(const r of view){
@@ -508,7 +519,88 @@
         r._grade_r = g.r;
         r._last_upload_ts = NaN;
         r.last_upload_txt = "";
+        r._upload_lookup_started = false;
+        r._last_upload_cached_at = NaN;
       }
+    }
+
+    function loadUploadCache(){
+      try {
+        const raw = localStorage.getItem(UPLOAD_CACHE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return;
+        const entries = parsed.entries;
+        if (!entries || typeof entries !== "object") return;
+        const now = Date.now();
+        for (const r of rows){
+          if (!r || r.uid === null || r.uid === undefined) continue;
+          const rec = entries[String(r.uid)];
+          if (!rec || typeof rec !== "object") continue;
+          const ts = Number(rec.ts);
+          const cachedAt = Number(rec.cached_at);
+          if (!Number.isFinite(ts) || !Number.isFinite(cachedAt)) continue;
+          if ((now - cachedAt) > UPLOAD_CACHE_MAX_AGE_MS) continue;
+          r._last_upload_ts = ts;
+          r.last_upload_txt = formatUploadDate(ts);
+          r._last_upload_cached_at = cachedAt;
+        }
+      } catch (_) {
+        // ignore cache parse/storage errors
+      }
+    }
+
+    function saveUploadCache(){
+      try {
+        const entries = {};
+        const now = Date.now();
+        for (const r of rows){
+          if (!r || r.uid === null || r.uid === undefined) continue;
+          if (!Number.isFinite(r._last_upload_ts)) continue;
+          entries[String(r.uid)] = { ts: r._last_upload_ts, cached_at: now };
+        }
+        localStorage.setItem(UPLOAD_CACHE_KEY, JSON.stringify({ entries }));
+      } catch (_) {
+        // ignore cache write errors
+      }
+    }
+
+    function queueBackgroundUploadLookups(view){
+      if (backgroundQueued) return;
+      backgroundQueued = true;
+      const seen = new Set();
+      const prioritized = Array.isArray(view) ? view : [];
+      const rest = [];
+      for (const r of prioritized){
+        if (!r || r.uid === null || r.uid === undefined) continue;
+        const k = String(r.uid);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        queueUploadLookup(r);
+      }
+      for (const r of rows){
+        if (!r || r.uid === null || r.uid === undefined) continue;
+        const k = String(r.uid);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        rest.push(r);
+      }
+      const schedule = () => {
+        for (const r of rest) queueUploadLookup(r);
+      };
+      if (typeof requestIdleCallback === "function") {
+        requestIdleCallback(schedule, { timeout: 1200 });
+      } else {
+        setTimeout(schedule, 250);
+      }
+    }
+
+    function scheduleRender(){
+      if (rerenderTimer !== null) return;
+      rerenderTimer = setTimeout(() => {
+        rerenderTimer = null;
+        render();
+      }, 80);
     }
 
     async function fetchLastUploadForRow(r){
@@ -533,29 +625,35 @@
       }
     }
 
-    async function loadLatestUploads(){
-      const queue = rows.slice();
-      const concurrency = 4;
-      let active = 0;
-      return new Promise((resolve) => {
-        const next = () => {
-          if (!queue.length && active === 0) {
-            render();
-            resolve();
-            return;
-          }
-          while (active < concurrency && queue.length) {
-            const r = queue.shift();
-            active += 1;
-            fetchLastUploadForRow(r)
-              .finally(() => {
-                active -= 1;
-                next();
-              });
-          }
-        };
-        next();
-      });
+    function pumpUploadQueue(){
+      while (uploadActive < UPLOAD_LOOKUP_CONCURRENCY && uploadQueue.length) {
+        const r = uploadQueue.shift();
+        uploadActive += 1;
+        fetchLastUploadForRow(r)
+          .finally(() => {
+            uploadActive -= 1;
+            saveUploadCache();
+            scheduleRender();
+            pumpUploadQueue();
+          });
+      }
+    }
+
+    function queueUploadLookup(r){
+      if (!r || r.uid === null || r.uid === undefined) return;
+      if (r._upload_lookup_started) return;
+      r._upload_lookup_started = true;
+      uploadQueue.push(r);
+      pumpUploadQueue();
+    }
+
+    function ensureUploadsForView(view){
+      if (!Array.isArray(view) || view.length === 0) return;
+      const cap = (sortKey === "_last_upload_ts") ? UPLOAD_LOOKUP_SORT_LIMIT : UPLOAD_LOOKUP_INITIAL_LIMIT;
+      for (let i = 0; i < view.length && i < cap; i += 1){
+        queueUploadLookup(view[i]);
+      }
+      queueBackgroundUploadLookups(view);
     }
 
     function initSunSliderFromData(){
@@ -584,7 +682,7 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
-        loadLatestUploads();
+        loadUploadCache();
         status.textContent = `Daten geladen (embedded): ${rows.length} Eintraege`;
         render();
         return;
@@ -605,7 +703,7 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
-        loadLatestUploads();
+        loadUploadCache();
         status.textContent = `Daten geladen: ${rows.length} Eintraege (Quelle: ${res.url})`;
         render();
       })
