@@ -729,13 +729,31 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
-  aspect_cardinal_raw <- as.character(r$aspect_cardinal[[1]])
+
+  aspect_cardinal_raw <- NA_character_
+  if ("aspect_cardinal" %in% names(r) && length(r[["aspect_cardinal"]]) > 0) {
+    aspect_cardinal_raw <- as.character(r[["aspect_cardinal"]][[1]])
+  }
   aspect_cardinal_txt <- esc_html(aspect_cardinal_raw)
-  aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
-  if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
+
+  aspect_deg <- NA_real_
+  if ("aspect_deg" %in% names(r) && length(r[["aspect_deg"]]) > 0 && !is.na(r[["aspect_deg"]][[1]])) {
+    aspect_deg <- suppressWarnings(as.numeric(r[["aspect_deg"]][[1]]))
+  }
+  if (!is.finite(aspect_deg)) {
+    if ("aspect" %in% names(r) && length(r[["aspect"]]) > 0 && !is.na(r[["aspect"]][[1]])) {
+      aspect_deg <- suppressWarnings(as.numeric(r[["aspect"]][[1]]))
+      if (!is.finite(aspect_deg)) aspect_deg <- NA_real_
+    } else {
+      aspect_deg <- NA_real_
+    }
+  }
+
   # If source degree does not fit the cardinal direction, derive degree from cardinal.
-  if (nchar(trimws(aspect_cardinal_raw)) > 0 &&
-      (!is.finite(aspect_deg) || !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw))) {
+  if (!is.na(aspect_cardinal_raw) &&
+      nchar(trimws(aspect_cardinal_raw)) > 0 &&
+      (is.na(aspect_deg) || !is.finite(aspect_deg) ||
+       !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw))) {
     aspect_deg <- cardinal_to_degree(aspect_cardinal_raw)
   }
   aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
