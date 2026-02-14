@@ -1084,10 +1084,11 @@ if (!has_fc) {
       data = sun_rects_fc,
       aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = "Sonneneinstrahlung"),
       inherit.aes = FALSE,
-      alpha = 0.25
+      alpha = 0.25,
+      show.legend = TRUE
     ) +
-    geom_line(aes(color = "Eisdicke"), linewidth = 0.9) +
-    geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE) +
+    geom_line(aes(color = "Eisdicke"), linewidth = 0.9, show.legend = TRUE) +
+    geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE, show.legend = TRUE) +
     coord_cartesian(xlim = c(forecast_start, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(
       breaks = peak_fc$peak_time,
@@ -1102,11 +1103,15 @@ if (!has_fc) {
     ) +
     scale_color_manual(
       name = "Legende",
-      values = c("Eisdicke" = "black", "Climbability" = "red")
+      values = c("Eisdicke" = "black", "Climbability" = "red"),
+      breaks = c("Eisdicke", "Climbability"),
+      drop = FALSE
     ) +
     scale_fill_manual(
       name = NULL,
-      values = c("Sonneneinstrahlung" = "yellow")
+      values = c("Sonneneinstrahlung" = "yellow"),
+      breaks = c("Sonneneinstrahlung"),
+      drop = FALSE
     ) +
     guides(
       color = guide_legend(order = 1),
