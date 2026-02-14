@@ -186,6 +186,34 @@ normalize_text <- function(x) {
 }
 
 
+normalize_cardinal <- function(x) {
+  x <- toupper(trimws(as.character(x)))
+  x <- gsub("Ö", "O", x, fixed = TRUE)
+  x <- gsub("OST", "O", x, fixed = TRUE)
+  x <- gsub("NORD", "N", x, fixed = TRUE)
+  x <- gsub("SUD", "S", x, fixed = TRUE)
+  x <- gsub("SUED", "S", x, fixed = TRUE)
+  x <- gsub("WEST", "W", x, fixed = TRUE)
+  x
+}
+
+# Return TRUE when degree is compatible with the cardinal direction.
+is_degree_consistent_with_cardinal <- function(deg, cardinal) {
+  if (!is.finite(deg)) return(FALSE)
+  c <- normalize_cardinal(cardinal)
+  centers <- c(
+    N = 0, NNO = 22.5, NO = 45, ONO = 67.5,
+    O = 90, OSO = 112.5, SO = 135, SSO = 157.5,
+    S = 180, SSW = 202.5, SW = 225, WSW = 247.5,
+    W = 270, WNW = 292.5, NW = 315, NNW = 337.5
+  )
+  if (!(c %in% names(centers))) return(TRUE)
+  center <- unname(centers[[c]])
+  delta <- abs((((deg - center) + 180) %% 360) - 180)
+  delta <= 22.5
+}
+
+
 # ----------------------------
 # 1) Load meta (CSV)
 # ----------------------------
@@ -695,9 +723,14 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
-  aspect_cardinal_txt <- esc_html(r$aspect_cardinal[[1]])
+  aspect_cardinal_raw <- as.character(r$aspect_cardinal[[1]])
+  aspect_cardinal_txt <- esc_html(aspect_cardinal_raw)
   aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
   if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
+  if (is.finite(aspect_deg) && nchar(trimws(aspect_cardinal_raw)) > 0 &&
+      !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw)) {
+    aspect_deg <- NA_real_
+  }
   aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
   aspect_txt <- dplyr::case_when(
     nchar(aspect_cardinal_txt) > 0 & nchar(aspect_deg_txt) > 0 ~ paste0(aspect_cardinal_txt, " (", aspect_deg_txt, ")"),
