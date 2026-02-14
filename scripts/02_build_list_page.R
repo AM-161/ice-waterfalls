@@ -207,6 +207,8 @@ meta <- tibble(
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
   aspect = get_chr(meta_raw, "ausrichtung", "aspect"),
+  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "ausrichtung_text"),
+  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),
   first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
@@ -693,8 +695,16 @@ for (i in seq_len(nrow(out))) {
   
   nm  <- esc_html(r$name[[1]])
   diff <- esc_html(r$difficulty[[1]])
-  aspect_txt <- esc_html(r$aspect[[1]])
-  if (nchar(aspect_txt) == 0) aspect_txt <- "&mdash;"
+  aspect_cardinal_txt <- esc_html(r$aspect_cardinal[[1]])
+  aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
+  if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
+  aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
+  aspect_txt <- dplyr::case_when(
+    nchar(aspect_cardinal_txt) > 0 & nchar(aspect_deg_txt) > 0 ~ paste0(aspect_cardinal_txt, " (", aspect_deg_txt, ")"),
+    nchar(aspect_cardinal_txt) > 0 ~ aspect_cardinal_txt,
+    nchar(aspect_deg_txt) > 0 ~ aspect_deg_txt,
+    TRUE ~ "&mdash;"
+  )
   elev <- r$elev_m[[1]]
   elev_txt <- if (is.finite(elev)) paste0(round(elev), " m") else "&mdash;"
   
