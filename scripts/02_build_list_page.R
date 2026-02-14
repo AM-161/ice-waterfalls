@@ -197,18 +197,24 @@ normalize_cardinal <- function(x) {
   x
 }
 
+cardinal_degree_centers <- c(
+  N = 0, NNO = 22.5, NO = 45, ONO = 67.5,
+  O = 90, OSO = 112.5, SO = 135, SSO = 157.5,
+  S = 180, SSW = 202.5, SW = 225, WSW = 247.5,
+  W = 270, WNW = 292.5, NW = 315, NNW = 337.5
+)
+
+cardinal_to_degree <- function(cardinal) {
+  c <- normalize_cardinal(cardinal)
+  if (length(c) == 0 || is.na(c) || !(c %in% names(cardinal_degree_centers))) return(NA_real_)
+  unname(cardinal_degree_centers[[c]])
+}
+
 # Return TRUE when degree is compatible with the cardinal direction.
 is_degree_consistent_with_cardinal <- function(deg, cardinal) {
   if (!is.finite(deg)) return(FALSE)
-  c <- normalize_cardinal(cardinal)
-  centers <- c(
-    N = 0, NNO = 22.5, NO = 45, ONO = 67.5,
-    O = 90, OSO = 112.5, SO = 135, SSO = 157.5,
-    S = 180, SSW = 202.5, SW = 225, WSW = 247.5,
-    W = 270, WNW = 292.5, NW = 315, NNW = 337.5
-  )
-  if (!(c %in% names(centers))) return(TRUE)
-  center <- unname(centers[[c]])
+  center <- cardinal_to_degree(cardinal)
+  if (!is.finite(center)) return(TRUE)
   delta <- abs((((deg - center) + 180) %% 360) - 180)
   delta <= 22.5
 }
@@ -727,9 +733,10 @@ for (i in seq_len(nrow(out))) {
   aspect_cardinal_txt <- esc_html(aspect_cardinal_raw)
   aspect_deg <- suppressWarnings(as.numeric(r$aspect_deg[[1]]))
   if (!is.finite(aspect_deg)) aspect_deg <- suppressWarnings(as.numeric(r$aspect[[1]]))
-  if (is.finite(aspect_deg) && nchar(trimws(aspect_cardinal_raw)) > 0 &&
-      !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw)) {
-    aspect_deg <- NA_real_
+  # If source degree does not fit the cardinal direction, derive degree from cardinal.
+  if (nchar(trimws(aspect_cardinal_raw)) > 0 &&
+      (!is.finite(aspect_deg) || !is_degree_consistent_with_cardinal(aspect_deg, aspect_cardinal_raw))) {
+    aspect_deg <- cardinal_to_degree(aspect_cardinal_raw)
   }
   aspect_deg_txt <- if (is.finite(aspect_deg)) paste0(round(aspect_deg), "&deg;") else ""
   aspect_txt <- dplyr::case_when(
