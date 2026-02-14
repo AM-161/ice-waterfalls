@@ -64,13 +64,16 @@
       ELEV:{ min: 0, max: 4000 }
     };
     const API_BASE = "https://icefalls-api.carlos-wydra.workers.dev";
-    const UPLOAD_LOOKUP_CONCURRENCY = 3;
-    const UPLOAD_LOOKUP_INITIAL_LIMIT = 40;
-    const UPLOAD_LOOKUP_SORT_LIMIT = 250;
+    const UPLOAD_LOOKUP_CONCURRENCY = 6;
+    const UPLOAD_LOOKUP_INITIAL_LIMIT = 120;
+    const UPLOAD_LOOKUP_SORT_LIMIT = 400;
+    const UPLOAD_CACHE_KEY = "icefalls:last_upload_cache:v1";
+    const UPLOAD_CACHE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
     const uploadQueue = [];
     let uploadActive = 0;
     let rerenderTimer = null;
+    let backgroundQueued = false;
 
     function num(x){
       if (x === null || x === undefined) return NaN;
@@ -517,6 +520,78 @@
         r._last_upload_ts = NaN;
         r.last_upload_txt = "";
         r._upload_lookup_started = false;
+        r._last_upload_cached_at = NaN;
+      }
+    }
+
+    function loadUploadCache(){
+      try {
+        const raw = localStorage.getItem(UPLOAD_CACHE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return;
+        const entries = parsed.entries;
+        if (!entries || typeof entries !== "object") return;
+        const now = Date.now();
+        for (const r of rows){
+          if (!r || r.uid === null || r.uid === undefined) continue;
+          const rec = entries[String(r.uid)];
+          if (!rec || typeof rec !== "object") continue;
+          const ts = Number(rec.ts);
+          const cachedAt = Number(rec.cached_at);
+          if (!Number.isFinite(ts) || !Number.isFinite(cachedAt)) continue;
+          if ((now - cachedAt) > UPLOAD_CACHE_MAX_AGE_MS) continue;
+          r._last_upload_ts = ts;
+          r.last_upload_txt = formatUploadDate(ts);
+          r._last_upload_cached_at = cachedAt;
+        }
+      } catch (_) {
+        // ignore cache parse/storage errors
+      }
+    }
+
+    function saveUploadCache(){
+      try {
+        const entries = {};
+        const now = Date.now();
+        for (const r of rows){
+          if (!r || r.uid === null || r.uid === undefined) continue;
+          if (!Number.isFinite(r._last_upload_ts)) continue;
+          entries[String(r.uid)] = { ts: r._last_upload_ts, cached_at: now };
+        }
+        localStorage.setItem(UPLOAD_CACHE_KEY, JSON.stringify({ entries }));
+      } catch (_) {
+        // ignore cache write errors
+      }
+    }
+
+    function queueBackgroundUploadLookups(view){
+      if (backgroundQueued) return;
+      backgroundQueued = true;
+      const seen = new Set();
+      const prioritized = Array.isArray(view) ? view : [];
+      const rest = [];
+      for (const r of prioritized){
+        if (!r || r.uid === null || r.uid === undefined) continue;
+        const k = String(r.uid);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        queueUploadLookup(r);
+      }
+      for (const r of rows){
+        if (!r || r.uid === null || r.uid === undefined) continue;
+        const k = String(r.uid);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        rest.push(r);
+      }
+      const schedule = () => {
+        for (const r of rest) queueUploadLookup(r);
+      };
+      if (typeof requestIdleCallback === "function") {
+        requestIdleCallback(schedule, { timeout: 1200 });
+      } else {
+        setTimeout(schedule, 250);
       }
     }
 
@@ -557,6 +632,7 @@
         fetchLastUploadForRow(r)
           .finally(() => {
             uploadActive -= 1;
+            saveUploadCache();
             scheduleRender();
             pumpUploadQueue();
           });
@@ -577,6 +653,7 @@
       for (let i = 0; i < view.length && i < cap; i += 1){
         queueUploadLookup(view[i]);
       }
+      queueBackgroundUploadLookups(view);
     }
 
     function initSunSliderFromData(){
@@ -605,6 +682,7 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
+        loadUploadCache();
         status.textContent = `Daten geladen (embedded): ${rows.length} Eintraege`;
         render();
         return;
@@ -625,6 +703,7 @@
         if (!Array.isArray(rows)) rows = [];
         enrichRows();
         initSunSliderFromData();
+        loadUploadCache();
         status.textContent = `Daten geladen: ${rows.length} Eintraege (Quelle: ${res.url})`;
         render();
       })
