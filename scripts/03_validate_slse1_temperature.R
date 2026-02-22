@@ -180,6 +180,8 @@ stations_all <- readr::read_csv(PATH_STATIONS, show_col_types = FALSE) %>%
   mutate(
     station_id = as.character(station_id),
     source = as.character(source),
+    lon = to_num(lon),
+    lat = to_num(lat),
     altitude_m = to_num(altitude_m),
     tl = as.logical(tl)
   ) %>%
@@ -189,24 +191,67 @@ target_meta <- stations_all %>% filter(station_id == TARGET_STATION) %>% slice(1
 if (nrow(target_meta) == 0) stop("Station ", TARGET_STATION, " nicht in stations_all gefunden.")
 
 target_alt <- target_meta$altitude_m[[1]]
-message("Lade Referenzdaten von ", TARGET_STATION, " (", target_meta$source[[1]], ") ...")
+target_lon <- target_meta$lon[[1]]
+target_lat <- target_meta$lat[[1]]
 
+deg2rad <- function(x) x * pi / 180
+haversine_km <- function(lon1, lat1, lon2, lat2) {
+  r <- 6371
+  dlon <- deg2rad(lon2 - lon1)
+  dlat <- deg2rad(lat2 - lat1)
+  a <- sin(dlat / 2)^2 + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dlon / 2)^2
+  2 * r * atan2(sqrt(a), sqrt(1 - a))
+}
+
+nearest_station <- stations_all %>%
+  filter(
+    station_id != TARGET_STATION,
+    is.finite(lon), is.finite(lat),
+    is.finite(target_lon), is.finite(target_lat)
+  ) %>%
+  mutate(dist_to_target_km = haversine_km(lon, lat, target_lon, target_lat)) %>%
+  arrange(dist_to_target_km) %>%
+  slice(1) %>%
+  transmute(station_id, source, altitude_m, reason = "nearest")
+
+inversion_stations <- tibble(
+  station_id = c("38", "IMUT2", "IMUT1"),
+  source = c("GeoSphere", "LWD", "LWD"),
+  altitude_m = c(860, 1935, 2580),
+  reason = "inversion"
+)
+
+candidates <- bind_rows(
+  tibble(
+    station_id = TARGET_STATION,
+    source = target_meta$source[[1]],
+    altitude_m = target_alt,
+    reason = "target"
+  ),
+  nearest_station,
+  inversion_stations
+) %>%
+  distinct(station_id, .keep_all = TRUE)
+
+message("Vergleich nur mit benötigten Stationen: ", paste(candidates$station_id, collapse = ", "))
+
+message("Lade Referenzdaten von ", TARGET_STATION, " (", target_meta$source[[1]], ") ...")
 ref <- get_station_tl(START_DATE, END_DATE, TARGET_STATION, target_meta$source[[1]]) %>%
   rename(TL_ref = TL) %>%
   filter(!is.na(TL_ref))
 
 if (nrow(ref) == 0) stop("Keine Temperaturdaten für Zielstation ", TARGET_STATION)
 
-results <- vector("list", nrow(stations_all))
-cmp_by_station <- vector("list", nrow(stations_all))
+results <- vector("list", nrow(candidates))
+cmp_by_station <- vector("list", nrow(candidates))
 
-for (i in seq_len(nrow(stations_all))) {
-  st <- stations_all[i, ]
+for (i in seq_len(nrow(candidates))) {
+  st <- candidates[i, ]
   sid <- st$station_id[[1]]
   src <- st$source[[1]]
   z_st <- st$altitude_m[[1]]
 
-  message(sprintf("[%d/%d] %s (%s)", i, nrow(stations_all), sid, src))
+  message(sprintf("[%d/%d] %s (%s, %s)", i, nrow(candidates), sid, src, st$reason[[1]]))
 
   dat <- get_station_tl(START_DATE, END_DATE, sid, src)
   if (nrow(dat) == 0) next
@@ -231,6 +276,7 @@ for (i in seq_len(nrow(stations_all))) {
   results[[i]] <- tibble(
     station_id = sid,
     source = src,
+    reason = st$reason[[1]],
     altitude_m = z_st,
     n = nrow(cmp),
     mae_C = mae,
@@ -297,8 +343,8 @@ if (file.exists(OUT_PNG)) {
   message("⚠️ Kein Differenz-Diagramm erzeugt (keine Vergleichsdaten).")
 }
 message("Zeitraum: ", START_DATE, " bis ", END_DATE)
-message("Top 15 Stationen (Simulation auf Höhe ", TARGET_STATION, "):")
-print(head(res, 15), n = 15)
+message("Ergebnisse:")
+print(res, n = nrow(res))
 
 slse1_self <- res %>% filter(station_id == TARGET_STATION)
 if (nrow(slse1_self) == 1) {
