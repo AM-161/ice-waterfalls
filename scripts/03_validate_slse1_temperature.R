@@ -14,14 +14,18 @@ LAPSE_K_PER_M <- 0.0065
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 OUT_CSV <- "data/AWS/slse1_temperature_validation.csv"
 OUT_PNG <- "data/AWS/slse1_temperature_difference.png"
-TARGET_STATION <- "SLSE1"
+TARGET_STATION_DEFAULT <- "SLSE1"
 
 args <- commandArgs(trailingOnly = TRUE)
 START_DATE <- if (length(args) >= 1) as.Date(args[[1]]) else Sys.Date() - 30
 END_DATE   <- if (length(args) >= 2) as.Date(args[[2]]) else Sys.Date() - 1
+TARGET_STATION <- if (length(args) >= 3) as.character(args[[3]]) else TARGET_STATION_DEFAULT
 
 if (is.na(START_DATE) || is.na(END_DATE) || START_DATE > END_DATE) {
-  stop("Ungültiger Zeitraum. Nutzung: Rscript scripts/03_validate_slse1_temperature.R YYYY-MM-DD YYYY-MM-DD")
+  stop("Ungültiger Zeitraum. Nutzung: Rscript scripts/03_validate_slse1_temperature.R YYYY-MM-DD YYYY-MM-DD [STATION_ID]")
+}
+if (is.na(TARGET_STATION) || !nzchar(TARGET_STATION)) {
+  stop("Ungültige Zielstation. Bitte STATION_ID als 3. Argument übergeben.")
 }
 
 to_num <- function(x) suppressWarnings(as.numeric(x))
@@ -194,6 +198,11 @@ target_alt <- target_meta$altitude_m[[1]]
 target_lon <- target_meta$lon[[1]]
 target_lat <- target_meta$lat[[1]]
 
+message("Simulationsformel: TL_sim = TL_station - ", LAPSE_K_PER_M,
+        " * (z_target - z_station)")
+message("Zielstation für Vergleich: ", TARGET_STATION,
+        " (", target_meta$source[[1]], ", ", target_alt, " m)")
+
 deg2rad <- function(x) x * pi / 180
 haversine_km <- function(lon1, lat1, lon2, lat2) {
   r <- 6371
@@ -305,8 +314,12 @@ readr::write_csv(res, OUT_CSV)
 cmp_all <- bind_rows(cmp_by_station)
 
 if (nrow(cmp_all) > 0) {
-  best_station <- res$station_id[[1]]
+  res_non_target <- res %>% filter(station_id != TARGET_STATION)
+  best_station <- if (nrow(res_non_target) > 0) res_non_target$station_id[[1]] else res$station_id[[1]]
   cmp_best <- cmp_all %>% filter(station_id == best_station)
+  if (identical(best_station, TARGET_STATION)) {
+    message("⚠️ Nur Zielstation selbst verfügbar; Differenz ist Baseline-nahe 0.")
+  }
 
   png(filename = OUT_PNG, width = 1200, height = 700, res = 120)
   op <- par(no.readonly = TRUE)
@@ -343,7 +356,7 @@ if (file.exists(OUT_PNG)) {
   message("⚠️ Kein Differenz-Diagramm erzeugt (keine Vergleichsdaten).")
 }
 message("Zeitraum: ", START_DATE, " bis ", END_DATE)
-message("Ergebnisse:")
+message("Ergebnisse (inkl. Baseline der Zielstation):")
 print(res, n = nrow(res))
 
 slse1_self <- res %>% filter(station_id == TARGET_STATION)
