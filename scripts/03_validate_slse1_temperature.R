@@ -317,9 +317,17 @@ if (nrow(cmp_all) > 0) {
   res_non_target <- res %>% filter(station_id != TARGET_STATION)
   best_station <- if (nrow(res_non_target) > 0) res_non_target$station_id[[1]] else res$station_id[[1]]
   cmp_best <- cmp_all %>% filter(station_id == best_station)
+  best_row <- res %>% filter(station_id == best_station) %>% slice(1)
+
   if (identical(best_station, TARGET_STATION)) {
     message("⚠️ Nur Zielstation selbst verfügbar; Differenz ist Baseline-nahe 0.")
   }
+
+  message(sprintf(
+    "Plot verwendet Station %s (reason=%s, n=%d, RMSE=%.2f, MAE=%.2f, Bias=%.2f)",
+    best_row$station_id[[1]], best_row$reason[[1]], best_row$n[[1]],
+    best_row$rmse_C[[1]], best_row$mae_C[[1]], best_row$bias_C[[1]]
+  ))
 
   png(filename = OUT_PNG, width = 1200, height = 700, res = 120)
   op <- par(no.readonly = TRUE)
@@ -334,16 +342,16 @@ if (nrow(cmp_all) > 0) {
     lwd = 2,
     xlab = "Zeit",
     ylab = "Differenz (Simulation - SLSE1) [°C]",
-    main = paste0("Temperaturdifferenz zu SLSE1 (beste Station: ", best_station, ")")
+    main = paste0("Temperaturdifferenz zu ", TARGET_STATION, " (beste Station: ", best_station, ")")
   )
   abline(h = 0, col = "#666666", lty = 2)
 
   legend(
     "topright",
     legend = c(
-      paste0("MAE: ", round(res$mae_C[[1]], 2), " °C"),
-      paste0("RMSE: ", round(res$rmse_C[[1]], 2), " °C"),
-      paste0("Bias: ", round(res$bias_C[[1]], 2), " °C")
+      paste0("MAE: ", round(best_row$mae_C[[1]], 2), " °C"),
+      paste0("RMSE: ", round(best_row$rmse_C[[1]], 2), " °C"),
+      paste0("Bias: ", round(best_row$bias_C[[1]], 2), " °C")
     ),
     bty = "n"
   )
