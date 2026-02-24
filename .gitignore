@@ -21,6 +21,7 @@ data/ModelRuns
 
 #Modell anpassen und Fehler suchen
 /adj_model
+/scripts/AWS Validation/out
 
 #Neue Stationen oder Eisfälle hinzufügen
 /add_new
