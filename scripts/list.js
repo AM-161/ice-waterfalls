@@ -352,8 +352,9 @@
           <td>${str(r.sun_tomorrow_range_txt) || "<span class=muted>&mdash;</span>"}</td>
           <td>${isFinite(num(r.sun_hours_tomorrow_h)) ? (num(r.sun_hours_tomorrow_h).toFixed(1) + " h") : "<span class=muted>&mdash;</span>"}</td>
           <td>${r.thickness_tomorrow_07_txt || "<span class=muted>&mdash;</span>"}</td>
-          <td>${r.climb_max_tomorrow_txt || "<span class=muted>&mdash;</span>"}</td>
-          <td>${str(r.climb_max_time_local) || "<span class=muted>&mdash;</span>"}</td>
+          <td>${(r.climb_max_tomorrow_txt || str(r.climb_max_time_local))
+            ? `${r.climb_max_tomorrow_txt || "<span class=muted>&mdash;</span>"}<div class="muted">${str(r.climb_max_time_local) || "&mdash;"}</div>`
+            : "<span class=muted>&mdash;</span>"}</td>
           <td>${r.last_upload_txt || "<span class=muted>&mdash;</span>"}</td>
           <td>${detailsBtn}</td>
           <td>${topoLink}</td>
