@@ -1057,6 +1057,11 @@ if (!has_fc) {
     distinct(break_time, .keep_all = TRUE)
   
   bg <- tibble(xmin = forecast_start, xmax = x_max, ymin = -Inf, ymax = Inf)
+  fc_label <- tibble(
+    x = forecast_start + as.numeric(difftime(x_max, forecast_start, units = "secs")) / 2,
+    y = y_max - 0.05 * Y_DEN,
+    label = "FORCAST"
+  )
   
   # Links (Historie) – KEINE sec.axis (damit sie nicht zwischen Panels landet)
   p_hist <- ggplot(mod_hist, aes(time, thickness_m)) +
@@ -1099,6 +1104,16 @@ if (!has_fc) {
       show.legend = TRUE
     ) +
     geom_line(aes(color = "Eisdicke"), linewidth = 0.9, show.legend = TRUE) +
+    geom_text(
+      data = fc_label,
+      aes(x = x, y = y, label = label),
+      inherit.aes = FALSE,
+      color = "red",
+      size = 11,
+      fontface = "plain",
+      alpha = 0.85,
+      show.legend = FALSE
+    ) +
     geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE, show.legend = TRUE) +
     coord_cartesian(xlim = c(forecast_start, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(
@@ -1159,8 +1174,7 @@ if (!has_fc) {
           if (!is.na(ice_alt_m)) paste0("Höhe: ", round(ice_alt_m, 0), " m"),
           paste0("Station: ", station_id, " (", source, ")"),
           paste0("dist ", round(dist_km, 2), " km"),
-          paste0("dz ", round(dz_m, 0), " m"),
-          paste0("Forecast (grau, ", FORECAST_HOURS, "h)")
+          paste0("dz ", round(dz_m, 0), " m")
         ),
         collapse = " | "
       ),
