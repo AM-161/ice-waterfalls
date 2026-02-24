@@ -123,18 +123,34 @@ parse_time_any <- function(x, tz = TZ_LOCAL) {
   if (inherits(x, "POSIXct")) return(with_tz(x, tz))
   x <- as.character(x)
   x[x %in% c("", "NA", "NaN", "NULL")] <- NA_character_
-  
-  # handle ISO strings like 2025-11-01T13:13:00Z
-  x <- sub("Z$", "", x)
-  x <- gsub("T", " ", x, fixed = TRUE)
-  
-  t <- suppressWarnings(lubridate::ymd_hms(x, tz = tz))
-  if (all(is.na(t))) t <- suppressWarnings(lubridate::ymd_hm(x, tz = tz))
-  if (all(is.na(t))) t <- suppressWarnings(lubridate::parse_date_time(
-    x,
-    orders = c("Ymd HMS", "Ymd HM", "Y-m-d H:M:S", "Y-m-d H:M", "Y-m-dTH:M:S", "Y-m-dTH:M"),
-    tz = tz
-  ))
+
+  # Parse timezone-aware timestamps (Z / +HH:MM) in UTC first, then convert.
+  has_tz_offset <- grepl("(Z|[+-][0-9]{2}:?[0-9]{2})$", x)
+  t <- as.POSIXct(rep(NA_real_, length(x)), origin = "1970-01-01", tz = tz)
+  if (any(has_tz_offset, na.rm = TRUE)) {
+    x_tz <- x[has_tz_offset]
+    t_tz <- suppressWarnings(lubridate::parse_date_time(
+      x_tz,
+      orders = c("Y-m-dTH:M:SZ", "Y-m-dTH:MZ", "Y-m-dTH:M:S z", "Y-m-dTH:M z", "Y-m-d H:M:S z", "Y-m-d H:M z"),
+      tz = "UTC"
+    ))
+    t[has_tz_offset] <- suppressWarnings(with_tz(t_tz, tz))
+  }
+
+  no_tz <- !has_tz_offset
+  if (any(no_tz, na.rm = TRUE)) {
+    x_local <- x[no_tz]
+    x_local <- gsub("T", " ", x_local, fixed = TRUE)
+    t_local <- suppressWarnings(lubridate::ymd_hms(x_local, tz = tz))
+    if (all(is.na(t_local))) t_local <- suppressWarnings(lubridate::ymd_hm(x_local, tz = tz))
+    if (all(is.na(t_local))) t_local <- suppressWarnings(lubridate::parse_date_time(
+      x_local,
+      orders = c("Ymd HMS", "Ymd HM", "Y-m-d H:M:S", "Y-m-d H:M", "Y-m-dTH:M:S", "Y-m-dTH:M"),
+      tz = tz
+    ))
+    t[no_tz] <- t_local
+  }
+
   t
 }
 
@@ -315,7 +331,7 @@ summarise_uid_model <- function(uid) {
   df <- df %>%
     mutate(
       time = parse_time_any(.data$time, tz = TZ_LOCAL),
-      date = as.Date(time),
+      date = as.Date(with_tz(time, TZ_LOCAL)),
       thickness_m  = if ("thickness_m" %in% names(df)) to_num(.data$thickness_m) else NA_real_,
       climbability = if ("climbability" %in% names(df)) to_num(.data$climbability) else NA_real_
     ) %>%
@@ -336,7 +352,8 @@ summarise_uid_model <- function(uid) {
   } else {
     imax <- which.max(df_day$climbability)
     climb_max <- df_day$climbability[imax]
-    climb_time <- format(df_day$time[imax], "%d.%m.%Y %H:%M")
+    climb_time_obj <- with_tz(df_day$time[imax], TZ_LOCAL)
+    climb_time <- if (as.Date(climb_time_obj) == tomorrow) format(climb_time_obj, "%H:%M") else NA_character_
     thick_at_best <- df_day$thickness_m[imax]
   }
   
