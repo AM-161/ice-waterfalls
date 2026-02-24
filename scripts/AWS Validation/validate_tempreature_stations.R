@@ -27,6 +27,7 @@ suppressPackageStartupMessages({
 TZ_LOCAL <- "Europe/Vienna"
 LAPSE_K_PER_M <- 0.0065
 PATH_STATIONS <- "data/AWS/stations_all.csv"
+PATH_INV_DIR <- "data/_cache_inversion"
 OUT_CSV <- "scripts/AWS Validation/validation_temperature_stations.csv"
 OUT_PNG <- "scripts/AWS Validation/validation_temperature_stations.png"
 TARGET_STATION_DEFAULT <- "SLSE1"
@@ -35,6 +36,7 @@ args <- commandArgs(trailingOnly = TRUE)
 START_DATE <- if (length(args) >= 1) as.Date(args[[1]]) else Sys.Date() - 30
 END_DATE   <- if (length(args) >= 2) as.Date(args[[2]]) else Sys.Date() - 1
 TARGET_STATION <- if (length(args) >= 3) as.character(args[[3]]) else TARGET_STATION_DEFAULT
+PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
 if (is.na(START_DATE) || is.na(END_DATE) || START_DATE > END_DATE) {
   stop("Ungültiger Zeitraum. Nutzung: Rscript \"scripts/AWS Validation/validate_tempreature_stations.R\" YYYY-MM-DD YYYY-MM-DD [STATION_ID]")
@@ -217,8 +219,7 @@ target_alt <- target_meta$altitude_m[[1]]
 target_lon <- target_meta$lon[[1]]
 target_lat <- target_meta$lat[[1]]
 
-message("Simulationsformel: TL_sim = TL_station - ", LAPSE_K_PER_M,
-        " * (z_target - z_station)")
+message("Simulationsformel: Standard-Lapse + optional Inversionsprofil (wenn inv_active)")
 message("Zielstation für Vergleich: ", TARGET_STATION,
         " (", target_meta$source[[1]], ", ", target_alt, " m)")
 
@@ -270,6 +271,26 @@ ref <- get_station_tl(START_DATE, END_DATE, TARGET_STATION, target_meta$source[[
 
 if (nrow(ref) == 0) stop("Keine Temperaturdaten für Zielstation ", TARGET_STATION)
 
+if (file.exists(PATH_INV_RDS)) {
+  inv <- readRDS(PATH_INV_RDS) %>%
+    mutate(
+      timestamp = as.POSIXct(time, tz = TZ_LOCAL),
+      inv_active = ifelse(is.na(inv_active), FALSE, inv_active),
+      grad01_K_per_m = as.numeric(grad01_K_per_m),
+      grad12_K_per_m = as.numeric(grad12_K_per_m)
+    ) %>%
+    select(timestamp, inv_active, grad01_K_per_m, grad12_K_per_m)
+  message("Inversion cache geladen: ", PATH_INV_RDS)
+} else {
+  inv <- tibble(
+    timestamp = as.POSIXct(character(), tz = TZ_LOCAL),
+    inv_active = logical(),
+    grad01_K_per_m = numeric(),
+    grad12_K_per_m = numeric()
+  )
+  message("⚠️ Inversion cache fehlt: ", PATH_INV_RDS, " (Fallback auf konstante Lapse-Rate)")
+}
+
 results <- vector("list", nrow(candidates))
 cmp_by_station <- vector("list", nrow(candidates))
 
@@ -286,9 +307,25 @@ for (i in seq_len(nrow(candidates))) {
 
   cmp <- dat %>%
     filter(!is.na(TL)) %>%
-    transmute(
-      timestamp,
-      TL_sim = TL - LAPSE_K_PER_M * (target_alt - z_st)
+    transmute(timestamp, TL = as.numeric(TL)) %>%
+    left_join(inv, by = "timestamp") %>%
+    mutate(
+      inv_active = ifelse(is.na(inv_active), FALSE, inv_active),
+      use_prof = inv_active & is.finite(grad01_K_per_m) & is.finite(grad12_K_per_m),
+      TL_lapse = TL - LAPSE_K_PER_M * (target_alt - z_st),
+      TL_sim = if_else(
+        use_prof,
+        {
+          z1_m <- 1935
+          lo <- pmin(z_st, target_alt)
+          hi <- pmax(z_st, target_alt)
+          len_low  <- pmax(0, pmin(hi, z1_m) - lo)
+          len_high <- pmax(0, hi - pmax(lo, z1_m))
+          sgn <- if_else(target_alt >= z_st, 1, -1)
+          TL + sgn * (grad01_K_per_m * len_low + grad12_K_per_m * len_high)
+        },
+        TL_lapse
+      )
     ) %>%
     inner_join(ref, by = "timestamp") %>%
     mutate(diff_C = TL_sim - TL_ref)
@@ -310,7 +347,8 @@ for (i in seq_len(nrow(candidates))) {
     mae_C = mae,
     rmse_C = rmse,
     bias_C = bias,
-    cor = corv
+    cor = corv,
+    inv_share = mean(cmp$use_prof, na.rm = TRUE)
   )
 
   cmp_by_station[[i]] <- cmp %>%
