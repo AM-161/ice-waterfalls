@@ -28,7 +28,7 @@ TZ_LOCAL <- "Europe/Vienna"
 LAPSE_K_PER_M <- 0.0065
 MIN_OVERLAP <- 30
 PATH_STATIONS <- "data/AWS/stations_all.csv"
-OUT_DIR <- "scripts/AWS Validation"
+OUT_DIR <- "scripts/AWS Validation/out"
 OUT_CSV <- file.path(OUT_DIR, "validation_all_tirol_stations.csv")
 OUT_REL_CSV <- file.path(OUT_DIR, "validation_all_tirol_relationships.csv")
 OUT_SUMMARY <- file.path(OUT_DIR, "validation_all_tirol_summary.txt")

@@ -28,8 +28,8 @@ TZ_LOCAL <- "Europe/Vienna"
 LAPSE_K_PER_M <- 0.0065
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
-OUT_CSV <- "scripts/AWS Validation/validation_temperature_stations.csv"
-OUT_PNG <- "scripts/AWS Validation/validation_temperature_stations.png"
+OUT_CSV <- "scripts/AWS Validation/out/validation_temperature_stations.csv"
+OUT_PNG <- "scripts/AWS Validation/out/validation_temperature_stations.png"
 TARGET_STATION_DEFAULT <- "SLSE1"
 
 args <- commandArgs(trailingOnly = TRUE)
