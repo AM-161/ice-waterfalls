@@ -64,7 +64,7 @@
       ELEV:{ min: 0, max: 4000 }
     };
     const API_BASE = "https://icefalls-api.carlos-wydra.workers.dev";
-    const UPLOAD_LOOKUP_CONCURRENCY = 6;
+    const UPLOAD_LOOKUP_CONCURRENCY = 10;
     const UPLOAD_LOOKUP_INITIAL_LIMIT = 120;
     const UPLOAD_LOOKUP_SORT_LIMIT = 400;
     const UPLOAD_CACHE_KEY = "icefalls:last_upload_cache:v1";
@@ -522,6 +522,7 @@
         r.last_upload_txt = "";
         r._upload_lookup_started = false;
         r._last_upload_cached_at = NaN;
+        r._last_upload_empty = false;
       }
     }
 
@@ -540,10 +541,13 @@
           if (!rec || typeof rec !== "object") continue;
           const ts = Number(rec.ts);
           const cachedAt = Number(rec.cached_at);
-          if (!Number.isFinite(ts) || !Number.isFinite(cachedAt)) continue;
+          const hasUpload = rec.has_upload !== false;
+          if (!Number.isFinite(cachedAt)) continue;
+          if (hasUpload && !Number.isFinite(ts)) continue;
           if ((now - cachedAt) > UPLOAD_CACHE_MAX_AGE_MS) continue;
-          r._last_upload_ts = ts;
-          r.last_upload_txt = formatUploadDate(ts);
+          r._last_upload_empty = !hasUpload;
+          r._last_upload_ts = hasUpload ? ts : NaN;
+          r.last_upload_txt = hasUpload ? formatUploadDate(ts) : "";
           r._last_upload_cached_at = cachedAt;
         }
       } catch (_) {
@@ -557,8 +561,13 @@
         const now = Date.now();
         for (const r of rows){
           if (!r || r.uid === null || r.uid === undefined) continue;
-          if (!Number.isFinite(r._last_upload_ts)) continue;
-          entries[String(r.uid)] = { ts: r._last_upload_ts, cached_at: now };
+          if (Number.isFinite(r._last_upload_ts)) {
+            entries[String(r.uid)] = { ts: r._last_upload_ts, has_upload: true, cached_at: now };
+            continue;
+          }
+          if (r._last_upload_empty) {
+            entries[String(r.uid)] = { ts: 0, has_upload: false, cached_at: now };
+          }
         }
         localStorage.setItem(UPLOAD_CACHE_KEY, JSON.stringify({ entries }));
       } catch (_) {
@@ -610,7 +619,13 @@
         const res = await fetch(`${API_BASE}/api/images?uid=${r.uid}`, { method: "GET" });
         if (!res.ok) return;
         const arr = await res.json();
-        if (!Array.isArray(arr) || arr.length === 0) return;
+        if (!Array.isArray(arr) || arr.length === 0) {
+          r._last_upload_empty = true;
+          r._last_upload_ts = NaN;
+          r.last_upload_txt = "";
+          r._last_upload_cached_at = Date.now();
+          return;
+        }
         let maxTs = NaN;
         for (const item of arr){
           const ts = parseUploadDate(item);
@@ -618,12 +633,23 @@
           if (!Number.isFinite(maxTs) || ts > maxTs) maxTs = ts;
         }
         if (Number.isFinite(maxTs)) {
+          r._last_upload_empty = false;
           r._last_upload_ts = maxTs;
           r.last_upload_txt = formatUploadDate(maxTs);
+        } else {
+          r._last_upload_empty = true;
+          r._last_upload_ts = NaN;
+          r.last_upload_txt = "";
         }
+        r._last_upload_cached_at = Date.now();
       } catch (_) {
         // ignore upload lookup errors
       }
+    }
+
+    function hasFreshUploadCache(r){
+      if (!r || !Number.isFinite(r._last_upload_cached_at)) return false;
+      return (Date.now() - r._last_upload_cached_at) <= UPLOAD_CACHE_MAX_AGE_MS;
     }
 
     function pumpUploadQueue(){
@@ -642,6 +668,7 @@
 
     function queueUploadLookup(r){
       if (!r || r.uid === null || r.uid === undefined) return;
+      if (hasFreshUploadCache(r)) return;
       if (r._upload_lookup_started) return;
       r._upload_lookup_started = true;
       uploadQueue.push(r);
