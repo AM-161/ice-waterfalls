@@ -301,11 +301,9 @@ sin_alpha_t <- sin(lat_center_rad) * sin(delta_t) +
 sin_alpha_t[sin_alpha_t < 0] <- 0
 solar_height_factor_t <- sin_alpha_t
 
-max_time <- max(time_vec, na.rm = TRUE)
-age_days <- as.numeric(difftime(max_time, time_vec, units = "days"))
-
-tau_days      <- 10
-weight_time_t <- exp(-age_days / tau_days)
+# Für die Eisdicken-Akkumulation werden alle Stunden gleich gewichtet.
+# Ein zeitlicher Decay würde frühe Saisonphasen künstlich entwerten.
+weight_time_t <- rep(1, length(time_vec))
 
 t_start           <- min(time_vec, na.rm = TRUE)
 time_offset_hours <- as.numeric(difftime(time_vec, t_start, units = "hours"))
@@ -1446,8 +1444,7 @@ m <- m |>
     overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
     options       = layersControlOptions(collapsed = FALSE)
   ) |>
-  fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@xmax)  # <- falls du hier ext@ymax meintest: korrigiere unten
-# ↑ HINWEIS: du hattest vorher lat2 = ext@ymax. Wenn das bei dir stimmt, stell es wieder auf ext@ymax.
+  fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax)
 
 # Legenden (wie gehabt)
 m <- m |>
