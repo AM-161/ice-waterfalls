@@ -330,7 +330,7 @@
         const stationTxt = r.station_id ? ("Station: " + str(r.station_id) + (r.source ? (" (" + str(r.source) + ")") : "")) : "";
         const metaTxt = ["UID " + uidPad, stationTxt].filter(Boolean).join(" · ");
    const detailsUrl = `icefalls/uid_${uidPad}.html`;
-   const detailsBtn = `<a class="btn" href="${detailsUrl}">Öffnen</a>`;
+   const detailsBtn = `<a class="btn" href="${detailsUrl}">Open</a>`;
 
         const aTxt  = isFinite(num(r._grade_a))  ? ("A" + fmtGrade(r._grade_a))  : "<span class=muted>&mdash;</span>";
         const mTxt  = isFinite(num(r._grade_m))  ? ("M" + fmtGrade(r._grade_m))  : "<span class=muted>&mdash;</span>";
@@ -366,9 +366,9 @@
         .forEach(btn => btn.addEventListener("click", () => openFullscreen(btn.getAttribute("data-plot"), btn.getAttribute("data-title"))));
 
       const dirTxt = sortAsc ? "ASC" : "DESC";
-      const radiusTxt = (center && isFinite(radiusKm)) ? (` | Umkreis: ${radiusKm} km um ${centerLabel || "Zentrum"}`) : "";
-      const centerOnlyTxt = (center && !isFinite(radiusKm)) ? (` | Zentrum: ${centerLabel || "Zentrum"} (Radius aus)`) : "";
-      status.textContent = `Eintraege: ${view.length} / ${rows.length}${radiusTxt || centerOnlyTxt} | Sort: ${sortKey} ${dirTxt}`;
+      const radiusTxt = (center && isFinite(radiusKm)) ? (` | Radius: ${radiusKm} km around ${centerLabel || "Center"}`) : "";
+      const centerOnlyTxt = (center && !isFinite(radiusKm)) ? (` | Center: ${centerLabel || "Center"} (radius off)`) : "";
+      status.textContent = `Entries: ${view.length} / ${rows.length}${radiusTxt || centerOnlyTxt} | Sort: ${sortKey} ${dirTxt}`;
     }
 
     ths.forEach(th => {
@@ -398,26 +398,26 @@
     if (setCustomBtn) setCustomBtn.addEventListener("click", () => {
       const lat = centerLat ? Number(centerLat.value) : NaN;
       const lon = centerLon ? Number(centerLon.value) : NaN;
-      if (!isFinite(lat) || !isFinite(lon)) { if (geoStatus) geoStatus.textContent = "Koordinaten ungueltig"; return; }
+      if (!isFinite(lat) || !isFinite(lon)) { if (geoStatus) geoStatus.textContent = "Invalid coordinates"; return; }
       center = { lat, lon };
       centerLabel = lat.toFixed(5) + "," + lon.toFixed(5);
-      if (geoStatus) geoStatus.textContent = "Zentrum gesetzt: " + centerLabel;
+      if (geoStatus) geoStatus.textContent = "Center set: " + centerLabel;
       render();
     });
 
     function geocodePlace(query){
       const q = (query || "").trim();
-      if (!q) return Promise.reject(new Error("Kein Ort eingegeben"));
+      if (!q) return Promise.reject(new Error("No place entered"));
       const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(q) + "&countrycodes=at,de,it,ch";
       return fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } })
         .then(r => { if (!r.ok) throw new Error("Geocoding HTTP " + r.status); return r.json(); })
         .then(arr => {
-          if (!Array.isArray(arr) || arr.length === 0) throw new Error("Ort nicht gefunden");
+          if (!Array.isArray(arr) || arr.length === 0) throw new Error("Place not found");
           const hit = arr[0];
           const lat = Number(hit.lat);
           const lon = Number(hit.lon);
           const label = hit.display_name ? String(hit.display_name).split(",")[0] : q;
-          if (!isFinite(lat) || !isFinite(lon)) throw new Error("Geocoding ohne Koordinaten");
+          if (!isFinite(lat) || !isFinite(lon)) throw new Error("Geocoding without coordinates");
           return { lat, lon, label };
         });
     }
@@ -467,34 +467,34 @@
     if (geocodeBtn) geocodeBtn.addEventListener("click", () => {
       if (!placeInput) return;
       const v = (placeInput.value || "").trim();
-      if (!v) { if (geoStatus) geoStatus.textContent = "Kein Ort eingegeben"; return; }
+      if (!v) { if (geoStatus) geoStatus.textContent = "No place entered"; return; }
       const hit = lastSug.find(s => String(s.label).toLowerCase() === v.toLowerCase());
       if (hit && isFinite(hit.lat) && isFinite(hit.lon)) {
         center = { lat: hit.lat, lon: hit.lon };
         centerLabel = hit.label;
         if (centerLat) centerLat.value = hit.lat.toFixed(6);
         if (centerLon) centerLon.value = hit.lon.toFixed(6);
-        if (geoStatus) geoStatus.textContent = "Zentrum gesetzt: " + centerLabel;
+        if (geoStatus) geoStatus.textContent = "Center set: " + centerLabel;
         render();
         return;
       }
-      if (geoStatus) geoStatus.textContent = "Suche Ort ...";
+      if (geoStatus) geoStatus.textContent = "Searching place ...";
       geocodePlace(v)
         .then(res => {
           center = { lat: res.lat, lon: res.lon };
           centerLabel = res.label;
           if (centerLat) centerLat.value = res.lat.toFixed(6);
           if (centerLon) centerLon.value = res.lon.toFixed(6);
-          if (geoStatus) geoStatus.textContent = "Zentrum gesetzt: " + centerLabel;
+          if (geoStatus) geoStatus.textContent = "Center set: " + centerLabel;
           render();
         })
-        .catch(err => { if (geoStatus) geoStatus.textContent = "Ortsuche fehlgeschlagen: " + (err && err.message ? err.message : err); });
+        .catch(err => { if (geoStatus) geoStatus.textContent = "Place search failed: " + (err && err.message ? err.message : err); });
     });
 
     if (useGeoBtn) useGeoBtn.addEventListener("click", () => {
-      if (!navigator.geolocation) { if (geoStatus) geoStatus.textContent = "Geolocation nicht verfuegbar"; return; }
-      if (window.isSecureContext !== true) { if (geoStatus) geoStatus.textContent = "GPS benoetigt https oder localhost (file:// ist meist blockiert)."; return; }
-      if (geoStatus) geoStatus.textContent = "Hole Standort ...";
+      if (!navigator.geolocation) { if (geoStatus) geoStatus.textContent = "Geolocation not available"; return; }
+      if (window.isSecureContext !== true) { if (geoStatus) geoStatus.textContent = "GPS requires https or localhost (file:// is usually blocked)."; return; }
+      if (geoStatus) geoStatus.textContent = "Getting location ...";
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const lat = pos.coords.latitude;
@@ -502,11 +502,11 @@
           if (centerLat) centerLat.value = lat.toFixed(6);
           if (centerLon) centerLon.value = lon.toFixed(6);
           center = { lat: lat, lon: lon };
-          centerLabel = "Standort";
-          if (geoStatus) geoStatus.textContent = "Zentrum: Standort";
+          centerLabel = "Location";
+          if (geoStatus) geoStatus.textContent = "Center: Location";
           render();
         },
-        (err) => { if (geoStatus) geoStatus.textContent = "Standort fehlgeschlagen: " + (err && err.message ? err.message : err); },
+        (err) => { if (geoStatus) geoStatus.textContent = "Location failed: " + (err && err.message ? err.message : err); },
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
       );
     });
@@ -711,13 +711,13 @@
         enrichRows();
         initSunSliderFromData();
         loadUploadCache();
-        status.textContent = `Daten geladen (embedded): ${rows.length} Eintraege`;
+        status.textContent = `Data loaded (embedded): ${rows.length} entries`;
         render();
         return;
       }
     } catch(e) { console.error("Embedded Base64 parse failed", e); }
 
-    status.textContent = "Kein embedded JSON gefunden. Versuche fetch() ...";
+    status.textContent = "No embedded JSON found. Trying fetch() ...";
     const candidates = ["icefalls_table.json", "./icefalls_table.json", "../icefalls_table.json", "site/icefalls_table.json", "./site/icefalls_table.json", "../site/icefalls_table.json"];
     function fetchJsonFirstOk(urls){
       return urls.reduce((p, u) => p.catch(() => fetch(u, {cache: "no-store"}).then(r => {
@@ -732,8 +732,8 @@
         enrichRows();
         initSunSliderFromData();
         loadUploadCache();
-        status.textContent = `Daten geladen: ${rows.length} Eintraege (Quelle: ${res.url})`;
+        status.textContent = `Data loaded: ${rows.length} entries (source: ${res.url})`;
         render();
       })
-      .catch(err => { status.textContent = "Fehler beim Laden: " + err; console.error(err); });
+      .catch(err => { status.textContent = "Loading error: " + err; console.error(err); });
   })();
