@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -42,38 +42,38 @@
     <div class="overlay"></div>
     <div class="content">
       <div class="home-link">
-        <a class="btn" href="index.html">🏠 Startseite</a>
+        <a class="btn" href="index.html">🏠 Home</a>
       </div>
-      <span class="pill">Icefalls · Masterarbeit</span>
-      <h1>Icefalls – Eisfälle besser verstehen</h1>
-      <p>Diese Seite ist Teil einer Masterarbeit und zeigt eine interaktive Karte sowie eine Übersicht aktueller Eisfälle. Ziel ist es, Eisbedingungen besser abzuschätzen und Beobachtungen gemeinsam zu sammeln.</p>
+      <span class="pill">Icefalls · Master thesis</span>
+      <h1>Icefalls – Better understanding icefalls</h1>
+      <p>This page is part of a master thesis and provides an interactive map and an overview of current icefalls. The goal is to better assess ice conditions and collect observations together.</p>
       <div class="update-banner" id="lastUpdateBanner">
         <span class="update-dot" aria-hidden="true"></span>
         <div>
-          <div class="update-title">Letztes Update</div>
-          <div class="update-value" id="lastUpdateValue">wird geladen…</div>
+          <div class="update-title">Last update</div>
+          <div class="update-value" id="lastUpdateValue">loading…</div>
         </div>
       </div>
       <div class="cta">
-        <a class="btn primary" href="map.html">Zur Karte</a>
-        <a class="btn" href="list.html">Zur Liste</a>
+        <a class="btn primary" href="map.html">Go to map</a>
+        <a class="btn" href="list.html">Go to list</a>
       </div>
       <div class="card">
-        <h2>Mitmachen & Uploads</h2>
-        <p>Alle können Bilder zu Eisfällen hochladen. Die Uploads helfen, das Modell zu verbessern und aktuelle Informationen zu teilen.</p>
-        <p>Den Upload findet ihr auf der Detail Seite der Eisfälle</p>
-        <p class="legal"><b>Hinweis:</b> Wenn Bilder hochgeladen werden, dürfen sie für das Training des Modells verwendet werden.</p>
+        <h2>Contribute & Uploads</h2>
+        <p>Everyone can upload photos of icefalls. Uploads help improve the model and share up-to-date information.</p>
+        <p>You can find the upload section on each icefall detail page.</p>
+        <p class="legal"><b>Note:</b> If photos are uploaded, they may be used to train the model.</p>
       </div>
       <div class="card">
-        <h2>Rechtlicher Hinweis</h2>
-        <p class="legal">Die Modelle sind experimentell. Alle Angaben erfolgen ohne Gewähr. Es wird keine Haftung übernommen.</p>
+        <h2>Legal notice</h2>
+        <p class="legal">The models are experimental. All information is provided without guarantee. No liability is assumed.</p>
       </div>
       <div class="card">
-        <h2>Impressum / Quellen</h2>
-        <div style="font-weight:700; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; opacity:0.75; margin:2px 0 6px;">Quellen</div>
+        <h2>Legal / Sources</h2>
+        <div style="font-weight:700; font-size:12px; letter-spacing:0.02em; text-transform:uppercase; opacity:0.75; margin:2px 0 6px;">Sources</div>
         <ul style="margin:0; padding-left:16px;">
           <li style="margin:0 0 6px 0;">
-            <span style="font-weight:600;">Wetterstationen:</span><br/>
+            <span style="font-weight:600;">Weather stations:</span><br/>
             <span style="opacity:0.9;">GeoSphere Austria (klima-v2-10min)</span>
             <a href="https://data.hub.geosphere.at/dataset/klima-v2-10min" target="_blank" style="text-decoration:none;">↗</a><br/>
             <span style="opacity:0.9;">LWD Tirol / HD Tirol (OGD Österreich)</span>
@@ -88,20 +88,20 @@
             <a href="https://doi.org/10.60669/9zm8-s664" target="_blank" style="text-decoration:none;">doi:10.60669/9zm8-s664</a>
           </li>
           <li style="margin:0;">
-            <span style="font-weight:600;">DEM Tirol:</span>
+            <span style="font-weight:600;">Tyrol DEM:</span>
             <a href="https://www.data.gv.at/katalog/datasets/0454f5f3-1d8c-464e-847d-541901eb021a" target="_blank" style="text-decoration:none;">data.gv.at</a>
           </li>
         </ul>
         <div style="height:1px; background:rgba(0,0,0,0.08); margin:8px 0;"></div>
-        <div class="legal"><em>Letztes Update: siehe Hinweis oben auf der Startseite.</em></div>
+        <div class="legal"><em>Last update: see the note above on the homepage.</em></div>
       </div>
       <div class="card">
-        <h2>Geplante Erweiterungen</h2>
+        <h2>Planned features</h2>
         <ul>
-          <li>Eisfälle hinzufügen und bearbeiten</li>
-          <li>Registrierung und Nutzerprofile</li>
-          <li>Gruppen und Community-Funktionen</li>
-          <li>Chat & Benachrichtigungen</li>
+          <li>Add and edit icefalls</li>
+          <li>Registration and user profiles</li>
+          <li>Groups and community features</li>
+          <li>Chat & notifications</li>
         </ul>
       </div>
     </div>
@@ -111,19 +111,19 @@
     const lastUpdateBanner = document.getElementById("lastUpdateBanner");
     function setLastUpdate(text){
       if (lastUpdateValue) lastUpdateValue.textContent = text;
-      if (lastUpdateBanner) lastUpdateBanner.setAttribute("title", `Letztes Update: ${text}`);
+      if (lastUpdateBanner) lastUpdateBanner.setAttribute("title", `Last update: ${text}`);
     }
     fetch("last_update.json", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("no update file"))))
       .then((data) => {
         if (!data || !data.last_update) {
-          setLastUpdate("siehe Karte");
+          setLastUpdate("see map");
           return;
         }
         setLastUpdate(data.last_update);
       })
       .catch(() => {
-        setLastUpdate("siehe Karte");
+        setLastUpdate("see map");
       });
   </script>
 </body>
