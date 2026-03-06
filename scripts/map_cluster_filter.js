@@ -78,9 +78,9 @@ function(el, x){
     return null;
   }
 
-  var rawGroup = getLayerGroup('EisfälleRaw');
+  var rawGroup = getLayerGroup('IcefallsRaw');
   if (!rawGroup || typeof rawGroup.getLayers !== 'function') {
-    console.warn('EisfälleRaw group not found.');
+    console.warn('IcefallsRaw group not found.');
     return;
   }
 
@@ -137,11 +137,11 @@ cluster.addLayers(rawMarkers);
 // disable raw group (prevents flicker / removal)
 try{ if (typeof rawGroup.clearLayers === 'function') rawGroup.clearLayers(); } catch(e){}
 
-// register as overlay "Eisfälle"
+// register as overlay "Icefalls"
 try{
   if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
-    map.layerManager.addLayer(cluster, 'markercluster', 'icefalls_cluster', 'Eisfälle', null, null);
-    if (typeof map.layerManager.showGroup === 'function') map.layerManager.showGroup('Eisfälle');
+    map.layerManager.addLayer(cluster, 'markercluster', 'icefalls_cluster', 'Icefalls', null, null);
+    if (typeof map.layerManager.showGroup === 'function') map.layerManager.showGroup('Icefalls');
   } else {
     cluster.addTo(map);
   }
@@ -228,7 +228,7 @@ function applyFilter(){
   window._icefallsCluster.clearLayers();
   window._icefallsCluster.addLayers(visible);
   
-  status.textContent = visible.length + ' / ' + window._icefallsAll.length + ' Eisfälle';
+  status.textContent = visible.length + ' / ' + window._icefallsAll.length + ' icefalls';
 }
 
 if (input) input.addEventListener('input', applyFilter);

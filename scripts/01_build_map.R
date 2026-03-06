@@ -1142,15 +1142,15 @@ if (!"longitude" %in% names(sun_today)) {
 
 sun_today <- sun_today %>%
   dplyr::mutate(
-    name = dplyr::coalesce(name, paste0("Eisfall ", sprintf("%03d", uid))),
+    name = dplyr::coalesce(name, paste0("Icefall ", sprintf("%03d", uid))),
     sunrise_txt   = substr(as.character(sunrise_topo), 12, 16),
     sunset_txt    = substr(as.character(sunset_topo),  12, 16),
     sun_hours_txt = sprintf("%.1f", sun_hours_topo),
     date_txt      = format(date, "%d.%m.%Y"),
     link_txt = ifelse(
       !is.na(topo_url) & topo_url != "",
-      paste0("<a href='", topo_url, "' target='_blank'>Topo öffnen</a>"),
-      "(kein Topo-Link hinterlegt)"
+      paste0("<a href='", topo_url, "' target='_blank'>Open topo</a>"),
+      "(no topo link available)"
     ),
     
     uid_pad  = sprintf("%03d", uid),
@@ -1161,15 +1161,15 @@ sun_today <- sun_today %>%
     difficulty_txt = dplyr::if_else(
       !is.na(difficulty) & difficulty != "",
       difficulty,
-      "k. A."
+      "n/a"
     ),
     height_txt = dplyr::case_when(
       is.finite(icefall_height_m) ~ paste0(round(icefall_height_m), " m"),
       is.finite(elev_m) ~ paste0(round(elev_m), " m"),
-      TRUE ~ "k. A."
+      TRUE ~ "n/a"
     ),
     info_block = sprintf(
-      "<div style='margin-top:4px;font-size:12px;line-height:1.35;'><b>Schwierigkeit:</b> %s<br/><b>H&ouml;he:</b> %s</div>",
+      "<div style='margin-top:4px;font-size:12px;line-height:1.35;'><b>Difficulty:</b> %s<br/><b>Elevation:</b> %s</div>",
       htmltools::htmlEscape(difficulty_txt),
       htmltools::htmlEscape(height_txt)
     ),
@@ -1190,7 +1190,7 @@ sun_today <- sun_today %>%
       "<a href='", detail_url, "' ",
       "style='padding:6px 10px; background:#0d6efd; color:white; ",
       "border-radius:6px; text-decoration:none; font-weight:600;'>",
-      "📄 Details & Upload",
+      "📄 Details & upload",
       "</a>",
 
       "</div>",
@@ -1208,7 +1208,7 @@ sun_today <- sun_today %>%
       paste0(
         map_meta,
         sprintf(
-          "<b>%s</b><br/>Sonne am %s: KEINE SONNENDATEN%s<br/>%s",
+          "<b>%s</b><br/>Sun on %s: NO SUN DATA%s<br/>%s",
           name, date_txt, info_block, link_txt
         ),
         plot_block
@@ -1218,7 +1218,7 @@ sun_today <- sun_today %>%
         paste0(
           map_meta,
           sprintf(
-          "<b>%s</b><br/>Sonne am %s: keine direkte Sonneneinstrahlung%s<br/>%s",
+          "<b>%s</b><br/>Sun on %s: no direct sunlight%s<br/>%s",
           name, date_txt, info_block, link_txt
           ),
           plot_block
@@ -1226,7 +1226,7 @@ sun_today <- sun_today %>%
         paste0(
           map_meta,
           sprintf(
-            "<b>%s</b><br/>Sonne am %s: %s – %s (%s h)%s<br/>%s",
+            "<b>%s</b><br/>Sun on %s: %s – %s (%s h)%s<br/>%s",
             name, date_txt, sunrise_txt, sunset_txt, sun_hours_txt, info_block, link_txt
           ),
           plot_block
@@ -1249,7 +1249,7 @@ if (nrow(marker_data) == 0) {
 init_i <- n_steps
 m <- leaflet() |>
   addProviderTiles(providers$OpenStreetMap, group = "OSM") |>
-  addProviderTiles(providers$OpenTopoMap,   group = "Gelände (Topo)")
+  addProviderTiles(providers$OpenTopoMap,   group = "Terrain (Topo)")
 
 preview_mode <- interactive()
 
@@ -1261,7 +1261,7 @@ if (isTRUE(preview_mode)) {
       opacity = 0.8,
       project = TRUE,
       method  = "bilinear",
-      group   = "Eisdicke",
+      group   = "Ice thickness",
       layerId = "ice_preview"
     ) |>
     addRasterImage(
@@ -1300,11 +1300,11 @@ if (isTRUE(preview_mode)) {
 
          try {
            if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
-             map.layerManager.addLayer(ice,   'image', 'ice_overlay',   'Eisdicke',     null, null);
+             map.layerManager.addLayer(ice,   'image', 'ice_overlay',   'Ice thickness',     null, null);
              map.layerManager.addLayer(climb, 'image', 'climb_overlay', 'Climbability', null, null);
 
              if (typeof map.layerManager.showGroup === 'function') {
-               map.layerManager.showGroup('Eisdicke');
+               map.layerManager.showGroup('Ice thickness');
                map.layerManager.showGroup('Climbability');
              }
            } else {
@@ -1332,8 +1332,8 @@ m <- m |>
     position = "topleft",
     html = htmltools::HTML(
       "<div style='background:rgba(255,255,255,0.9);padding:6px 8px;border-radius:6px;display:flex;flex-direction:column;gap:6px;'>
-         <a href='index.html' class='map-home-link' style='font-size:14px;font-weight:bold;'>🏠 Startseite</a>
-         <a href='list.html' class='map-list-link' style='font-size:14px;font-weight:bold;'>📋 Eisfall-Liste</a>
+         <a href='index.html' class='map-home-link' style='font-size:14px;font-weight:bold;'>🏠 Home</a>
+         <a href='list.html' class='map-list-link' style='font-size:14px;font-weight:bold;'>📋 Icefall list</a>
        </div>"
     )
   ) |>
@@ -1341,15 +1341,15 @@ m <- m |>
     position = "bottomright",
     html = htmltools::HTML(
       "<details id='map-filter' style='background:rgba(255,255,255,0.95);padding:8px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:240px;width:340px;max-width:calc(100vw - 24px);box-sizing:border-box;'>
-        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filter</summary>
+        <summary style='font-weight:700;font-size:12px;letter-spacing:0.02em;text-transform:uppercase;cursor:pointer;'>Filters</summary>
         <div style='margin-top:6px;display:flex;flex-direction:column;gap:10px;'>
-          <input id='mapFilterInput' type='search' placeholder='Name, UID, Schwierigkeit' autocomplete='off'
+          <input id='mapFilterInput' type='search' placeholder='Name, UID, difficulty' autocomplete='off'
                  style='width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:8px;font-size:13px;'/>
           <div style='display:flex;flex-direction:column;gap:6px;'>
-            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Schwierigkeit</div>
+            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Difficulty</div>
             <div style='display:flex;flex-direction:column;gap:6px;'>
               <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
-                <span>Technisch (A)</span>
+                <span>Technical (A)</span>
                 <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
                   <input id='mapAmin' type='range' min='0.75' max='4.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
                   <input id='mapAmax' type='range' min='0.75' max='4.25' step='0.25' value='4.25' style='flex:1;min-width:120px;'/>
@@ -1367,7 +1367,7 @@ m <- m |>
               </div>
 
               <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
-                <span>Wassereis (WI)</span>
+                <span>Water ice (WI)</span>
                 <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
                   <input id='mapWImin' type='range' min='0.75' max='7.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
                   <input id='mapWImax' type='range' min='0.75' max='7.25' step='0.25' value='7.25' style='flex:1;min-width:120px;'/>
@@ -1376,7 +1376,7 @@ m <- m |>
               </div>
 
               <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
-                <span>Fels (UIAA)</span>
+                <span>Rock (UIAA)</span>
                 <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
                   <input id='mapRmin' type='range' min='0.75' max='12.25' step='0.25' value='0.75' style='flex:1;min-width:120px;'/>
                   <input id='mapRmax' type='range' min='0.75' max='12.25' step='0.25' value='12.25' style='flex:1;min-width:120px;'/>
@@ -1387,9 +1387,9 @@ m <- m |>
           </div>
 
           <div style='display:flex;flex-direction:column;gap:6px;'>
-            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sonne</div>
+            <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sun</div>
             <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
-              <span>Sonne morgen (h)</span>
+              <span>Sun tomorrow (h)</span>
               <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
                 <input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/>
                 <input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/>
@@ -1400,7 +1400,7 @@ m <- m |>
 
           <button id='mapFilterReset' type='button'
                   style='border:1px solid #d1d5db;background:#fff;border-radius:8px;padding:6px 8px;font-size:12px;cursor:pointer;'>
-            Filter zurücksetzen
+            Reset filters
           </button>
           <div id='mapFilterStatus' style='font-size:12px;color:#666;line-height:1.2;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;'></div>
         </div>
@@ -1424,7 +1424,7 @@ m <- m |>
     lng    = ~longitude,
     lat    = ~latitude,
     popup  = ~popup,
-    group  = "EisfälleRaw",
+    group  = "IcefallsRaw",
     options = markerOptions(pane = "icefallsPane"),
     layerId = ~uid
   )
@@ -1440,8 +1440,8 @@ m <- m |>
 # LayersControl (zeigt "Eisfälle" als Overlay, "EisfälleRaw" nicht)
 m <- m |>
   addLayersControl(
-    baseGroups    = c("OSM", "Gelände (Topo)"),
-    overlayGroups = c("Eisdicke", "Climbability", "Eisfälle"),
+    baseGroups    = c("OSM", "Terrain (Topo)"),
+    overlayGroups = c("Ice thickness", "Climbability", "Icefalls"),
     options       = layersControlOptions(collapsed = FALSE)
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax)
@@ -1458,7 +1458,7 @@ m <- m |>
   addLegend(
     pal       = pal_h,
     values    = c(0, max_h),
-    title     = "Eisdicke (m)",
+    title     = "Ice thickness (m)",
     labFormat = labelFormat(digits = 2),
     position  = "bottomleft"
   )
@@ -1554,7 +1554,7 @@ m <- m |>
             var title = document.createElement('div');
             title.style.fontSize    = '16px';
             title.style.marginBottom = '4px';
-            title.innerHTML = '<b>Eisdicke & Climbability – Zeitverlauf</b>';
+            title.innerHTML = '<b>Ice thickness & climbability – timeline</b>';
             div.appendChild(title);
             
             var labelDiv = document.createElement('div');
