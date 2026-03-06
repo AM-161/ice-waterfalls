@@ -612,7 +612,7 @@ if (is.null(ice_name) || is.na(ice_name) || !nzchar(ice_name)) {
   if ("ice_name" %in% names(row_uid)) ice_name <- row_uid$ice_name
 }
 if (is.null(ice_name) || is.na(ice_name) || !nzchar(ice_name)) ice_name <- row_uid$name
-if (is.null(ice_name) || is.na(ice_name) || !nzchar(ice_name)) ice_name <- "Eisfall"
+if (is.null(ice_name) || is.na(ice_name) || !nzchar(ice_name)) ice_name <- "Icefall"
 
 ice_alt_m <- if ("icefall_elev_m" %in% names(row_uid)) to_num(row_uid$icefall_elev_m) else NA_real_
 ice_fallheight_m <- if ("icefall_height_m" %in% names(row_uid)) to_num(row_uid$icefall_height_m) else NA_real_
@@ -947,7 +947,7 @@ if (!has_fc) {
   climb_hist_daily <- climb_hist_daily %>% mutate(climb_y = y_min + climbability * Y_DEN)
   
   plt <- ggplot(mod, aes(time, thickness_m)) +
-    geom_line(aes(color = "Eisdicke"), linewidth = 0.9) +
+    geom_line(aes(color = "Ice thickness"), linewidth = 0.9) +
     geom_line(
       data = climb_hist_daily,
       aes(time, climb_y, color = "Climbability"),
@@ -958,26 +958,26 @@ if (!has_fc) {
     coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
     scale_y_continuous(
-      name = "Eisdicke (m)",
+      name = "Ice thickness (m)",
       sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
     ) +
     scale_color_manual(
-      name = "Legende",
-      values = c("Eisdicke" = "black", "Climbability" = "red")
+      name = "Legend",
+      values = c("Ice thickness" = "black", "Climbability" = "red")
     ) +
     guides(color = guide_legend(order = 1)) +
     labs(
       subtitle = paste(
         c(
-          if (!is.na(ice_fallheight_m)) paste0("Eisfallhöhe: ", round(ice_fallheight_m, 0), " m"),
-          if (!is.na(ice_alt_m)) paste0("Höhe: ", round(ice_alt_m, 0), " m"),
+          if (!is.na(ice_fallheight_m)) paste0("Icefall height: ", round(ice_fallheight_m, 0), " m"),
+          if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
           paste0("Station: ", station_id, " (", source, ")"),
           paste0("dist ", round(dist_km, 2), " km"),
           paste0("dz ", round(dz_m, 0), " m")
         ),
         collapse = " | "
       ),
-      x = "Zeit"
+      x = "Time"
     ) +
     theme_minimal(base_size = 12) +
     theme(
@@ -1062,10 +1062,10 @@ if (!has_fc) {
     ) +
     coord_cartesian(xlim = c(x_min, forecast_start), ylim = c(y_min, y_max)) +
     scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
-    scale_y_continuous(name = "Eisdicke (m)") +
+    scale_y_continuous(name = "Ice thickness (m)") +
     scale_color_manual(
-      name = "Legende",
-      values = c("Eisdicke" = "black", "Climbability" = "red")
+      name = "Legend",
+      values = c("Ice thickness" = "black", "Climbability" = "red")
     ) +
     theme_minimal(base_size = 12) +
     theme(
@@ -1083,12 +1083,12 @@ if (!has_fc) {
               inherit.aes = FALSE, fill = "grey85", alpha = 0.6, show.legend = FALSE) +
     geom_rect(
       data = sun_rects_fc,
-      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = "Sonneneinstrahlung"),
+      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = "Sun exposure"),
       inherit.aes = FALSE,
       alpha = 0.25,
       show.legend = TRUE
     ) +
-    geom_line(aes(color = "Eisdicke"), linewidth = 0.9, show.legend = TRUE) +
+    geom_line(aes(color = "Ice thickness"), linewidth = 0.9, show.legend = TRUE) +
     geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE, show.legend = TRUE) +
     coord_cartesian(xlim = c(forecast_start, x_max), ylim = c(y_min, y_max)) +
     scale_x_datetime(
@@ -1103,15 +1103,15 @@ if (!has_fc) {
       sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
     ) +
     scale_color_manual(
-      name = "Legende",
-      values = c("Eisdicke" = "black", "Climbability" = "red"),
-      breaks = c("Eisdicke", "Climbability"),
+      name = "Legend",
+      values = c("Ice thickness" = "black", "Climbability" = "red"),
+      breaks = c("Ice thickness", "Climbability"),
       drop = FALSE
     ) +
     scale_fill_manual(
       name = NULL,
-      values = c("Sonneneinstrahlung" = "yellow"),
-      breaks = c("Sonneneinstrahlung"),
+      values = c("Sun exposure" = "yellow"),
+      breaks = c("Sun exposure"),
       drop = FALSE
     ) +
     guides(
@@ -1143,18 +1143,18 @@ if (!has_fc) {
   plt <- (p_hist + p_fc) +
     patchwork::plot_layout(widths = c(2, 1)) +
     patchwork::plot_annotation(
-      title = paste0("Modellierte Eisdicke – ", ice_name, " (UID ", sprintf("%03d", UID_TEST), ")"),
+      title = paste0("Modeled ice thickness – ", ice_name, " (UID ", sprintf("%03d", UID_TEST), ")"),
       subtitle = paste(
         c(
-          if (!is.na(ice_alt_m)) paste0("Höhe: ", round(ice_alt_m, 0), " m"),
+          if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
           paste0("Station: ", station_id, " (", source, ")"),
           paste0("dist ", round(dist_km, 2), " km"),
           paste0("dz ", round(dz_m, 0), " m"),
-          "Forecast (grau)"
+          "Forecast (gray)"
         ),
         collapse = " | "
       ),
-      caption = paste0("10-min Modell (dt=", MODEL_STEP_MIN, " min): FDH/PDH + SW(toposun) + Wind(vuln) + Dryness + Sättigung")
+      caption = paste0("10-min model (dt=", MODEL_STEP_MIN, " min): FDH/PDH + SW(toposun) + Wind(vuln) + Dryness + Saturation")
     )
 
   plt <- plt + patchwork::plot_layout(guides = "collect") &
