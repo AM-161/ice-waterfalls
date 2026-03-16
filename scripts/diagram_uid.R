@@ -767,7 +767,15 @@ if (file.exists(PATH_INV_RDS)) {
       inv_class  = ifelse(is.na(inv_class),  "none", inv_class)
     )
 } else {
-  wx <- wx %>% mutate(inv_active = FALSE, inv_score_C = 0, inv_class = "none")
+  wx <- wx %>% mutate(
+    inv_active = FALSE,
+    inv_score_C = 0,
+    inv_class = "none",
+    inv_grad_max_C_per_100m = NA_real_,
+    grad01_K_per_m = NA_real_,
+    grad12_K_per_m = NA_real_,
+    grad02_K_per_m = NA_real_
+  )
   message("⚠️ Inversion cache fehlt: ", PATH_INV_RDS, " (inv_active=FALSE)")
 }
 
@@ -793,7 +801,20 @@ wx <- wx %>%
 # =====================================================================
 # 7) Ice model
 # =====================================================================
-ice_params <- list(albedo = 0.50, Hmax_m = 0.90, H0_m = 0.20)
+ice_params <- list(
+  albedo = 0.50,
+  Hmax_m = 0.90,
+  H0_m = 0.20,
+  core_seed_mm = 35,
+  surface_seed_mm = 15,
+  core_share_min = 0.18,
+  core_share_max = 0.45,
+  melt_damping_max = 0.45,
+  melt_damping_scale_m = 0.40,
+  core_melt_base = 0.15,
+  core_melt_warm = 0.20,
+  core_melt_sun = 0.15
+)
 coef <- list(
   lapse_K_per_m      = 0.0065,
   growth_mm_per_C_h  = 0.50,
@@ -854,21 +875,50 @@ wx <- wx %>%
       coef$rad_melt_mm_per_MJ * SW_MJ_step
   )
 
-thickness_mm <- numeric(nrow(wx))
-thickness_mm[1] <- 50
+surface_mm <- numeric(nrow(wx))
+core_mm <- numeric(nrow(wx))
+
+surface_mm[1] <- ice_params$surface_seed_mm
+core_mm[1] <- ice_params$core_seed_mm
 
 for (i in 2:nrow(wx)) {
-  Hprev_m <- thickness_mm[i-1] / 1000
+  Hprev_m <- (surface_mm[i-1] + core_mm[i-1]) / 1000
   iso <- exp(-Hprev_m / ice_params$H0_m)
   cap <- pmax(0, 1 - Hprev_m / ice_params$Hmax_m)
-  growth <- wx$base_growth_mm_step[i] * iso * cap
-  melt   <- wx$base_melt_mm_step[i]
-  thickness_mm[i] <- max(0, thickness_mm[i-1] + (growth - melt))
+  growth_total <- wx$base_growth_mm_step[i] * iso * cap
+
+  core_share <- ice_params$core_share_min +
+    0.14 * pmin(1, wx$FDH[i] / 4) +
+    0.12 * pmin(1, Hprev_m / 0.30)
+  core_share <- pmin(ice_params$core_share_max, pmax(ice_params$core_share_min, core_share))
+
+  growth_core <- growth_total * core_share
+  growth_surface <- growth_total - growth_core
+
+  surface_pre_melt <- surface_mm[i-1] + growth_surface
+  core_pre_melt <- core_mm[i-1] + growth_core
+
+  melt_scale <- 1 - ice_params$melt_damping_max * pmin(1, Hprev_m / ice_params$melt_damping_scale_m)
+  melt_total <- wx$base_melt_mm_step[i] * melt_scale
+
+  melt_surface <- min(surface_pre_melt, melt_total)
+  melt_left <- pmax(0, melt_total - melt_surface)
+
+  core_melt_fac <- ice_params$core_melt_base +
+    ice_params$core_melt_warm * pmin(1, wx$PDH[i] / 4) +
+    ice_params$core_melt_sun * wx$topo_sun_fac
+  core_melt_fac <- pmin(0.85, pmax(0.20, core_melt_fac))
+  melt_core <- min(core_pre_melt, melt_left * core_melt_fac)
+
+  surface_mm[i] <- max(0, surface_pre_melt - melt_surface)
+  core_mm[i] <- max(0, core_pre_melt - melt_core)
 }
 
 mod <- wx %>%
   mutate(
-    thickness_m = thickness_mm / 1000,
+    thickness_m = (surface_mm + core_mm) / 1000,
+    surface_ice_m = surface_mm / 1000,
+    core_ice_m = core_mm / 1000,
     station_id = station_id,
     source = source,
     dist_km = dist_km,
@@ -887,6 +937,9 @@ RANGE_T3 <- max(T3_OPT - T3_MIN, T3_MAX - T3_OPT)
 
 RH_OPT <- 0.70; RH_SIG <- 0.20
 WIN_72H <- as.integer(72 * 60 / MODEL_STEP_MIN)
+WIN_24H <- as.integer(24 * 60 / MODEL_STEP_MIN)
+WIN_48H <- as.integer(48 * 60 / MODEL_STEP_MIN)
+WIN_120H <- as.integer(120 * 60 / MODEL_STEP_MIN)
 
 score_T_fun_vec <- function(Tv, Topt, Tmin, Tmax, rangeT) {
   s <- 1 - abs(Tv - Topt) / rangeT
@@ -897,16 +950,42 @@ score_T_fun_vec <- function(Tv, Topt, Tmin, Tmax, rangeT) {
 
 mod <- mod %>%
   mutate(
+    thaw_flag = TLz > 0,
+    thaw_transition = c(0, abs(diff(as.integer(thaw_flag)))),
     TLz_72h = zoo::rollapplyr(
       TLz, width = WIN_72H,
       FUN = function(x) mean(x, na.rm = TRUE),
+      fill = NA_real_, partial = TRUE
+    ),
+    PDH_24h = zoo::rollapplyr(
+      PDH * DT_H, width = WIN_24H,
+      FUN = function(x) sum(x, na.rm = TRUE),
+      fill = NA_real_, partial = TRUE
+    ),
+    PDH_72h = zoo::rollapplyr(
+      PDH * DT_H, width = WIN_72H,
+      FUN = function(x) sum(x, na.rm = TRUE),
+      fill = NA_real_, partial = TRUE
+    ),
+    SW_48h_MJ = zoo::rollapplyr(
+      SW_MJ_step, width = WIN_48H,
+      FUN = function(x) sum(x, na.rm = TRUE),
+      fill = NA_real_, partial = TRUE
+    ),
+    thaw_cycles_120h = zoo::rollapplyr(
+      thaw_transition, width = WIN_120H,
+      FUN = function(x) sum(x, na.rm = TRUE) / 2,
       fill = NA_real_, partial = TRUE
     ),
     score_h  = pmin(1, pmax(0, (thickness_m - H_MIN) / (H_OPT - H_MIN))),
     score_T  = score_T_fun_vec(TLz,     T_OPT,  T_MIN,  T_MAX,  RANGE_T),
     score_T3 = score_T_fun_vec(TLz_72h,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
     score_RH = exp(-((RF/100) - RH_OPT)^2 / (2 * RH_SIG^2)),
-    climbability = score_h * score_T * score_T3 * score_RH,
+    score_rot_warm = exp(-0.14 * coalesce(PDH_24h, 0) - 0.05 * coalesce(PDH_72h, 0)),
+    score_rot_sun = exp(-0.06 * coalesce(SW_48h_MJ, 0)),
+    score_rot_cycle = exp(-0.30 * coalesce(thaw_cycles_120h, 0)),
+    score_structure = score_rot_warm * score_rot_sun * score_rot_cycle,
+    climbability = score_h * score_T * score_T3 * score_RH * score_structure,
     climbability = ifelse(thickness_m < H_MIN, NA_real_, climbability),
     climbability = pmin(1, pmax(0, climbability)),
     date = as.Date(time)

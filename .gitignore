@@ -17,10 +17,13 @@ data/DEM/_cache_aspect
 data/_cache_sunapi
 data/nwp_3500m_forecast/nwp_metadata_cache.json
 data/_cache_inversion
+data/_cache_cap/
 data/ModelRuns
+/tmp
 
 #Modell anpassen und Fehler suchen
 /adj_model
+/scripts/AWS Validation/out
 
 #Neue Stationen oder Eisfälle hinzufügen
 /add_new
