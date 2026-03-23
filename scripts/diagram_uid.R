@@ -95,6 +95,8 @@ fill1 <- function(x) {
   x
 }
 
+clamp01 <- function(x) pmin(1, pmax(0, x))
+
 read_geosphere_csv <- function(path) {
   x <- tryCatch(readr::read_delim(path, delim = ",", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
@@ -604,6 +606,11 @@ dist_km    <- to_num(row_uid$dist_km)
 dz_m       <- to_num(row_uid$elev_diff_m)  # ice - station
 ice_lon    <- to_num(row_uid$ice_lon)
 ice_lat    <- to_num(row_uid$ice_lat)
+ice_topo_pos_uid <- if ("ice_topo_pos" %in% names(row_uid)) to_num(row_uid$ice_topo_pos) else NA_real_
+station_topo_pos_uid <- if ("station_topo_pos" %in% names(row_uid)) to_num(row_uid$station_topo_pos) else NA_real_
+topo_pos_diff_uid <- if ("topo_pos_diff" %in% names(row_uid)) to_num(row_uid$topo_pos_diff) else NA_real_
+path_barrier_uid <- if ("path_barrier_m" %in% names(row_uid)) to_num(row_uid$path_barrier_m) else NA_real_
+same_valley_dem_uid <- if ("same_valley_dem" %in% names(row_uid)) isTRUE(row_uid$same_valley_dem[[1]]) else FALSE
 
 ice_name <- NA_character_
 
@@ -767,7 +774,15 @@ if (file.exists(PATH_INV_RDS)) {
       inv_class  = ifelse(is.na(inv_class),  "none", inv_class)
     )
 } else {
-  wx <- wx %>% mutate(inv_active = FALSE, inv_score_C = 0, inv_class = "none")
+  wx <- wx %>% mutate(
+    inv_active = FALSE,
+    inv_score_C = 0,
+    inv_class = "none",
+    inv_grad_max_C_per_100m = NA_real_,
+    grad01_K_per_m = NA_real_,
+    grad12_K_per_m = NA_real_,
+    grad02_K_per_m = NA_real_
+  )
   message("⚠️ Inversion cache fehlt: ", PATH_INV_RDS, " (inv_active=FALSE)")
 }
 
@@ -801,11 +816,38 @@ coef <- list(
   rad_melt_mm_per_MJ = 0.35,
   k_wind             = 0.06,
   k_dry              = 0.25,
-  wind_cap_ms        = 15
+  wind_cap_ms        = 15,
+  gorge_cold_max_C   = 3.0,
+  core_lock_frac     = 0.30,
+  core_lock_Hmin_m   = 0.12,
+  core_lock_Hspan_m  = 0.25,
+  core_melt_frac     = 0.10,
+  core_T3_buffer_C_per_m = 8.0,
+  core_climb_bonus_mult = 1.5,
+  core_climb_bonus_decay_m = 0.25
+)
+
+gorge_low_topo_fac <- clamp01((0.28 - ice_topo_pos_uid) / 0.22)
+gorge_topo_mismatch_fac <- clamp01((topo_pos_diff_uid - 0.10) / 0.28)
+gorge_same_valley_fac <- if (isTRUE(same_valley_dem_uid)) 1 else 0
+gorge_barrier_fac <- clamp01((120 - path_barrier_uid) / 120)
+gorge_upper_station_fac <- clamp01(((-dz_m) - 150) / 450)
+gorge_cold_base <- clamp01(
+  0.40 * gorge_low_topo_fac +
+    0.25 * gorge_topo_mismatch_fac +
+    0.20 * gorge_same_valley_fac +
+    0.15 * gorge_barrier_fac
 )
 
 wx <- wx %>%
   mutate(
+    sun_hours_topo_eff = if_else(is.finite(sun_hours_topo), sun_hours_topo, 6),
+    gorge_shade_fac = clamp01((4 - sun_hours_topo_eff) / 4),
+    gorge_cold_bonus_C = if_else(
+      !is_forecast,
+      coef$gorge_cold_max_C * gorge_cold_base * gorge_shade_fac * gorge_upper_station_fac,
+      0
+    ),
     # Roh-Delta z (Forecast optional auf 0 setzen)
     dz_raw = if_else(is_forecast, 0, dz_m),
     
@@ -836,8 +878,8 @@ wx <- wx %>%
     # Temperatur auf Eisfall-Höhe:
     # - Standard: konstante Lapse
     # - Bei inv_active: physikalisches Profil (auch für dz>0 und dz<0)
-    TLz_raw = TL - coef$lapse_K_per_m * dz_raw,
-    TLz     = if_else(use_prof, TL + dT_prof, TLz_raw),
+    TLz_raw = TL - coef$lapse_K_per_m * dz_raw - gorge_cold_bonus_C,
+    TLz     = if_else(use_prof, TL + dT_prof - gorge_cold_bonus_C, TLz_raw),
     
     FDH = pmax(0, -TLz),
     PDH = pmax(0,  TLz),
@@ -854,31 +896,57 @@ wx <- wx %>%
       coef$rad_melt_mm_per_MJ * SW_MJ_step
   )
 
+surface_mm <- numeric(nrow(wx))
+core_mm <- numeric(nrow(wx))
 thickness_mm <- numeric(nrow(wx))
-thickness_mm[1] <- 50
+surface_mm[1] <- 50
+core_mm[1] <- 0
+thickness_mm[1] <- surface_mm[1] + core_mm[1]
 
 for (i in 2:nrow(wx)) {
-  Hprev_m <- thickness_mm[i-1] / 1000
+  Hprev_m <- (surface_mm[i-1] + core_mm[i-1]) / 1000
   iso <- exp(-Hprev_m / ice_params$H0_m)
   cap <- pmax(0, 1 - Hprev_m / ice_params$Hmax_m)
   growth <- wx$base_growth_mm_step[i] * iso * cap
-  melt   <- wx$base_melt_mm_step[i]
-  thickness_mm[i] <- max(0, thickness_mm[i-1] + (growth - melt))
+  lock_fac <- clamp01((Hprev_m - coef$core_lock_Hmin_m) / coef$core_lock_Hspan_m)
+  lock_mm <- pmin(growth, growth * coef$core_lock_frac * lock_fac)
+  
+  surface_pre_melt <- surface_mm[i-1] + growth - lock_mm
+  core_pre_melt <- core_mm[i-1] + lock_mm
+  melt_total <- wx$base_melt_mm_step[i]
+  
+  melt_surface <- pmin(surface_pre_melt, melt_total)
+  melt_left <- pmax(0, melt_total - melt_surface)
+  melt_core <- pmin(core_pre_melt, melt_left * coef$core_melt_frac)
+  
+  surface_mm[i] <- pmax(0, surface_pre_melt - melt_surface)
+  core_mm[i] <- pmax(0, core_pre_melt - melt_core)
+  thickness_mm[i] <- surface_mm[i] + core_mm[i]
 }
 
 mod <- wx %>%
   mutate(
+    surface_m = surface_mm / 1000,
+    core_m = core_mm / 1000,
     thickness_m = thickness_mm / 1000,
     station_id = station_id,
     source = source,
     dist_km = dist_km,
-    dz_m = dz_m
+    dz_m = dz_m,
+    ice_topo_pos = ice_topo_pos_uid,
+    station_topo_pos = station_topo_pos_uid,
+    topo_pos_diff = topo_pos_diff_uid,
+    path_barrier_m = path_barrier_uid,
+    same_valley_dem = same_valley_dem_uid,
+    gorge_cold_base = gorge_cold_base,
+    gorge_upper_station_fac = gorge_upper_station_fac
   )
 
 # =====================================================================
 # 8) Climbability (0..1) + Hist daily smoothing
 # =====================================================================
-H_MIN <- 0.10; H_OPT <- 0.50
+H_CUTOFF <- 0.05
+H_MIN <- 0.08; H_OPT <- 0.50
 T_OPT <- -4;  T_MIN <- -20; T_MAX <- 0
 RANGE_T <- max(T_OPT - T_MIN, T_MAX - T_OPT)
 
@@ -902,12 +970,16 @@ mod <- mod %>%
       FUN = function(x) mean(x, na.rm = TRUE),
       fill = NA_real_, partial = TRUE
     ),
-    score_h  = pmin(1, pmax(0, (thickness_m - H_MIN) / (H_OPT - H_MIN))),
+    TLz_72h_eff = TLz_72h - coef$core_T3_buffer_C_per_m * core_m,
+    core_climb_bonus_m = core_m * coef$core_climb_bonus_mult *
+      clamp01(1 - thickness_m / coef$core_climb_bonus_decay_m),
+    climb_thickness_m = thickness_m + core_climb_bonus_m,
+    score_h  = pmin(1, pmax(0, (climb_thickness_m - H_MIN) / (H_OPT - H_MIN))),
     score_T  = score_T_fun_vec(TLz,     T_OPT,  T_MIN,  T_MAX,  RANGE_T),
-    score_T3 = score_T_fun_vec(TLz_72h,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
+    score_T3 = score_T_fun_vec(TLz_72h_eff,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
     score_RH = exp(-((RF/100) - RH_OPT)^2 / (2 * RH_SIG^2)),
     climbability = score_h * score_T * score_T3 * score_RH,
-    climbability = ifelse(thickness_m < H_MIN, NA_real_, climbability),
+    climbability = ifelse(climb_thickness_m < H_CUTOFF, NA_real_, climbability),
     climbability = pmin(1, pmax(0, climbability)),
     date = as.Date(time)
   )

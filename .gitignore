@@ -18,6 +18,7 @@ data/_cache_sunapi
 data/nwp_3500m_forecast/nwp_metadata_cache.json
 data/_cache_inversion
 data/ModelRuns
+/tmp
 
 #Modell anpassen und Fehler suchen
 /adj_model
