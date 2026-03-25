@@ -11,10 +11,6 @@
 # Usage beyond reading or reproducing this thesis context is prohibited.
 # Please contact the author before requesting reuse.
 # =====================================================================
-# dieser Masterarbeit hinaus ist nicht gestattet. Bei Rückfragen
-# oder einer gewünschten Nutzung bitte vorher Kontakt mit dem Autor
-# aufnehmen...
-# =====================================================================
 
 suppressPackageStartupMessages({
   library(httr)
@@ -1241,7 +1237,7 @@ marker_data <- sun_today %>%
 if (nrow(marker_data) == 0) {
   message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
 } else {
-  message("�
+  message("??
  Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
 }
 
@@ -1604,7 +1600,7 @@ m <- m |>
 
 dir.create("site", showWarnings = FALSE)
 saveWidget(m, "site/map.html", selfcontained = FALSE)
-message("�
+message("??
  Fertig: site/map.html + site/img/*.png")
 
 if (interactive()) {
