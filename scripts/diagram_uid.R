@@ -602,6 +602,8 @@ dist_km    <- to_num(row_uid$dist_km)
 dz_m       <- to_num(row_uid$elev_diff_m)  # ice - station
 ice_lon    <- to_num(row_uid$ice_lon)
 ice_lat    <- to_num(row_uid$ice_lat)
+path_barrier_m_uid <- if ("path_barrier_m" %in% names(row_uid)) to_num(row_uid$path_barrier_m) else NA_real_
+topo_pos_diff_uid <- if ("topo_pos_diff" %in% names(row_uid)) to_num(row_uid$topo_pos_diff) else NA_real_
 
 ice_name <- NA_character_
 
@@ -816,34 +818,54 @@ ice_params <- list(
   # Smaller values = sharper cutoff near Hmax_m,
   # larger values = smoother, more gradual saturation.
   
-  core_seed_mm = 45,          # Initial core-ice thickness at model start [mm];
-  # represents pre-existing dense/supportive inner ice.
+  core_seed_mm = 4,           # Baseline initial core-ice thickness at model start [mm];
+  # represents a small amount of pre-existing dense/supportive inner ice.
   
-  surface_seed_mm = 20,       # Initial surface-ice thickness at model start [mm];
+  core_seed_boost_mm = 55,    # Additional core seed for strong cold-retention sites [mm];
+  # large vertical station offsets justify more persistent pre-existing core ice.
+  
+  surface_seed_mm = 16,       # Initial surface-ice thickness at model start [mm];
   # represents pre-existing outer / recently formed surface ice.
   
-  core_share_min = 0.22,      # Minimum fraction of new growth assigned to the core layer [-];
-  # ensures that some part of each growth step strengthens the core.
+  core_share_min = 0.02,      # Baseline minimum fraction of new growth routed to core ice [-];
+  # low-retention sites keep less of their new ice in the persistent core layer.
   
-  core_share_max = 0.55,      # Maximum fraction of new growth assigned to the core layer [-];
-  # limits how much of new ice can be routed into the core.
+  core_share_min_boost = 0.22,# Extra minimum core-growth share for strong cold-retention sites [-];
+  # cold-retention sites convert more new ice into long-lived core ice.
   
-  melt_damping_max = 0.55,    # Maximum reduction of melt for thick ice [-];
-  # thicker ice becomes less sensitive to melt in the model.
+  core_share_max = 0.10,      # Baseline maximum fraction of new growth routed to core ice [-];
+  # limits core routing for low-retention sites.
+  
+  core_share_max_boost = 0.48,# Extra maximum core-growth share for strong cold-retention sites [-];
+  # allows deeply retained sites to build a much more persistent core.
+  
+  melt_damping_max = 0.05,    # Baseline reduction of melt for thick ice [-];
+  # low-retention sites receive only moderate melt protection.
+  
+  melt_damping_boost = 0.50,  # Additional melt protection for strong cold-retention sites [-];
+  # thick ice in strongly retained sites stays shielded much longer.
   
   melt_damping_scale_m = 0.45,# Thickness scale [m] over which melt damping increases;
   # around this thickness, the protection effect of thicker ice
   # becomes substantial.
   
-  core_melt_base = 0.10,      # Base fraction of residual melt that can affect the core [-];
-  # surface ice melts first, but this sets a minimum vulnerability
-  # of the core.
+  core_melt_base = 0.48,      # Baseline fraction of residual melt that can affect the core [-];
+  # low-retention sites expose the core more readily once surface ice is gone.
   
-  core_melt_warm = 0.12,      # Additional core-melt sensitivity to positive air temperature [-];
-  # warmer conditions increase the fraction of melt reaching the core.
+  core_melt_base_drop = 0.32, # Reduction of base core-melt sensitivity for retained sites [-];
+  # strongly retained sites keep the core better insulated from residual melt.
   
-  core_melt_sun = 0.10        # Additional core-melt sensitivity when the icefall is sunlit [-];
+  core_melt_warm = 0.30,      # Baseline extra core-melt sensitivity to positive air temperature [-];
+  # warm air erodes the core more aggressively at low-retention sites.
+  
+  core_melt_warm_drop = 0.12, # Reduction of warm-air core-melt sensitivity for retained sites [-];
+  # retained sites respond less strongly to the same positive temperatures.
+  
+  core_melt_sun = 0.24,       # Baseline extra core-melt sensitivity when the icefall is sunlit [-];
   # direct topographic sun exposure increases core vulnerability.
+  
+  core_melt_sun_drop = 0.10   # Reduction of sun-driven core melt for retained sites [-];
+  # retained sites lose less core ice under the same sun exposure.
 )
 
 coef <- list(
@@ -921,13 +943,28 @@ wx <- wx %>%
     base_growth_mm_step = coef$growth_mm_per_C_h * FDH * DT_H * wind_fac * dry_fac,
     base_melt_mm_step   = coef$melt_mm_per_C_h * PDH * DT_H * wind_fac +
       coef$rad_melt_mm_per_MJ * SW_MJ_step
+  ) %>%
+  mutate(
+    TLz_72h_step = zoo::rollapplyr(
+      TLz, width = as.integer(72 * 60 / MODEL_STEP_MIN),
+      FUN = function(x) mean(x, na.rm = TRUE),
+      fill = NA_real_, partial = TRUE
+    )
   )
 
 surface_mm <- numeric(nrow(wx))
 core_mm <- numeric(nrow(wx))
+retention_dz_fac_uid <- clamp01((abs(dz_m) - 150) / 300)
+retention_barrier_fac_uid <- clamp01((path_barrier_m_uid - 80) / 160)
+retention_topo_fac_uid <- clamp01((0.16 - topo_pos_diff_uid) / 0.10)
+retention_fac_uid <- retention_dz_fac_uid * retention_barrier_fac_uid * retention_topo_fac_uid
+exposure_barrier_fac_uid <- 1 - clamp01((path_barrier_m_uid - 40) / 120)
+exposure_topo_fac_uid <- clamp01((topo_pos_diff_uid - 0.18) / 0.12)
+exposure_fac_uid <- exposure_barrier_fac_uid * exposure_topo_fac_uid
+core_reserve_mm <- numeric(nrow(wx))
 
 surface_mm[1] <- ice_params$surface_seed_mm
-core_mm[1] <- ice_params$core_seed_mm
+core_mm[1] <- ice_params$core_seed_mm + ice_params$core_seed_boost_mm * retention_fac_uid
 
 for (i in 2:nrow(wx)) {
   Hprev_m <- (surface_mm[i-1] + core_mm[i-1]) / 1000
@@ -939,10 +976,14 @@ for (i in 2:nrow(wx)) {
   
   growth_total <- wx$base_growth_mm_step[i] * iso * cap_exp
 
-  core_share <- ice_params$core_share_min +
+  core_share_min_eff <- ice_params$core_share_min +
+    ice_params$core_share_min_boost * retention_fac_uid
+  core_share_max_eff <- ice_params$core_share_max +
+    ice_params$core_share_max_boost * retention_fac_uid
+  core_share <- core_share_min_eff +
     0.14 * pmin(1, wx$FDH[i] / 4) +
     0.12 * pmin(1, Hprev_m / 0.30)
-  core_share <- pmin(ice_params$core_share_max, pmax(ice_params$core_share_min, core_share))
+  core_share <- pmin(core_share_max_eff, pmax(core_share_min_eff, core_share))
 
   growth_core <- growth_total * core_share
   growth_surface <- growth_total - growth_core
@@ -950,20 +991,33 @@ for (i in 2:nrow(wx)) {
   surface_pre_melt <- surface_mm[i-1] + growth_surface
   core_pre_melt <- core_mm[i-1] + growth_core
 
-  melt_scale <- 1 - ice_params$melt_damping_max * pmin(1, Hprev_m / ice_params$melt_damping_scale_m)
+  melt_damping_eff <- ice_params$melt_damping_max +
+    ice_params$melt_damping_boost * retention_fac_uid
+  melt_scale <- 1 - melt_damping_eff * pmin(1, Hprev_m / ice_params$melt_damping_scale_m)
   melt_total <- wx$base_melt_mm_step[i] * melt_scale
+  spring_exposure_fac <- clamp01((wx$TLz_72h_step[i] + 5) / 5)
+  melt_total <- melt_total * (1 + 0.8 * exposure_fac_uid * spring_exposure_fac)
 
   melt_surface <- min(surface_pre_melt, melt_total)
   melt_left <- pmax(0, melt_total - melt_surface)
 
-  core_melt_fac <- ice_params$core_melt_base +
-    ice_params$core_melt_warm * pmin(1, wx$PDH[i] / 4) +
-    ice_params$core_melt_sun * wx$topo_sun_fac
+  core_melt_fac <- (ice_params$core_melt_base - ice_params$core_melt_base_drop * retention_fac_uid) +
+    (ice_params$core_melt_warm - ice_params$core_melt_warm_drop * retention_fac_uid) * pmin(1, wx$PDH[i] / 4) +
+    (ice_params$core_melt_sun - ice_params$core_melt_sun_drop * retention_fac_uid) * wx$topo_sun_fac
   core_melt_fac <- pmin(0.85, pmax(0.20, core_melt_fac))
   melt_core <- min(core_pre_melt, melt_left * core_melt_fac)
 
+  reserve_gain_mm <- 0.30 * growth_core * retention_fac_uid
+  reserve_loss_mm <- (0.08 * wx$PDH[i] * DT_H + 0.05 * wx$topo_sun_fac + 0.02 * pmax(0, wx$TLz_72h_step[i] + 2)) *
+    retention_fac_uid
+  reserve_cap_mm <- 0.28 * core_pre_melt
+  core_reserve_mm[i] <- min(
+    reserve_cap_mm,
+    max(0, core_reserve_mm[i-1] + reserve_gain_mm - reserve_loss_mm)
+  )
+
   surface_mm[i] <- max(0, surface_pre_melt - melt_surface)
-  core_mm[i] <- max(0, core_pre_melt - melt_core)
+  core_mm[i] <- max(core_reserve_mm[i], core_pre_melt - melt_core)
 }
 
 mod <- wx %>%
@@ -1047,6 +1101,9 @@ mod <- mod %>%
     core_structure_floor = 0.10 + 0.45 * clamp01(core_ice_m / 0.12),
     score_structure = pmax(score_structure_raw, core_structure_floor),
     climbability = score_h * score_T * score_T3 * score_RH * score_structure,
+    core_climb_floor = 0.22 * retention_fac_uid * clamp01(core_ice_m / 0.08) *
+      exp(-0.08 * coalesce(PDH_24h, 0) - 0.03 * coalesce(PDH_72h, 0) - 0.05 * coalesce(SW_48h_MJ, 0)),
+    climbability = pmax(climbability, core_climb_floor),
     climbability = ifelse(climb_thickness_m < H_MIN, NA_real_, climbability),
     climbability = pmin(1, pmax(0, climbability)),
     date = as.Date(time)
