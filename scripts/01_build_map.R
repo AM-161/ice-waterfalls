@@ -1,16 +1,16 @@
 # =====================================================================
-# Urheberrechtlicher Hinweis / Nutzungseinsschränkung
+# Copyright / usage information
 # ---------------------------------------------------------------------
-# © 2025 Alle Rechte vorbehalten.
+# 2025 All rights reserved.
 #
-# Dieses Skript wurde im Rahmen der Masterarbeit zur Kletterbarkeit
-# von Eisfällen in Nordtirol erstellt. Der Code darf ohne vorherige
-# ausdrückliche schriftliche Zustimmung des Autors weder ganz noch
-# teilweise kopiert, verändert, weiterverbreitet oder in eigene
-# Projekte (insbesondere kommerzielle Anwendungen oder proprietäre
-# Software) integriert werden.
+# This script was created for the master thesis on icefall climbability
+# in North Tyrol. The code may not be copied, modified, shared, or
+# embedded in other projects (especially commercial or proprietary
+# software) without the author's prior written permission.
 #
-# Eine Nutzung über das reine Lesen und Nachvollziehen im Kontext
+# Usage beyond reading or reproducing this thesis context is prohibited.
+# Please contact the author before requesting reuse.
+# =====================================================================
 # dieser Masterarbeit hinaus ist nicht gestattet. Bei Rückfragen
 # oder einer gewünschten Nutzung bitte vorher Kontakt mit dem Autor
 # aufnehmen...
@@ -1241,7 +1241,8 @@ marker_data <- sun_today %>%
 if (nrow(marker_data) == 0) {
   message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
 } else {
-  message("✅ Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
+  message("�
+ Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
 }
 
 # 12) Leaflet Map: stabile ClusterGroup + Slider wechselt PNG-URL -------
@@ -1603,7 +1604,8 @@ m <- m |>
 
 dir.create("site", showWarnings = FALSE)
 saveWidget(m, "site/map.html", selfcontained = FALSE)
-message("✅ Fertig: site/map.html + site/img/*.png")
+message("�
+ Fertig: site/map.html + site/img/*.png")
 
 if (interactive()) {
   m

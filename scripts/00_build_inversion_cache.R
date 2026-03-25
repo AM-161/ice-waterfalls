@@ -34,7 +34,7 @@ season_start_oct <- function(d) {
   y <- year(d); m <- month(d)
   as.Date(sprintf("%d-10-01", ifelse(m >= 10, y, y - 1)))
 }
-# Ganze Saison (01.10. bis heute), damit inv_active für jede 10-min Stelle existiert
+# Full season (Oct 1 through today) so inv_active exists for every 10-min timestamp
 START_DATE <- season_start_oct(END_DATE)
 
 # ----------------------------
@@ -159,8 +159,8 @@ get_geosphere_tl <- function(start_date, end_date, station_id) {
 
 # ----------------------------
 # LWD TL (LT): seasonal first, then *_latest
-# - Wir übernehmen die robuste Logik aus diagram_uid.R (httr2 + resp_body_raw)
-# - Zusätzlich: Fallback auf *_LT_latest.csv
+# - Reuse the proven logic from diagram_uid.R (httr2 + resp_body_raw)
+# - Add fallback using *_LT_latest.csv
 # ----------------------------
 season_label <- function(date) {
   y <- year(date); m <- month(date)
@@ -207,7 +207,7 @@ read_lwd_url <- function(url) {
   if (is.na(txt0)) return(NULL)
   txt <- iconv(txt0, from = "", to = "UTF-8", sub = "byte")
   
-  # LWD ist meist ';' getrennt
+  # LWD files typically use ';' as delimiter
   tmp <- tryCatch(readr::read_delim(I(txt), delim = ";", show_col_types = FALSE, progress = FALSE),
                   error = function(e) NULL)
   if (is.null(tmp) || nrow(tmp) == 0) return(NULL)
@@ -279,12 +279,12 @@ get_lwd_tl <- function(start_date, end_date, station_code) {
   seasons <- unique(season_label(seq(as.Date(start_date), as.Date(end_date), by = "day")))
   tl <- bind_rows(lapply(seasons, function(seas) read_lwd_param(station_code, "LT", seas)))
   
-  # 2) fallback: latest (falls station keine saison-files hat)
+  # 2) fallback: latest (if the station lacks seasonal files)
   if (nrow(tl) == 0) tl <- read_lwd_latest(station_code, "LT")
   
   if (is.null(tl) || nrow(tl) == 0) {
-    stop("Keine LWD TL Daten für Station ", station_code,
-         " (seasonal + latest fehlgeschlagen). Tipp: Sys.setenv(DEBUG_LWD=\"1\")")
+    stop("No LWD TL data for station ", station_code,
+         " (seasonal + latest failed). Tip: Sys.setenv(DEBUG_LWD=\"1\")")
   }
   
   out <- tl %>%
@@ -358,10 +358,10 @@ inv <- df0 %>%
     grad12_K_per_m = I12 / (Z2_m - Z1_m),
     grad02_K_per_m = I02 / (Z2_m - Z0_m),
     
-    # Inversionsstärke als positiver Gradient (°C/100 m)
+    # Express inversion strength as a positive gradient (°C/100 m)
     inv_grad_max_C_per_100m = pmax(0, pmax(grad01_K_per_m, grad12_K_per_m)) * 100,
     
-    # optional: dein alter Score bleibt verfügbar (jetzt ausdrücklich ΔT-basiert)
+    # optional: your old score remains available (now explicitly ΔT-based)
     inv_score_C = 0.7 * pmax(0, I01) + 0.3 * pmax(0, I12),
     
     inv_class = case_when(

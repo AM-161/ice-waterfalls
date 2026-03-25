@@ -51,11 +51,9 @@ PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
-# ✅ NEU: keine UID-Unterordner mehr – alles direkt in diese Ordner
 PATH_INCA_DIR <- "adj_model/plots/inca"
 PATH_NWP_DIR  <- "adj_model/plots/nwp"
 
-# ✅ NEU: ModelRuns ohne extra Unterordner (war bei dir eh schon so)
 PATH_OUT      <- sprintf("data/ModelRuns/model_uid%s.csv", UID_TEST)
 
 # ----------------------------
@@ -94,6 +92,8 @@ fill1 <- function(x) {
   x <- zoo::na.locf(x, na.rm = FALSE, fromLast = TRUE)
   x
 }
+
+clamp01 <- function(x) pmin(1, pmax(0, x))
 
 read_geosphere_csv <- function(path) {
   x <- tryCatch(readr::read_delim(path, delim = ",", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
@@ -150,8 +150,7 @@ parse_inca_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
     select(time, UU, VV, GL)
 }
 
-# ✅ geändert: kein out_dir pro uid mehr
-# Dateien landen direkt in base_dir, Dateiname enthält uid + Zeitraum
+
 download_inca_point_uid_ts <- function(uid, lat, lon, start_date, end_date,
                                        base_dir = PATH_INCA_DIR, verbose = TRUE) {
   dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
@@ -292,8 +291,7 @@ parse_nwp_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
     select(time, t2m, rh2m, u10m, v10m, grad)
 }
 
-# ✅ geändert: kein out_dir pro uid mehr
-# Dateien landen direkt in base_dir, Dateiname enthält uid + ref + Zeitraum
+
 download_nwp_point_uid_fc <- function(uid, lat, lon, start_time_utc, end_time_utc,
                                       forecast_offset = 0,
                                       base_dir = PATH_NWP_DIR, verbose = TRUE) {
@@ -802,27 +800,77 @@ wx <- wx %>%
 # 7) Ice model
 # =====================================================================
 ice_params <- list(
-  albedo = 0.50,
-  Hmax_m = 0.90,
-  H0_m = 0.20,
-  core_seed_mm = 35,
-  surface_seed_mm = 15,
-  core_share_min = 0.18,
-  core_share_max = 0.45,
-  melt_damping_max = 0.45,
-  melt_damping_scale_m = 0.40,
-  core_melt_base = 0.15,
-  core_melt_warm = 0.20,
-  core_melt_sun = 0.15
+  albedo = 0.50,              # Shortwave albedo of the ice surface [-];
+  # fraction of incoming solar radiation reflected by the ice.
+  # Higher values reduce absorbed radiation and therefore reduce melt.
+  
+  Hmax_m = 0.90,              # Asymptotic maximum ice thickness [m];
+  # used as the upper thickness scale for growth saturation.
+  
+  H0_m = 0.20,                # Exponential insulation / damping scale [m];
+  # controls how quickly further ice growth is reduced as total ice
+  # thickness increases. Smaller values = stronger early damping.
+  
+  Hsat_lambda_m = 0.15,       # Exponential saturation softness parameter [m];
+  # controls how smoothly growth approaches zero near Hmax_m.
+  # Smaller values = sharper cutoff near Hmax_m,
+  # larger values = smoother, more gradual saturation.
+  
+  core_seed_mm = 45,          # Initial core-ice thickness at model start [mm];
+  # represents pre-existing dense/supportive inner ice.
+  
+  surface_seed_mm = 20,       # Initial surface-ice thickness at model start [mm];
+  # represents pre-existing outer / recently formed surface ice.
+  
+  core_share_min = 0.22,      # Minimum fraction of new growth assigned to the core layer [-];
+  # ensures that some part of each growth step strengthens the core.
+  
+  core_share_max = 0.55,      # Maximum fraction of new growth assigned to the core layer [-];
+  # limits how much of new ice can be routed into the core.
+  
+  melt_damping_max = 0.55,    # Maximum reduction of melt for thick ice [-];
+  # thicker ice becomes less sensitive to melt in the model.
+  
+  melt_damping_scale_m = 0.45,# Thickness scale [m] over which melt damping increases;
+  # around this thickness, the protection effect of thicker ice
+  # becomes substantial.
+  
+  core_melt_base = 0.10,      # Base fraction of residual melt that can affect the core [-];
+  # surface ice melts first, but this sets a minimum vulnerability
+  # of the core.
+  
+  core_melt_warm = 0.12,      # Additional core-melt sensitivity to positive air temperature [-];
+  # warmer conditions increase the fraction of melt reaching the core.
+  
+  core_melt_sun = 0.10        # Additional core-melt sensitivity when the icefall is sunlit [-];
+  # direct topographic sun exposure increases core vulnerability.
 )
+
 coef <- list(
-  lapse_K_per_m      = 0.0065,
-  growth_mm_per_C_h  = 0.50,
-  melt_mm_per_C_h    = 0.70,
-  rad_melt_mm_per_MJ = 0.35,
-  k_wind             = 0.06,
-  k_dry              = 0.25,
-  wind_cap_ms        = 15
+  lapse_K_per_m      = 0.0065,# Environmental lapse rate [K m^-1];
+  # used to vertically adjust air temperature from station/grid
+  # elevation to icefall elevation.
+  
+  growth_mm_per_C_h  = 0.50,  # Ice growth coefficient [mm per °C per hour];
+  # converts freezing degree hours into potential ice growth.
+  
+  melt_mm_per_C_h    = 0.60,  # Melt coefficient [mm per °C per hour];
+  # converts positive degree hours into potential melt.
+  
+  rad_melt_mm_per_MJ = 0.35,  # Radiation melt coefficient [mm per MJ m^-2];
+  # converts absorbed shortwave energy into additional melt.
+  
+  k_wind             = 0.06,  # Wind enhancement factor [- per m s^-1];
+  # scales growth/melt intensity with wind speed
+  # (depending on model formulation).
+  
+  k_dry              = 0.25,  # Dryness enhancement factor [-];
+  # increases growth potential under dry-air conditions
+  # through a relative-humidity-based multiplier.
+  
+  wind_cap_ms        = 15      # Maximum wind speed considered by the model [m s^-1];
+  # caps the wind effect to avoid unrealistically large responses
+  # at very high wind speeds.
 )
 
 wx <- wx %>%
@@ -884,8 +932,12 @@ core_mm[1] <- ice_params$core_seed_mm
 for (i in 2:nrow(wx)) {
   Hprev_m <- (surface_mm[i-1] + core_mm[i-1]) / 1000
   iso <- exp(-Hprev_m / ice_params$H0_m)
-  cap <- pmax(0, 1 - Hprev_m / ice_params$Hmax_m)
-  growth_total <- wx$base_growth_mm_step[i] * iso * cap
+  
+  gap_m <- pmax(0, ice_params$Hmax_m - Hprev_m)
+  cap_exp <- (1 - exp(-gap_m / ice_params$Hsat_lambda_m)) /
+    (1 - exp(-ice_params$Hmax_m / ice_params$Hsat_lambda_m))
+  
+  growth_total <- wx$base_growth_mm_step[i] * iso * cap_exp
 
   core_share <- ice_params$core_share_min +
     0.14 * pmin(1, wx$FDH[i] / 4) +
@@ -928,14 +980,17 @@ mod <- wx %>%
 # =====================================================================
 # 8) Climbability (0..1) + Hist daily smoothing
 # =====================================================================
-H_MIN <- 0.10; H_OPT <- 0.50
-T_OPT <- -4;  T_MIN <- -20; T_MAX <- 0
+H_MIN <- 0.07; H_OPT <- 0.45
+T_OPT <- -3.5;  T_MIN <- -20; T_MAX <- 1.5
 RANGE_T <- max(T_OPT - T_MIN, T_MAX - T_OPT)
 
-T3_OPT <- -6; T3_MIN <- -20; T3_MAX <- -1
+T3_OPT <- -6; T3_MIN <- -20; T3_MAX <- 0
 RANGE_T3 <- max(T3_OPT - T3_MIN, T3_MAX - T3_OPT)
 
 RH_OPT <- 0.70; RH_SIG <- 0.20
+CORE_T3_BUFFER_C_PER_M <- 8.0
+CORE_CLIMB_BONUS_MULT <- 1.5
+CORE_CLIMB_BONUS_DECAY_M <- 0.25
 WIN_72H <- as.integer(72 * 60 / MODEL_STEP_MIN)
 WIN_24H <- as.integer(24 * 60 / MODEL_STEP_MIN)
 WIN_48H <- as.integer(48 * 60 / MODEL_STEP_MIN)
@@ -977,16 +1032,22 @@ mod <- mod %>%
       FUN = function(x) sum(x, na.rm = TRUE) / 2,
       fill = NA_real_, partial = TRUE
     ),
-    score_h  = pmin(1, pmax(0, (thickness_m - H_MIN) / (H_OPT - H_MIN))),
+    TLz_72h_eff = TLz_72h - CORE_T3_BUFFER_C_PER_M * core_ice_m,
+    core_climb_bonus_m = core_ice_m * CORE_CLIMB_BONUS_MULT *
+      clamp01(1 - thickness_m / CORE_CLIMB_BONUS_DECAY_M),
+    climb_thickness_m = thickness_m + core_climb_bonus_m,
+    score_h  = pmin(1, pmax(0, (climb_thickness_m - H_MIN) / (H_OPT - H_MIN))),
     score_T  = score_T_fun_vec(TLz,     T_OPT,  T_MIN,  T_MAX,  RANGE_T),
-    score_T3 = score_T_fun_vec(TLz_72h,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
+    score_T3 = score_T_fun_vec(TLz_72h_eff,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
     score_RH = exp(-((RF/100) - RH_OPT)^2 / (2 * RH_SIG^2)),
     score_rot_warm = exp(-0.14 * coalesce(PDH_24h, 0) - 0.05 * coalesce(PDH_72h, 0)),
     score_rot_sun = exp(-0.06 * coalesce(SW_48h_MJ, 0)),
     score_rot_cycle = exp(-0.30 * coalesce(thaw_cycles_120h, 0)),
-    score_structure = score_rot_warm * score_rot_sun * score_rot_cycle,
+    score_structure_raw = score_rot_warm * score_rot_sun * score_rot_cycle,
+    core_structure_floor = 0.10 + 0.45 * clamp01(core_ice_m / 0.12),
+    score_structure = pmax(score_structure_raw, core_structure_floor),
     climbability = score_h * score_T * score_T3 * score_RH * score_structure,
-    climbability = ifelse(thickness_m < H_MIN, NA_real_, climbability),
+    climbability = ifelse(climb_thickness_m < H_MIN, NA_real_, climbability),
     climbability = pmin(1, pmax(0, climbability)),
     date = as.Date(time)
   )
@@ -1199,7 +1260,6 @@ if (!has_fc) {
     ) +
     theme_minimal(base_size = 12) +
     theme(
-      # ✅ Gridlines nur bei den Peak-Breaks
       panel.grid.major.x = element_line(),
       panel.grid.minor.x = element_blank(),
       
