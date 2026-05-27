@@ -8,8 +8,8 @@ on:
       - main-test
 
   # Schedule läuft i.d.R. nur auf dem Default-Branch (main)
-  schedule:
-    - cron: "0 15 * * *"   # täglich 15:00 UTC (Kommentar ggf. anpassen)
+  #schedule:
+   # - cron: "0 15 * * *"   # täglich 15:00 UTC (Kommentar ggf. anpassen)
 
   # Manuell triggerbar (auf beliebigem Branch)
   workflow_dispatch:
