@@ -188,6 +188,48 @@ fmt_duration_h <- function(h) {
   out
 }
 
+normalize_angle_deg <- function(x) {
+  ((x %% 360) + 360) %% 360
+}
+
+angle_diff_deg <- function(a, b) {
+  a <- normalize_angle_deg(a)
+  b <- normalize_angle_deg(b)
+  d <- abs(a - b)
+  pmin(d, 360 - d)
+}
+
+normalize_cardinal <- function(x) {
+  x <- toupper(trimws(as.character(x)))
+  x <- gsub("NORD", "N", x, fixed = TRUE)
+  x <- gsub("SUED", "S", x, fixed = TRUE)
+  x <- gsub("SUD", "S", x, fixed = TRUE)
+  x <- gsub("OST", "O", x, fixed = TRUE)
+  x <- gsub("EAST", "O", x, fixed = TRUE)
+  x <- gsub("WEST", "W", x, fixed = TRUE)
+  x <- gsub("[^NOSWE]", "", x)
+  x
+}
+
+cardinal_to_degree <- function(x) {
+  key <- normalize_cardinal(x)
+  lut <- c(
+    "N" = 0, "NNO" = 22.5, "NO" = 45, "ONO" = 67.5,
+    "O" = 90, "OSO" = 112.5, "SO" = 135, "SSO" = 157.5,
+    "S" = 180, "SSW" = 202.5, "SW" = 225, "WSW" = 247.5,
+    "W" = 270, "WNW" = 292.5, "NW" = 315, "NNW" = 337.5,
+    "NE" = 45, "SE" = 135, "E" = 90
+  )
+  out <- unname(lut[key])
+  out[is.na(out)] <- NA_real_
+  as.numeric(out)
+}
+
+is_degree_consistent_with_cardinal <- function(deg, cardinal) {
+  target <- cardinal_to_degree(cardinal)
+  is.finite(deg) & is.finite(target) & angle_diff_deg(deg, target) <= 45
+}
+
 # Fix common encoding / symbol issues (e.g., degree sign)
 normalize_text <- function(x) {
   if (is.null(x)) return(NA_character_)
@@ -222,6 +264,9 @@ meta <- tibble(
   longitude = get_num(meta_raw, "longitude", "lon"),
   elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
   difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
+  aspect = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
+  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
+  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "exposition"),
   icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
   approach = get_chr(meta_raw, "zustieg", "approach"),
   descent  = get_chr(meta_raw, "abstieg", "descent"),

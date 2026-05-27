@@ -4,12 +4,15 @@ Interactive icefall map and model output for a master thesis project.
 
 ## Repository structure
 
-- `static/`: static homepage source.
-- `assets/`: static assets copied into the GitHub Pages build.
+- `assets/`: homepage source (`index.html`) and static assets copied into the GitHub Pages build.
 - `scripts/`: runtime build scripts used by GitHub Actions.
-- `data/`: input and small derived data required by the model/build.
+- `data/`: input, cache, and derived data required by the model/build.
+  - `data/Glacier/`: glacier inventory shapefile used by the CAP calculation.
+  - `data/inca_nordtirol/point_timeseries/`: cached INCA point time series used by UID model plots.
+  - `data/nwp_2500m_forecast/point_forecasts/`: cached NWP point forecasts used by UID model plots.
 - `analysis/`: research, QA, and thesis-helper scripts that are not part of the normal Pages build.
 - `site/`: generated GitHub Pages output. It is ignored except for `.gitkeep`.
+- `ALT/`: local archive for old scripts, scratch files, and RStudio state. It is ignored by Git.
 
 ## GitHub Pages build
 
@@ -19,7 +22,7 @@ The workflow runs:
 
 1. `scripts/00_build_plots_all.R`
 2. `scripts/02_build_list_page.R`
-3. copy `static/index.html` and `assets/` into `site/`
+3. copy `assets/index.html` and other assets into `site/`
 4. `scripts/01_build_map.R`
 
 On `main`, the generated `site/` folder is deployed to GitHub Pages. On `main-test`, it is uploaded as a workflow artifact for checking.
@@ -39,6 +42,27 @@ Then serve the generated site locally:
 ```bash
 python -m http.server 8000 --directory site
 ```
+
+## Add new icefalls
+
+Fill one or more rows in `add_new/new_icefalls.csv`, then run from the
+repository root:
+
+```bash
+Rscript scripts/add_new_icefalls.R
+```
+
+If `Rscript` is not in `PATH` on Windows, use:
+
+```powershell
+& "C:\Program Files\R\R-4.5.3\bin\Rscript.exe" scripts/add_new_icefalls.R
+```
+
+Leave `uid` empty for new icefalls; set an existing `uid` to update/recalculate
+that icefall. The command updates the main table and the fixed derived
+parameters such as height/aspect, station assignment, wind vulnerability,
+topographic sun, route structure, and cold-air-pooling tables. Add `--dry-run`
+to preview the affected UIDs without writing files.
 
 ## Notes for pushing
 

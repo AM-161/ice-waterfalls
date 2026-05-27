@@ -86,8 +86,8 @@ jobs:
       - name: Add homepage assets
         run: |
           mkdir -p site/assets
-          cp -R assets/. site/assets/
-          cp static/index.html site/index.html
+          cp assets/index.html site/index.html
+          find assets -mindepth 1 -maxdepth 1 ! -name index.html -exec cp -R {} site/assets/ \;
 
       - name: Build map
         run: Rscript scripts/01_build_map.R

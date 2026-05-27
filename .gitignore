@@ -13,6 +13,7 @@ Rplots.pdf
 
 # Runtime-generated data and caches
 /data/plots/
+/data/inca_nordtirol/point_timeseries/
 /data/nwp_2500m_forecast/
 /data/nwp_3500m_forecast/nwp_metadata_cache.json
 /data/_cache_sunapi/
@@ -29,8 +30,11 @@ Rplots.pdf
 /DGM_Tirol_5m_epsg31254_2006_2020.tif
 
 # Local work areas, validation outputs, and scratch files
-/add_new/
-/adj_model/
+/ALT/
+/add_new/*
+!/add_new/
+!/add_new/README.md
+!/add_new/new_icefalls.csv
 /tmp/
 /scripts/AWS Validation/out/
 

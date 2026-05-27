@@ -53,8 +53,8 @@ PATH_CAP <- "data/CAP/icefall_station_cap.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
-PATH_INCA_DIR <- "adj_model/plots/inca"
-PATH_NWP_DIR  <- "adj_model/plots/nwp"
+PATH_INCA_DIR <- "data/inca_nordtirol/point_timeseries"
+PATH_NWP_DIR  <- "data/nwp_2500m_forecast/point_forecasts"
 
 PATH_OUT      <- sprintf("data/ModelRuns/model_uid%s.csv", UID_TEST)
 
@@ -842,7 +842,13 @@ wind_uid <- wind_lut %>%
   mutate(dir_deg = as.numeric(dir_deg), wind_vuln_0_9 = as.integer(wind_vuln_0_9)) %>%
   select(dir_deg, wind_vuln_0_9)
 
-if (nrow(wind_uid) == 0) stop("Keine Wind-LUT für uid ", UID_TEST)
+if (nrow(wind_uid) == 0) {
+  message("Keine Wind-LUT fuer uid ", UID_TEST, " (wind_vuln_0_9=9 fuer alle Richtungen)")
+  wind_uid <- tibble(
+    dir_deg = seq(0, 355, by = 5),
+    wind_vuln_0_9 = 9L
+  )
+}
 
 # =====================================================================
 # 3) Station TL/RF (10-min) -> 10-min Raster + Fill

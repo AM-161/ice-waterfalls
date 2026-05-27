@@ -14,7 +14,7 @@ terraOptions(progress = 0)
 
 PATH_ASSIGN <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
-PATH_GLACIERS <- Sys.getenv("ICEFALL_GLACIER_SHP", "adj_model/AWS Validation/GI_4_2015.shp")
+PATH_GLACIERS <- Sys.getenv("ICEFALL_GLACIER_SHP", "data/Glacier/GI_4_2015.shp")
 
 OUT_DIR <- "data/CAP"
 PATH_CAP_INDEX <- file.path(OUT_DIR, "cap_index.csv")
