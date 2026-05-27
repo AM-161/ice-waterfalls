@@ -1,31 +1,46 @@
-#RStudio
-.Rproj.user
+# R / RStudio
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
-
-#Outputs
-/site
-/data/plots
-/data/nwp_2500m_forecast
 Rplots.pdf
-list.html
-icefalls_table.json
-last_update.json
-data/DEM/DGM_AT_5m_epsg31287.tif
-data/DEM/_cache_aspect
-data/_cache_sunapi
-data/nwp_3500m_forecast/nwp_metadata_cache.json
-data/_cache_inversion
-data/_cache_cap/
-data/ModelRuns
-/tmp
 
-#Modell anpassen und Fehler suchen
-/adj_model
-/scripts/AWS Validation/out
+# GitHub Pages build outputs
+/site/
+/list.html
+/icefalls_table.json
+/last_update.json
 
-#Neue Stationen oder Eisfälle hinzufügen
-/add_new
-DGM_Tirol_5m_epsg31254_2006_2020.tif
-data/DEM/eudem_dem_3035_europe.tif
+# Runtime-generated data and caches
+/data/plots/
+/data/nwp_2500m_forecast/
+/data/nwp_3500m_forecast/nwp_metadata_cache.json
+/data/_cache_sunapi/
+/data/_cache_inversion/
+/data/_cache_cap/
+/data/ModelRuns/
+/data/derived/icefall_structure/cache/
+/data/DEM/_cache_aspect/
+
+# Large DEM/source files that should stay local
+/data/DEM/DGM_AT_5m_epsg31287.tif
+/data/DEM/DGM_Tirol_5m_epsg31254_2006_2020.tif
+/data/DEM/eudem_dem_3035_europe.tif
+/DGM_Tirol_5m_epsg31254_2006_2020.tif
+
+# Local work areas, validation outputs, and scratch files
+/add_new/
+/adj_model/
+/tmp/
+/scripts/AWS Validation/out/
+
+# Analysis outputs kept out of Git; scripts live under analysis/
+/Hist_Klima/
+/analysis/historical_climate/**/cache/
+/analysis/historical_climate/**/output/
+
+# Python and OS noise
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db

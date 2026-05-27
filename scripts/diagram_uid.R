@@ -48,6 +48,8 @@ PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 DIR_SUN       <- "data/suntime"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
+PATH_STRUCTURE <- "data/derived/icefall_structure/icefall_structure_analysis.csv"
+PATH_CAP <- "data/CAP/icefall_station_cap.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
@@ -55,6 +57,10 @@ PATH_INCA_DIR <- "adj_model/plots/inca"
 PATH_NWP_DIR  <- "adj_model/plots/nwp"
 
 PATH_OUT      <- sprintf("data/ModelRuns/model_uid%s.csv", UID_TEST)
+
+DEFAULT_SOLAR_TILT_DEG <- 65
+MIN_SOLAR_TILT_DEG <- 45
+MAX_SOLAR_TILT_DEG <- 85
 
 # ----------------------------
 # Helpers
@@ -95,6 +101,26 @@ fill1 <- function(x) {
 
 clamp01 <- function(x) pmin(1, pmax(0, x))
 
+deg2rad <- function(x) x * pi / 180
+rad2deg <- function(x) x * 180 / pi
+
+first_finite <- function(...) {
+  vals <- c(...)
+  vals <- vals[is.finite(vals)]
+  if (length(vals) == 0) return(NA_real_)
+  vals[[1]]
+}
+
+tz_offset_hours_vec <- function(time_local) {
+  z <- format(time_local, "%z")
+  sign <- ifelse(substr(z, 1, 1) == "-", -1, 1)
+  hh <- suppressWarnings(as.numeric(substr(z, 2, 3)))
+  mm <- suppressWarnings(as.numeric(substr(z, 4, 5)))
+  off <- sign * (hh + mm / 60)
+  off[!is.finite(off)] <- 0
+  off
+}
+
 read_geosphere_csv <- function(path) {
   x <- tryCatch(readr::read_delim(path, delim = ",", show_col_types = FALSE, progress = FALSE), error = function(e) NULL)
   if (!is.null(x) && ncol(x) > 1) return(x)
@@ -113,6 +139,95 @@ parse_time_any_utc <- function(x) {
     tz = "UTC"
   ))
   t
+}
+
+compute_solar_position <- function(time_local, lat_deg, lon_deg) {
+  n <- length(time_local)
+  if (n == 0 || !is.finite(lat_deg) || !is.finite(lon_deg)) {
+    return(list(
+      altitude_rad = rep(NA_real_, n),
+      altitude_deg = rep(NA_real_, n),
+      azimuth_deg = rep(NA_real_, n)
+    ))
+  }
+
+  doy <- lubridate::yday(time_local)
+  hour_local <- lubridate::hour(time_local) +
+    lubridate::minute(time_local) / 60 +
+    lubridate::second(time_local) / 3600
+  gamma <- 2 * pi / 365.2422 * (doy - 1 + (hour_local - 12) / 24)
+
+  eqtime_min <- 229.18 * (
+    0.000075 +
+      0.001868 * cos(gamma) -
+      0.032077 * sin(gamma) -
+      0.014615 * cos(2 * gamma) -
+      0.040849 * sin(2 * gamma)
+  )
+
+  decl <- 0.006918 -
+    0.399912 * cos(gamma) +
+    0.070257 * sin(gamma) -
+    0.006758 * cos(2 * gamma) +
+    0.000907 * sin(2 * gamma) -
+    0.002697 * cos(3 * gamma) +
+    0.00148 * sin(3 * gamma)
+
+  tz_hours <- tz_offset_hours_vec(time_local)
+  true_solar_min <- (hour_local * 60 + eqtime_min + 4 * lon_deg - 60 * tz_hours) %% 1440
+  hour_angle_deg <- true_solar_min / 4 - 180
+  hour_angle_deg[hour_angle_deg < -180] <- hour_angle_deg[hour_angle_deg < -180] + 360
+
+  lat_rad <- deg2rad(lat_deg)
+  ha_rad <- deg2rad(hour_angle_deg)
+
+  cos_zen <- sin(lat_rad) * sin(decl) + cos(lat_rad) * cos(decl) * cos(ha_rad)
+  cos_zen <- pmin(1, pmax(-1, cos_zen))
+  altitude_rad <- asin(cos_zen)
+
+  azimuth_rad <- atan2(
+    sin(ha_rad),
+    cos(ha_rad) * sin(lat_rad) - tan(decl) * cos(lat_rad)
+  )
+  azimuth_deg <- (rad2deg(azimuth_rad) + 180) %% 360
+
+  list(
+    altitude_rad = altitude_rad,
+    altitude_deg = rad2deg(altitude_rad),
+    azimuth_deg = azimuth_deg
+  )
+}
+
+compute_surface_solar_ratio <- function(time_local, lat_deg, lon_deg,
+                                        surface_aspect_deg, surface_tilt_deg,
+                                        sun_visible,
+                                        horiz_floor = 0.15,
+                                        max_ratio = 2.6) {
+  n <- length(time_local)
+  ratio <- ifelse(sun_visible > 0, 1, 0)
+  if (n == 0) return(ratio)
+
+  if (!all(is.finite(c(lat_deg, lon_deg, surface_aspect_deg, surface_tilt_deg)))) {
+    return(ratio)
+  }
+
+  sol <- compute_solar_position(time_local, lat_deg, lon_deg)
+  aspect_rad <- deg2rad(surface_aspect_deg %% 360)
+  tilt_rad <- deg2rad(pmin(89, pmax(0, surface_tilt_deg)))
+  azimuth_rad <- deg2rad(sol$azimuth_deg)
+
+  face_cos <- sin(sol$altitude_rad) * cos(tilt_rad) +
+    cos(sol$altitude_rad) * sin(tilt_rad) * cos(azimuth_rad - aspect_rad)
+  horiz_cos <- pmax(sin(sol$altitude_rad), horiz_floor)
+  raw_ratio <- pmax(0, face_cos) / horiz_cos
+
+  usable <- sun_visible > 0 &
+    is.finite(raw_ratio) &
+    is.finite(sol$altitude_deg) &
+    sol$altitude_deg > 0
+
+  ratio[usable] <- pmin(max_ratio, pmax(1, raw_ratio[usable]))
+  ratio
 }
 
 # ----------------------------
@@ -556,6 +671,49 @@ stations_all <- readr::read_csv(
   PATH_STATIONS, show_col_types = FALSE, progress = FALSE,
   col_select = dplyr::any_of(c("station_id","altitude_m"))
 )
+structure_all <- if (file.exists(PATH_STRUCTURE)) {
+  readr::read_csv(
+    PATH_STRUCTURE, show_col_types = FALSE, progress = FALSE,
+    col_select = dplyr::any_of(c(
+      "uid",
+      "name",
+      "source_aspect_deg",
+      "preferred_aspect_deg",
+      "slope_mean_deg",
+      "slope_p90_deg"
+    ))
+  )
+} else {
+  tibble(
+    uid = integer(),
+    name = character(),
+    source_aspect_deg = numeric(),
+    preferred_aspect_deg = numeric(),
+    slope_mean_deg = numeric(),
+    slope_p90_deg = numeric()
+  )
+}
+cap_pairs <- if (file.exists(PATH_CAP)) {
+  readr::read_csv(
+    PATH_CAP, show_col_types = FALSE, progress = FALSE,
+    col_select = dplyr::any_of(c(
+      "uid",
+      "icefall_cap_potential",
+      "station_cap_potential",
+      "cap_delta",
+      "cap_pair_confidence"
+    ))
+  )
+} else {
+  message("CAP cache fehlt: ", PATH_CAP, " (CAP-Korrektur bleibt 0)")
+  tibble(
+    uid = integer(),
+    icefall_cap_potential = numeric(),
+    station_cap_potential = numeric(),
+    cap_delta = numeric(),
+    cap_pair_confidence = numeric()
+  )
+}
 find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
   uid_i <- suppressWarnings(as.integer(uid))
   if (!is.finite(uid_i)) return(NA_character_)
@@ -605,6 +763,18 @@ ice_lat    <- to_num(row_uid$ice_lat)
 path_barrier_m_uid <- if ("path_barrier_m" %in% names(row_uid)) to_num(row_uid$path_barrier_m) else NA_real_
 topo_pos_diff_uid <- if ("topo_pos_diff" %in% names(row_uid)) to_num(row_uid$topo_pos_diff) else NA_real_
 
+cap_uid <- cap_pairs %>% filter(uid == UID_TEST) %>% slice(1)
+cap_num <- function(df, col, default = NA_real_) {
+  if (nrow(df) == 1 && col %in% names(df)) return(to_num(df[[col]]))
+  default
+}
+cap_icefall_uid <- cap_num(cap_uid, "icefall_cap_potential")
+cap_station_uid <- cap_num(cap_uid, "station_cap_potential")
+cap_delta_uid <- cap_num(cap_uid, "cap_delta", 0)
+cap_pair_confidence_uid <- cap_num(cap_uid, "cap_pair_confidence", 0)
+cap_delta_uid <- ifelse(is.finite(cap_delta_uid), pmax(-1, pmin(1, cap_delta_uid)), 0)
+cap_pair_confidence_uid <- ifelse(is.finite(cap_pair_confidence_uid), clamp01(cap_pair_confidence_uid), 0)
+
 ice_name <- NA_character_
 
 if ("icefall_name" %in% names(row_uid)) ice_name <- row_uid$icefall_name
@@ -619,6 +789,29 @@ ice_fallheight_m <- if ("icefall_height_m" %in% names(row_uid)) to_num(row_uid$i
 
 st_meta <- stations_all %>% filter(as.character(station_id) == .env$station_id) %>% slice(1)
 z_aws <- if (nrow(st_meta) == 1) to_num(st_meta$altitude_m) else NA_real_
+
+structure_uid <- structure_all %>% filter(uid == UID_TEST) %>% slice(1)
+ice_aspect_deg_uid <- if (nrow(structure_uid) == 1) {
+  first_finite(
+    to_num(structure_uid$preferred_aspect_deg),
+    to_num(structure_uid$source_aspect_deg)
+  )
+} else {
+  NA_real_
+}
+ice_slope_mean_deg_uid <- if (nrow(structure_uid) == 1) to_num(structure_uid$slope_mean_deg) else NA_real_
+ice_slope_p90_deg_uid <- if (nrow(structure_uid) == 1) to_num(structure_uid$slope_p90_deg) else NA_real_
+ice_tilt_seed_deg_uid <- first_finite(
+  if (is.finite(ice_slope_mean_deg_uid) && is.finite(ice_slope_p90_deg_uid)) {
+    0.35 * ice_slope_mean_deg_uid + 0.65 * ice_slope_p90_deg_uid
+  } else {
+    NA_real_
+  },
+  ice_slope_p90_deg_uid,
+  ice_slope_mean_deg_uid,
+  DEFAULT_SOLAR_TILT_DEG
+)
+ice_tilt_deg_uid <- pmin(MAX_SOLAR_TILT_DEG, pmax(MIN_SOLAR_TILT_DEG, ice_tilt_seed_deg_uid))
 
 # =====================================================================
 # 2) Sun + Wind LUT
@@ -798,6 +991,15 @@ wx <- wx %>%
     wind_vuln = pmin(1, pmax(0, wind_vuln_0_9 / 9))
   )
 
+wx$solar_incidence_ratio <- compute_surface_solar_ratio(
+  time_local = wx$time,
+  lat_deg = ice_lat,
+  lon_deg = ice_lon,
+  surface_aspect_deg = ice_aspect_deg_uid,
+  surface_tilt_deg = ice_tilt_deg_uid,
+  sun_visible = wx$topo_sun_fac
+)
+
 # =====================================================================
 # 7) Ice model
 # =====================================================================
@@ -805,6 +1007,20 @@ ice_params <- list(
   albedo = 0.50,              # Shortwave albedo of the ice surface [-];
   # fraction of incoming solar radiation reflected by the ice.
   # Higher values reduce absorbed radiation and therefore reduce melt.
+
+  solar_boost_strength = 1.35,# Extra shortwave boost for well-exposed wall geometry [-];
+  # south/east/west walls absorb more radiation than a horizontal surface
+  # when they are directly illuminated.
+
+  solar_core_boost_strength = 0.55,
+  # converts the geometric solar boost into stronger core/reserve melt.
+  # kept lower than the surface-radiation boost to avoid overreacting.
+
+  solar_load_cap = 3.0,       # Upper cap for solar melt amplification [-];
+  # prevents unrealistically large boosts at very low sun angles.
+
+  solar_core_cap = 1.8,       # Upper cap for core/reseve solar forcing [-];
+  # keeps sun-driven deep melt bounded even on very exposed lines.
   
   Hmax_m = 0.90,              # Asymptotic maximum ice thickness [m];
   # used as the upper thickness scale for growth saturation.
@@ -890,9 +1106,21 @@ coef <- list(
   # increases growth potential under dry-air conditions
   # through a relative-humidity-based multiplier.
   
-  wind_cap_ms        = 15      # Maximum wind speed considered by the model [m s^-1];
+  wind_cap_ms        = 15,     # Maximum wind speed considered by the model [m s^-1];
   # caps the wind effect to avoid unrealistically large responses
   # at very high wind speeds.
+
+  cap_max_adjust_C   = 3.0,    # Maximum relative CAP temperature correction [K];
+  # applied as station-relative cold-air-pooling potential.
+
+  cap_wind_shutdown_ms = 4.0,  # Wind speed where CAP cooling is mixed out [m s^-1];
+  # calm conditions preserve local cold-air pools.
+
+  cap_radiation_shutdown_Wm2 = 180, # Direct-radiation threshold reducing CAP [-];
+  # direct sun weakens near-surface pooling during the day.
+
+  cap_no_inversion_factor = 0.35 # Residual CAP strength when no inversion is detected [-].
+  # keeps weak nocturnal/local pooling possible even without the global inversion flag.
 )
 
 wx <- wx %>%
@@ -928,15 +1156,46 @@ wx <- wx %>%
     # - Standard: konstante Lapse
     # - Bei inv_active: physikalisches Profil (auch für dz>0 und dz<0)
     TLz_raw = TL - coef$lapse_K_per_m * dz_raw,
-    TLz     = if_else(use_prof, TL + dT_prof, TLz_raw),
-    
+    TLz_base = if_else(use_prof, TL + dT_prof, TLz_raw),
+    FF_eff = pmin(coef$wind_cap_ms, pmax(0, FF)),
+    GLOW = if_else(is.finite(GLOW), GLOW, 0),
+
+    # Station-relative cold-air pooling correction:
+    # positive cap_delta_uid cools the route relative to the station;
+    # negative values warm it when the station is the stronger cold-air pool.
+    cap_wind_fac = clamp01(1 - FF_eff / coef$cap_wind_shutdown_ms),
+    cap_sun_fac = if_else(
+      topo_sun_fac > 0,
+      clamp01(1 - GLOW / coef$cap_radiation_shutdown_Wm2),
+      1
+    ),
+    cap_inv_fac = if_else(inv_active, 1, coef$cap_no_inversion_factor),
+    cap_stability_fac = cap_wind_fac * cap_sun_fac * cap_inv_fac,
+    cap_temp_adjust_C = coef$cap_max_adjust_C * cap_delta_uid *
+      cap_pair_confidence_uid * cap_stability_fac,
+    TLz = TLz_base - cap_temp_adjust_C,
+
     FDH = pmax(0, -TLz),
     PDH = pmax(0,  TLz),
+
+    solar_load_fac = if_else(
+      topo_sun_fac > 0,
+      pmin(
+        ice_params$solar_load_cap,
+        1 + ice_params$solar_boost_strength * pmax(0, solar_incidence_ratio - 1)
+      ),
+      0
+    ),
+    solar_core_fac = if_else(
+      topo_sun_fac > 0,
+      pmin(
+        ice_params$solar_core_cap,
+        1 + ice_params$solar_core_boost_strength * pmax(0, solar_incidence_ratio - 1)
+      ),
+      0
+    ),
+    SW_MJ_step = GLOW * W2MJ_STEP * solar_load_fac * (1 - ice_params$albedo),
     
-    GLOW = if_else(is.finite(GLOW), GLOW, 0),
-    SW_MJ_step = GLOW * W2MJ_STEP * topo_sun_fac * (1 - ice_params$albedo),
-    
-    FF_eff   = pmin(coef$wind_cap_ms, pmax(0, FF)),
     wind_fac = 1 + coef$k_wind * FF_eff * wind_vuln,
     dry_fac  = 1 + coef$k_dry  * pmax(0, 1 - RF/100),
     
@@ -1003,12 +1262,12 @@ for (i in 2:nrow(wx)) {
 
   core_melt_fac <- (ice_params$core_melt_base - ice_params$core_melt_base_drop * retention_fac_uid) +
     (ice_params$core_melt_warm - ice_params$core_melt_warm_drop * retention_fac_uid) * pmin(1, wx$PDH[i] / 4) +
-    (ice_params$core_melt_sun - ice_params$core_melt_sun_drop * retention_fac_uid) * wx$topo_sun_fac
+    (ice_params$core_melt_sun - ice_params$core_melt_sun_drop * retention_fac_uid) * wx$solar_core_fac
   core_melt_fac <- pmin(0.85, pmax(0.20, core_melt_fac))
   melt_core <- min(core_pre_melt, melt_left * core_melt_fac)
 
   reserve_gain_mm <- 0.30 * growth_core * retention_fac_uid
-  reserve_loss_mm <- (0.08 * wx$PDH[i] * DT_H + 0.05 * wx$topo_sun_fac + 0.02 * pmax(0, wx$TLz_72h_step[i] + 2)) *
+  reserve_loss_mm <- (0.08 * wx$PDH[i] * DT_H + 0.05 * wx$solar_core_fac + 0.02 * pmax(0, wx$TLz_72h_step[i] + 2)) *
     retention_fac_uid
   reserve_cap_mm <- 0.28 * core_pre_melt
   core_reserve_mm[i] <- min(
@@ -1028,7 +1287,11 @@ mod <- wx %>%
     station_id = station_id,
     source = source,
     dist_km = dist_km,
-    dz_m = dz_m
+    dz_m = dz_m,
+    cap_icefall = cap_icefall_uid,
+    cap_station = cap_station_uid,
+    cap_delta = cap_delta_uid,
+    cap_pair_confidence = cap_pair_confidence_uid
   )
 
 # =====================================================================
@@ -1170,7 +1433,8 @@ if (!has_fc) {
           if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
           paste0("Station: ", station_id, " (", source, ")"),
           paste0("dist ", round(dist_km, 2), " km"),
-          paste0("dz ", round(dz_m, 0), " m")
+          paste0("dz ", round(dz_m, 0), " m"),
+          if (cap_pair_confidence_uid > 0) paste0("CAP delta ", round(cap_delta_uid, 2))
         ),
         collapse = " | "
       ),
@@ -1346,11 +1610,12 @@ if (!has_fc) {
           paste0("Station: ", station_id, " (", source, ")"),
           paste0("dist ", round(dist_km, 2), " km"),
           paste0("dz ", round(dz_m, 0), " m"),
+          if (cap_pair_confidence_uid > 0) paste0("CAP delta ", round(cap_delta_uid, 2)),
           "Forecast (gray)"
         ),
         collapse = " | "
       ),
-      caption = paste0("10-min model (dt=", MODEL_STEP_MIN, " min): FDH/PDH + SW(toposun) + Wind(vuln) + Dryness + Saturation")
+      caption = paste0("10-min model (dt=", MODEL_STEP_MIN, " min): FDH/PDH + CAP + SW(toposun) + Wind(vuln) + Dryness + Saturation")
     )
 
   plt <- plt + patchwork::plot_layout(guides = "collect") &

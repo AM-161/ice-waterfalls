@@ -32,11 +32,22 @@ if (nzchar(uid_raw)) {
 
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
+run_rscript_checked <- function(script, args = character()) {
+  status <- system2("Rscript", c(script, args), stdout = "", stderr = "")
+  exit_code <- attr(status, "status")
+  if (is.null(exit_code)) exit_code <- status
+  if (length(exit_code) == 0 || is.na(exit_code)) exit_code <- 0
+  if (!identical(as.integer(exit_code), 0L)) {
+    stop("Rscript failed with exit code ", exit_code, ": ", script)
+  }
+  invisible(TRUE)
+}
+
 # 0) Inversion einmal berechnen (Cache)
 inv_script <- "scripts/00_build_inversion_cache.R"
 if (!file.exists(inv_script)) stop("Fehlt Inversion-Skript: ", inv_script)
 
-system2("Rscript", c(inv_script), stdout = "", stderr = "")
+run_rscript_checked(inv_script)
 
 # Diagramm-Skript Pfad (anpassen, wie du es ablegst)
 plot_script <- "scripts/diagram_uid.R"
@@ -51,7 +62,7 @@ for (u in uids) {
   ok <- TRUE
   tryCatch({
     # neuer Prozess pro UID (robuster als source())
-    system2("Rscript", c(plot_script, as.character(u)), stdout = "", stderr = "")
+    run_rscript_checked(plot_script, as.character(u))
   }, error = function(e) {
     ok <<- FALSE
     message("❌ UID ", u, " fehlgeschlagen: ", e$message)

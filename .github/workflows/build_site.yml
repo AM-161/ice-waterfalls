@@ -1,21 +1,19 @@
-name: Build & Deploy Icefall Map (daily)
+name: Build & Deploy Icefall Map
 
 on:
-  # Läuft bei Push auf main und main-test (für Test-Branch Builds)
   push:
     branches:
       - main
       - main-test
 
-  # Schedule läuft i.d.R. nur auf dem Default-Branch (main)
-  #schedule:
-   # - cron: "0 15 * * *"   # täglich 15:00 UTC (Kommentar ggf. anpassen)
+  # Schedule runs only on the default branch. Keep it disabled unless needed.
+  # schedule:
+  #   - cron: "0 15 * * *"
 
-  # Manuell triggerbar (auf beliebigem Branch)
   workflow_dispatch:
     inputs:
       uids:
-        description: "Optionale UID-Liste (z.B. 12,34,56) fuer Plot-Build"
+        description: "Optional UID list for plot builds, e.g. 12,34,56"
         required: false
         default: ""
 
@@ -24,7 +22,6 @@ permissions:
   pages: write
   id-token: write
 
-# Wichtig: nicht main-test Builds mit main Deploys gegenseitig canceln
 concurrency:
   group: "pages-${{ github.ref_name }}"
   cancel-in-progress: true
@@ -59,6 +56,7 @@ jobs:
             any::jsonlite
             any::dplyr
             any::lubridate
+            any::stringr
             any::tidyr
             any::readr
             any::tibble
@@ -74,7 +72,7 @@ jobs:
             any::readxl
           needs: check
 
-      - name: Build plots (all UIDs)
+      - name: Build plots
         run: |
           if [ -n "${{ inputs.uids }}" ]; then
             Rscript scripts/00_build_plots_all.R --uids="${{ inputs.uids }}"
@@ -82,19 +80,19 @@ jobs:
             Rscript scripts/00_build_plots_all.R
           fi
 
-      - name: Build list page (summary table)
+      - name: Build list page
         run: Rscript scripts/02_build_list_page.R
 
-      - name: Add homepage (static)
+      - name: Add homepage assets
         run: |
           mkdir -p site/assets
+          cp -R assets/. site/assets/
           cp static/index.html site/index.html
 
-      - name: Build map (site/)
+      - name: Build map
         run: Rscript scripts/01_build_map.R
 
-      # ======= TEST-BRANCH: Artifact statt Deploy =======
-      - name: Upload build artifact (site/) for test branches
+      - name: Upload build artifact for test branches
         if: github.ref != 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
@@ -103,12 +101,11 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # ======= MAIN: GitHub Pages Deploy =======
       - name: Configure Pages
         if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
-      - name: Upload Pages artifact (site/)
+      - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
