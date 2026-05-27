@@ -179,30 +179,30 @@ clean_name <- function(x) {
 }
 
 canonical_meta_cols <- c(
-  "uid", "name", "latitude", "longitude", "hoehe_dgm5m",
-  "erstbegehnung", "schwierigkeit", "eisfallhhe",
-  "zustieg", "abstieg", "beschreibung",
-  "ausrichtung", "topo_url", "url", "himmelsrichtung"
+  "uid", "name", "latitude", "longitude", "elevation_dgm5m",
+  "first_ascent", "difficulty", "icefall_height_m",
+  "approach", "descent", "description",
+  "aspect_deg", "topo_url", "url", "aspect_cardinal"
 )
 
 standardize_new_icefall_cols <- function(df) {
   names(df) <- clean_name(names(df))
   alias <- list(
     uid = c("uid", "id"),
-    name = c("name", "eisfall", "icefall", "icefall_name", "icefall_name"),
-    latitude = c("latitude", "lat", "breitengrad", "y"),
-    longitude = c("longitude", "lon", "lng", "laengengrad", "langengrad", "x"),
-    hoehe_dgm5m = c("hoehe_dgm5m", "hoehe", "hohe", "elev_m", "elevation", "altitude_m"),
-    erstbegehnung = c("erstbegehnung", "first_ascent"),
-    schwierigkeit = c("schwierigkeit", "difficulty", "grad", "grade"),
-    eisfallhhe = c("eisfallhhe", "eisfallhoehe", "eisfallhohe", "eisfallh_he", "height_m", "icefall_height_m", "height"),
-    zustieg = c("zustieg", "approach"),
-    abstieg = c("abstieg", "descent"),
-    beschreibung = c("beschreibung", "description", "notes", "notiz", "notizen"),
-    ausrichtung = c("ausrichtung", "aspect", "aspect_deg", "exposition_deg"),
+    name = c("name", "icefall", "icefall_name"),
+    latitude = c("latitude", "lat", "y"),
+    longitude = c("longitude", "lon", "lng", "x"),
+    elevation_dgm5m = c("elevation_dgm5m", "elevation_m", "elev_m", "elevation", "altitude_m"),
+    first_ascent = c("first_ascent"),
+    difficulty = c("difficulty", "grade"),
+    icefall_height_m = c("icefall_height_m", "height_m", "height"),
+    approach = c("approach"),
+    descent = c("descent"),
+    description = c("description", "notes"),
+    aspect_deg = c("aspect_deg", "aspect", "exposure_deg"),
     topo_url = c("topo_url", "topo", "topolink", "topo_link"),
-    url = c("url", "source_url", "quelle"),
-    himmelsrichtung = c("himmelsrichtung", "aspect_cardinal", "exposition", "richtung")
+    url = c("url", "source_url"),
+    aspect_cardinal = c("aspect_cardinal", "exposure", "direction")
   )
 
   for (target in names(alias)) {
@@ -214,6 +214,24 @@ standardize_new_icefall_cols <- function(df) {
   df
 }
 
+normalize_cardinal <- function(x) {
+  x <- toupper(trimws(as.character(x)))
+  x[x %in% c("", "NA", "NAN", "NULL")] <- NA_character_
+  x <- gsub("NORTH", "N", x, fixed = TRUE)
+  x <- gsub("SOUTH", "S", x, fixed = TRUE)
+  x <- gsub("EAST", "E", x, fixed = TRUE)
+  x <- gsub("WEST", "W", x, fixed = TRUE)
+  x <- gsub("[^NSEW]", "", x)
+  x[x == "NO"] <- "NE"
+  x[x == "O"] <- "E"
+  x[x == "SO"] <- "SE"
+  x[x == "NNO"] <- "NNE"
+  x[x == "ONO"] <- "ENE"
+  x[x == "OSO"] <- "ESE"
+  x[x == "SSO"] <- "SSE"
+  x
+}
+
 drop_blank_rows <- function(df) {
   if (nrow(df) == 0) return(df)
   keep <- apply(as.data.frame(df), 1, function(row) any(nonempty(row)))
@@ -222,10 +240,11 @@ drop_blank_rows <- function(df) {
 
 read_meta <- function(path) {
   meta <- read_any_csv(path, force_character = TRUE)
-  names(meta) <- clean_name(names(meta))
+  meta <- standardize_new_icefall_cols(meta)
   for (nm in canonical_meta_cols) {
     if (!nm %in% names(meta)) meta[[nm]] <- NA_character_
   }
+  meta$aspect_cardinal <- normalize_cardinal(meta$aspect_cardinal)
   extra <- setdiff(names(meta), canonical_meta_cols)
   meta <- meta[, c(canonical_meta_cols, extra), drop = FALSE]
   meta
@@ -330,7 +349,7 @@ deg_to_dir8 <- function(deg) {
   out <- rep("", length(deg))
   ok <- is.finite(deg)
   if (!any(ok)) return(out)
-  labels <- c("N", "NO", "O", "SO", "S", "SW", "W", "NW")
+  labels <- c("N", "NE", "E", "SE", "S", "SW", "W", "NW")
   idx <- floor(((deg[ok] %% 360) + 22.5) / 45) %% 8
   out[ok] <- labels[idx + 1L]
   out
@@ -360,11 +379,11 @@ update_height_aspect <- function(meta, affected_uids, dem_catalog) {
         asp <- extract_point(asp_round, pt_asp, buffer = 15, fun = terra::modal)
       }
     }
-    if (is.finite(elev)) meta$hoehe_dgm5m[i] <- format(elev, scientific = FALSE, trim = TRUE)
+    if (is.finite(elev)) meta$elevation_dgm5m[i] <- format(elev, scientific = FALSE, trim = TRUE)
     if (is.finite(asp)) {
       asp_i <- as.integer(round(asp)) %% 360L
-      meta$ausrichtung[i] <- as.character(asp_i)
-      meta$himmelsrichtung[i] <- deg_to_dir8(asp_i)
+      meta$aspect_deg[i] <- as.character(asp_i)
+      meta$aspect_cardinal[i] <- deg_to_dir8(asp_i)
     }
     msg("  UID ", uid, ": DEM=", choice$spec$id, ", elev=", ifelse(is.finite(elev), round(elev, 1), "NA"), ", aspect=", ifelse(is.finite(asp), round(asp), "NA"))
   }
@@ -460,7 +479,7 @@ compute_station_assignments <- function(meta, affected_uids) {
   if (nrow(stations) == 0) stop("No stations with valid coordinates found.", call. = FALSE)
 
   ice <- meta %>%
-    mutate(uid_num = parse_uid(uid), ice_lat = to_num(latitude), ice_lon = to_num(longitude), icefall_elev_meta = to_num(hoehe_dgm5m)) %>%
+    mutate(uid_num = parse_uid(uid), ice_lat = to_num(latitude), ice_lon = to_num(longitude), icefall_elev_meta = to_num(elevation_dgm5m)) %>%
     filter(uid_num %in% affected_uids, is.finite(ice_lat), is.finite(ice_lon)) %>%
     transmute(uid = uid_num, icefall_name = as.character(name), ice_lat, ice_lon, icefall_elev_meta)
 

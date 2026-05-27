@@ -121,7 +121,7 @@
 
     function parseDifficulty(d){
       const s0 = str(d).toUpperCase();
-      const s = s0.replace(/SCHWIERIGKEIT|DIFFICULTY|GRADE|GRAD/g, " ");
+      const s = s0.replace(/DIFFICULTY|GRADE/g, " ");
       const out = { a: NaN, m: NaN, wi: NaN, r: NaN };
       let m = null;
 
@@ -273,7 +273,7 @@
 
     function openFullscreen(plotUrl, title){
       modalImg.src = plotUrl;
-      modalTitle.textContent = title || "Diagramm";
+      modalTitle.textContent = title || "Chart";
       openNewTab.href = plotUrl;
       modal.style.display = "block";
     }

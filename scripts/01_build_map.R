@@ -26,14 +26,14 @@ suppressPackageStartupMessages({
   library(png)
 })
 
-# 0) Zeitraum & Gebiet -------------------------------------------------
+# 0) Time range & area -------------------------------------------------
 
-start_all    <- as.Date("2025-10-01") # Startdatum der Saison
-end_all      <- Sys.Date()           # bis heute
-chunk_days   <- 2                    # 2-Tages-Chunks (API-Limit)
+start_all    <- as.Date("2025-10-01") # Season start date
+end_all      <- Sys.Date()           # through today
+chunk_days   <- 2                    # 2-day chunks (API limit)
 chunk_starts <- seq.Date(start_all, end_all, by = chunk_days)
 
-# Nordtirol-BBox in WGS84
+# North Tyrol bounding box in WGS84
 bbox <- c(
   46.7,  # lat_min
   10.1,  # lon_min
@@ -41,7 +41,7 @@ bbox <- c(
   12.2   # lon_max
 )
 
-# INCA-Parameter (erweitert für Wind, Feuchte etc.)
+# INCA parameters (extended for wind, humidity, etc.)
 parameters    <- c("RR", "T2M", "RH2M", "UU", "VV", "GL", "P0", "TD2M")
 param_str     <- paste(parameters, collapse = ",")
 base_url_inca <- "https://dataset.api.hub.geosphere.at/v1/grid/historical/inca-v1-1h-1km"
@@ -53,13 +53,13 @@ dir.create(out_dir_nwp, showWarnings = FALSE, recursive = TRUE)
 
 nc_files <- character(length(chunk_starts))
 
-# 1) INCA-Daten chunkweise laden (existierende Dateien überspringen) ---
+# 1) Load INCA data in chunks (skip existing files) --------------------
 
 for (idx in seq_along(chunk_starts)) {
   cs <- as.Date(chunk_starts[idx])
   ce <- as.Date(min(cs + (chunk_days - 1), end_all))
   
-  message("Chunk: ", cs, " bis ", ce)
+  message("Chunk: ", cs, " to ", ce)
   
   start_time <- sprintf("%sT00:00", format(cs, "%Y-%m-%d"))
   end_time   <- sprintf("%sT23:00", format(ce, "%Y-%m-%d"))
@@ -72,7 +72,7 @@ for (idx in seq_along(chunk_starts)) {
   )
   
   if (file.exists(outfile) && file.info(outfile)$size > 0) {
-    message("  -> übersprungen (existiert): ", outfile)
+    message("  -> skipped (exists): ", outfile)
   } else {
     query <- list(
       parameters    = param_str,
@@ -90,7 +90,7 @@ for (idx in seq_along(chunk_starts)) {
     )
     stop_for_status(resp)
     
-    message("  -> gespeichert: ", outfile, " (", file.info(outfile)$size, " Bytes)")
+    message("  -> saved: ", outfile, " (", file.info(outfile)$size, " Bytes)")
   }
   
   nc_files[idx] <- outfile
@@ -98,7 +98,7 @@ for (idx in seq_along(chunk_starts)) {
 
 nc_files <- sort(unique(nc_files))
 
-# 2) Alle NetCDFs einlesen und in ein Objekt packen --------------------
+# 2) Read all NetCDFs and pack them into one object --------------------
 
 convert_nc_time <- function(time_vals, time_units) {
   if (!grepl("since", time_units)) {
@@ -138,7 +138,7 @@ time_dim_name <- names(nc0$dim)[grep("time", tolower(names(nc0$dim)))[1]]
 vars_found    <- intersect(vars_wanted, varnames0)
 nc_close(nc0)
 
-# Zeitlängen pro Datei
+# Time lengths per file
 nt_per_file <- integer(length(nc_files))
 for (i in seq_along(nc_files)) {
   nc <- nc_open(nc_files[i])
@@ -147,13 +147,13 @@ for (i in seq_along(nc_files)) {
 }
 nt_total <- sum(nt_per_file)
 
-# Arrays allozieren
+# Allocate arrays
 
 time_all  <- as.POSIXct(rep(NA_real_, nt_total), origin = "1970-01-01", tz = "UTC")
 inca_data <- lapply(vars_found, function(.) array(NA_real_, dim = c(nx, ny, nt_total)))
 names(inca_data) <- vars_found
 
-# Daten einlesen
+# Read data
 pos <- 1L
 for (i in seq_along(nc_files)) {
   nc <- nc_open(nc_files[i])
@@ -180,7 +180,7 @@ inca_nordtirol_all <- list(
   data = inca_data
 )
 
-# 3) FDH/MDH (stundenweise) + Orientierung + Raster-Template -----------
+# 3) FDH/MDH (hourly) + orientation + raster template ------------------
 
 T2M_arr <- inca_nordtirol_all$data$T2M   # °C [nx, ny, nt]
 RH_arr  <- inca_nordtirol_all$data$RH2M  # %  [nx, ny, nt]
@@ -194,7 +194,7 @@ nx <- dim(T2M_arr)[1]
 ny <- dim(T2M_arr)[2]
 nt <- dim(T2M_arr)[3]
 
-# Orientierung (S->N, W->E)
+# Orientation (S->N, W->E)
 lat_mean_j <- colMeans(lat, na.rm = TRUE)
 if (lat_mean_j[1] < tail(lat_mean_j, 1)) {
   idx_j <- ny:1
@@ -237,7 +237,7 @@ extent(r_template) <- c(min(lon, na.rm = TRUE),
                         max(lat, na.rm = TRUE))
 crs(r_template) <- "EPSG:4326"
 
-# 4) DEM auf INCA-Grid + Expositionsindex ------------------------------
+# 4) DEM on INCA grid + exposure index --------------------------------
 
 dem_inca <- raster("data/DEM/DEM_Tirol_INCAgrid_1km_epsg4326.tif")
 crs(dem_inca) <- "EPSG:4326"
@@ -253,7 +253,7 @@ solar_index_r  <- (1 - northness_r) / 2
 solar_index_r[is.na(solar_index_r[])] <- 0.5
 solar_index_ij <- t(as.matrix(solar_index_r))
 
-# --- Höhen-Gewichte: Zellen > 2500 m werden weniger gewichtet --------
+# --- Elevation weights: cells > 2500 m are weighted less --------------
 alt_threshold    <- 2500
 alt_weight_high  <- 0.5
 
@@ -271,12 +271,12 @@ weighted_mean_alt <- function(r, w_rast = alt_weight_r) {
   sum(v[ok] * w[ok]) / sum(w[ok])
 }
 
-# 5) Zeitabhängige Sonnenhöhe + Zeit-Gewichtung ------------------------
+# 5) Time-dependent solar elevation + time weighting -------------------
 
 time_vec <- inca_nordtirol_all$time
 if (length(time_vec) != nt) {
   if (length(time_vec) > nt) time_vec <- tail(time_vec, nt)
-  else stop("Länge von time_vec (", length(time_vec), ") != nt (", nt, ")")
+  else stop("Length of time_vec (", length(time_vec), ") != nt (", nt, ")")
 }
 
 time_local <- as.POSIXlt(time_vec, tz = "Europe/Vienna")
@@ -297,14 +297,14 @@ sin_alpha_t <- sin(lat_center_rad) * sin(delta_t) +
 sin_alpha_t[sin_alpha_t < 0] <- 0
 solar_height_factor_t <- sin_alpha_t
 
-# Für die Eisdicken-Akkumulation werden alle Stunden gleich gewichtet.
-# Ein zeitlicher Decay würde frühe Saisonphasen künstlich entwerten.
+# For ice-thickness accumulation, all hours are weighted equally.
+# Time decay would artificially devalue early-season phases.
 weight_time_t <- rep(1, length(time_vec))
 
 t_start           <- min(time_vec, na.rm = TRUE)
 time_offset_hours <- as.numeric(difftime(time_vec, t_start, units = "hours"))
 
-# Lokalzeit für Hist-Snapshots
+# Local time for historical snapshots
 
 time_local_all <- as.POSIXct(format(time_vec, tz = "Europe/Vienna", usetz = TRUE),
                              tz = "Europe/Vienna")
@@ -334,7 +334,7 @@ FDH_hist_labels <- character(0)
 FDH_hist_times  <- as.POSIXct(character(0), tz = "UTC")
 snap_idx_hist   <- 1L
 
-# 6) Effektive FDH (FDHm + Wind + Feuchte + Strahlung + Zeit) ---------
+# 6) Effective FDH (FDHm + wind + humidity + radiation + time) ---------
 
 k_expo   <- 0.5
 k_wind   <- 0.5
@@ -435,7 +435,7 @@ extent(r_FDH_eff) <- extent(r_template)
 crs(r_FDH_eff)    <- crs(r_template)
 names(r_FDH_eff)  <- "FDH_eff_C_h"
 
-# 7) Effektive FDH -> Eisdicke + Climbability-Index (aktuell) ----------
+# 7) Effective FDH -> ice thickness + climbability index (current) -----
 
 h_c      <- 30
 rho_i    <- 880
@@ -516,7 +516,7 @@ RH_opt_c <- 0.7
 RH_sig_c <- 0.2
 score_RH <- score_RH_fun(RH_last_ij, RH_opt_c, RH_sig_c)
 
-# Climbability-Historie (wie bei dir)
+# Climbability history (same behavior as before)
 climb_hist_layers <- list()
 climb_hist_labels <- character(0)
 
@@ -572,7 +572,7 @@ extent(climb_r) <- extent(r_template)
 crs(climb_r)    <- crs(r_template)
 names(climb_r)  <- "Climbability_0_1"
 
-# 8) Prognose aus NWP --------------------------------------------------
+# 8) Forecast from NWP -------------------------------------------------
 
 base_url_nwp   <- "https://dataset.api.hub.geosphere.at/v1/grid/forecast/nwp-v1-1h-2500m"
 parameters_nwp <- c("t2m", "rh2m", "u10m", "v10m")
@@ -595,7 +595,7 @@ outfile_fc <- file.path(
 )
 
 if (!file.exists(outfile_fc) || file.info(outfile_fc)$size == 0) {
-  message("NWP-Chunk: ", start_fc, " bis ", end_fc)
+  message("NWP chunk: ", start_fc, " to ", end_fc)
   
   query_fc <- list(
     parameters    = param_str_nwp,
@@ -612,10 +612,10 @@ if (!file.exists(outfile_fc) || file.info(outfile_fc)$size == 0) {
     write_disk(outfile_fc, overwrite = TRUE)
   )
   stop_for_status(resp_fc)
-  message("  -> NWP-Vorhersage gespeichert: ", outfile_fc,
+  message("  -> NWP forecast saved: ", outfile_fc,
           " (", file.info(outfile_fc)$size, " Bytes)")
 } else {
-  message("  -> NWP-Vorhersage übersprungen (existiert): ", outfile_fc)
+  message("  -> NWP forecast skipped (exists): ", outfile_fc)
 }
 
 ice_fc_layers   <- NULL
@@ -798,11 +798,11 @@ if (file.exists(outfile_fc)) {
   }
 }
 
-# 9) Controls / HTML Summary (wie bei dir) -----------------------------
-# NOTE: Die "Kletterbarkeit – Tagesübersicht"-Box wurde auf Wunsch entfernt.
-#       Es gibt hierfür keinen aktiven Berechnungspfad/Control-Einbindung mehr.
+# 9) Controls / HTML summary ------------------------------------------
+# NOTE: The former daily climbability overview box was removed on request.
+#       No active calculation path/control binding remains for it.
 
-# 10) Zeit-Layer zusammenbauen (wie bei dir; Steps bleiben identisch) ---
+# 10) Build time layers (same step sequence as before) -----------------
 
 ice_time_layers   <- list()
 climb_time_layers <- list()
@@ -872,7 +872,7 @@ writeLines(last_update_payload, "last_update.json", useBytes = TRUE)
 ext         <- extent(r_template)
 
 # =====================================================================
-# SPEED PATCH CORE: externe PNGs pro Step schreiben
+# SPEED PATCH CORE: write external PNGs per step
 # =====================================================================
 
 dir.create("site/img", recursive = TRUE, showWarnings = FALSE)
@@ -908,13 +908,13 @@ write_overlay_png <- function(r, pal, file) {
   png::writePNG(arr, target = file)
 }
 
-message("Schreibe PNG-Overlays für ", n_steps, " Steps …")
+message("Writing PNG overlays for ", n_steps, " steps ...")
 for (i in seq_len(n_steps)) {
   write_overlay_png(ice_time_layers[[i]],   pal_h,  sprintf("site/img/ice_%03d.png", i))
   write_overlay_png(climb_time_layers[[i]], pal_ci, sprintf("site/img/climb_%03d.png", i))
 }
 
-# 11) Eisfall-Sonnendaten + Topo-URLs ---------------------------------
+# 11) Icefall sun data + topo URLs ------------------------------------
 
 DIR_SUN <- "data/suntime"
 
@@ -981,10 +981,10 @@ if (file.exists(PATH_META)) {
     rename_with(tolower)
   meta_map <- tibble(
     uid = parse_uid(meta_raw$uid),
-    name = get_chr(meta_raw, "name", "eisfall", "icefall"),
-    difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
-    elev_m = to_num(get_chr(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m")),
-    icefall_height_m = to_num(get_chr(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m")),
+    name = get_chr(meta_raw, "name", "icefall", "icefall_name"),
+    difficulty = get_chr(meta_raw, "difficulty", "grade"),
+    elev_m = to_num(get_chr(meta_raw, "elevation_dgm5m", "elevation_m", "elevation", "elev_m", "altitude_m")),
+    icefall_height_m = to_num(get_chr(meta_raw, "icefall_height_m", "height_m", "height")),
     topo_url = get_chr(meta_raw, "topo_url"),
     latitude = to_num(get_chr(meta_raw, "latitude")),
     longitude = to_num(get_chr(meta_raw, "longitude"))
@@ -992,7 +992,7 @@ if (file.exists(PATH_META)) {
 }
 
 if (!dir.exists(DIR_SUN)) {
-  message("⚠️ Sun-Verzeichnis fehlt: ", DIR_SUN)
+  message("Warning: sun directory missing: ", DIR_SUN)
 }
 
 expected_uids <- if (!is.null(meta_map) && "uid" %in% names(meta_map)) {
@@ -1006,14 +1006,14 @@ if (length(expected_uids) > 0) {
     sun_loaded <- load_sun_for_uids(expected_uids, dir_sun = DIR_SUN)
     if (length(sun_loaded$missing_uids) > 0) {
       message(
-        "⚠️ Fehlende Sun-Dateien für UIDs: ",
+        "Warning: missing sun files for UIDs: ",
         paste(sprintf("%03d", sun_loaded$missing_uids), collapse = ", ")
       )
     }
     sun_df <- sun_loaded$data
   } else {
     message(
-      "⚠️ Fehlende Sun-Dateien für UIDs: ",
+      "Warning: missing sun files for UIDs: ",
       paste(sprintf("%03d", expected_uids), collapse = ", ")
     )
     sun_df <- tibble::tibble()
@@ -1022,7 +1022,7 @@ if (length(expected_uids) > 0) {
   if (dir.exists(DIR_SUN)) {
     sun_files <- sort(list.files(DIR_SUN, pattern = "^sun_uid_\\d+\\.csv$", full.names = TRUE))
     if (length(sun_files) == 0) {
-      message("⚠️ Keine Sun-Dateien gefunden in: ", DIR_SUN)
+      message("Warning: no sun files found in: ", DIR_SUN)
       sun_df <- tibble::tibble()
     } else {
       sun_df <- dplyr::bind_rows(lapply(sun_files, function(f) readr::read_csv(f, show_col_types = FALSE)))
@@ -1075,12 +1075,12 @@ sun_today <- sun_df %>% dplyr::filter(date == sun_date)
 
 if (nrow(sun_today) == 0) {
   last_date <- max(sun_df$date, na.rm = TRUE)
-  message("Keine Sonnendaten für ", sun_date, " gefunden. Verwende stattdessen ", last_date, ".")
+  message("No sun data found for ", sun_date, ". Using ", last_date, " instead.")
   sun_today <- sun_df %>% dplyr::filter(date == last_date)
 }
 
 if (nrow(sun_today) == 0) {
-  message("⚠️ sun_today ist leer – es werden keine Sonnenzeiten angezeigt.")
+  message("Warning: sun_today is empty; no sun times will be shown.")
 }
 
 if (!is.null(meta_map)) {
@@ -1091,7 +1091,7 @@ if (!is.null(meta_map)) {
     dplyr::distinct(uid, .keep_all = TRUE)
 
   if (nrow(marker_base) == 0) {
-    message("⚠️ Meta-Daten enthalten keine gültigen UIDs – verwende Sun-Daten als Markerbasis.")
+    message("Warning: metadata contains no valid UIDs; using sun data as marker base.")
     sun_today <- sun_today
   } else {
     sun_today <- marker_base %>%
@@ -1235,13 +1235,12 @@ marker_data <- sun_today %>%
   dplyr::filter(is.finite(latitude), is.finite(longitude))
 
 if (nrow(marker_data) == 0) {
-  message("⚠️ Keine Marker mit gültigen Koordinaten verfügbar – Karte zeigt keine Eisfälle.")
+  message("Warning: no markers with valid coordinates available; map shows no icefalls.")
 } else {
-  message("??
- Marker bereit: ", nrow(marker_data), " Eisfälle mit gültigen Koordinaten.")
+  message("Markers ready: ", nrow(marker_data), " icefalls with valid coordinates.")
 }
 
-# 12) Leaflet Map: stabile ClusterGroup + Slider wechselt PNG-URL -------
+# 12) Leaflet map: stable ClusterGroup + slider swaps PNG URL ----------
 
 init_i <- n_steps
 m <- leaflet() |>
@@ -1322,7 +1321,7 @@ if (isTRUE(preview_mode)) {
   )
 }
 
-# UI / Controls (wie gehabt)
+# UI / controls
 m <- m |>
   addMapPane("icefallsPane", zIndex = 650) |>
   addControl(
@@ -1414,7 +1413,7 @@ m <- m |>
     )
   )
 
-# Marker RAW in eigene Gruppe (nicht clustern in R)
+# Raw markers in their own group (not clustered in R)
 m <- m |>
   addMarkers(
     data   = marker_data,
@@ -1426,7 +1425,7 @@ m <- m |>
     layerId = ~uid
   )
 
-# Dependency-Patch: leaflet.markercluster laden (auch wenn wir R-seitig nicht clustern)
+# Dependency patch: load leaflet.markercluster even though R does not cluster the markers.
 m <- m |>
   addMarkers(
     data = marker_data[0, , drop = FALSE],
@@ -1434,7 +1433,7 @@ m <- m |>
     clusterOptions = markerClusterOptions()
   )
 
-# LayersControl (zeigt "Eisfälle" als Overlay, "EisfälleRaw" nicht)
+# Layers control (shows "Icefalls" as overlay and hides "IcefallsRaw")
 m <- m |>
   addLayersControl(
     baseGroups    = c("OSM", "Terrain (Topo)"),
@@ -1443,7 +1442,7 @@ m <- m |>
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax)
 
-# Legenden (wie gehabt)
+# Legends
 m <- m |>
   addLegend(
     pal       = pal_ci,
@@ -1460,12 +1459,12 @@ m <- m |>
     position  = "bottomleft"
   )
 
-# --- Cluster + Filter: ausgelagert in JS-Datei (R-kompatibel) + stabil (nur clear/add auf Cluster)
+# --- Cluster + filter: moved to a JS file (R-compatible) + stable (only clear/add on cluster)
 js_cluster_filter <- paste(readLines("scripts/map_cluster_filter.js", warn = FALSE), collapse = "\n")
 
 m <- htmlwidgets::onRender(m, js_cluster_filter)
 
-# Zeit-Slider: Steps bleiben 1:1, aber wir wechseln nur die PNG-URL ----
+# Time slider: steps stay 1:1, but only the PNG URL changes -----------
 m <- m |>
   (\(x) {
     if (length(time_labels) > 0L) {
@@ -1596,12 +1595,11 @@ m <- m |>
     }
   })()
 
-# 13) Output: NICHT selfcontained, in site/ ----------------------------
+# 13) Output: not self-contained, into site/ ---------------------------
 
 dir.create("site", showWarnings = FALSE)
 saveWidget(m, "site/map.html", selfcontained = FALSE)
-message("??
- Fertig: site/map.html + site/img/*.png")
+message("Done: site/map.html + site/img/*.png")
 
 if (interactive()) {
   m

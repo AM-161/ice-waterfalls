@@ -201,24 +201,28 @@ angle_diff_deg <- function(a, b) {
 
 normalize_cardinal <- function(x) {
   x <- toupper(trimws(as.character(x)))
-  x <- gsub("NORD", "N", x, fixed = TRUE)
-  x <- gsub("SUED", "S", x, fixed = TRUE)
-  x <- gsub("SUD", "S", x, fixed = TRUE)
-  x <- gsub("OST", "O", x, fixed = TRUE)
-  x <- gsub("EAST", "O", x, fixed = TRUE)
+  x <- gsub("NORTH", "N", x, fixed = TRUE)
+  x <- gsub("SOUTH", "S", x, fixed = TRUE)
+  x <- gsub("EAST", "E", x, fixed = TRUE)
   x <- gsub("WEST", "W", x, fixed = TRUE)
-  x <- gsub("[^NOSWE]", "", x)
+  x <- gsub("[^NSEW]", "", x)
+  x[x == "NO"] <- "NE"
+  x[x == "O"] <- "E"
+  x[x == "SO"] <- "SE"
+  x[x == "NNO"] <- "NNE"
+  x[x == "ONO"] <- "ENE"
+  x[x == "OSO"] <- "ESE"
+  x[x == "SSO"] <- "SSE"
   x
 }
 
 cardinal_to_degree <- function(x) {
   key <- normalize_cardinal(x)
   lut <- c(
-    "N" = 0, "NNO" = 22.5, "NO" = 45, "ONO" = 67.5,
-    "O" = 90, "OSO" = 112.5, "SO" = 135, "SSO" = 157.5,
+    "N" = 0, "NNE" = 22.5, "NE" = 45, "ENE" = 67.5,
+    "E" = 90, "ESE" = 112.5, "SE" = 135, "SSE" = 157.5,
     "S" = 180, "SSW" = 202.5, "SW" = 225, "WSW" = 247.5,
-    "W" = 270, "WNW" = 292.5, "NW" = 315, "NNW" = 337.5,
-    "NE" = 45, "SE" = 135, "E" = 90
+    "W" = 270, "WNW" = 292.5, "NW" = 315, "NNW" = 337.5
   )
   out <- unname(lut[key])
   out[is.na(out)] <- NA_real_
@@ -248,12 +252,12 @@ normalize_text <- function(x) {
 # ----------------------------
 # 1) Load meta (CSV)
 # ----------------------------
-if (!file.exists(PATH_META)) stop("Fehlt: ", PATH_META)
+if (!file.exists(PATH_META)) stop("Missing: ", PATH_META)
 
 meta_raw <- read_any_delim(PATH_META, force_character = TRUE) %>%
   rename_with(tolower)
 
-if (!"uid" %in% names(meta_raw)) stop("META CSV hat keine Spalte 'uid'.")
+if (!"uid" %in% names(meta_raw)) stop("META CSV has no 'uid' column.")
 
 meta <- tibble(
   uid = parse_uid(meta_raw$uid),
@@ -262,16 +266,16 @@ meta <- tibble(
   topo_slug = get_chr(meta_raw, "topo_slug"),
   latitude  = get_num(meta_raw, "latitude", "lat"),
   longitude = get_num(meta_raw, "longitude", "lon"),
-  elev_m = get_num(meta_raw, "hoehe_dgm5m", "hoehe", "höhe", "elevation", "elev_m"),
-  difficulty = get_chr(meta_raw, "schwierigkeit", "difficulty", "grad"),
-  aspect = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
-  aspect_deg = get_num(meta_raw, "ausrichtung", "aspect", "aspect_deg"),
-  aspect_cardinal = get_chr(meta_raw, "himmelsrichtung", "aspect_cardinal", "exposition"),
-  icefall_height_m = get_num(meta_raw, "eisfallhhe", "eisfallhoehe", "eisfallhöhe", "height_m", "icefall_height_m"),
-  approach = get_chr(meta_raw, "zustieg", "approach"),
-  descent  = get_chr(meta_raw, "abstieg", "descent"),
-  first_ascent = get_chr(meta_raw, "erstbegehnung", "first_ascent"),
-  description  = get_chr(meta_raw, "beschreibung", "description")
+  elev_m = get_num(meta_raw, "elevation_dgm5m", "elevation_m", "elevation", "elev_m", "altitude_m"),
+  difficulty = get_chr(meta_raw, "difficulty", "grade"),
+  aspect = get_num(meta_raw, "aspect_deg", "aspect", "exposure_deg"),
+  aspect_deg = get_num(meta_raw, "aspect_deg", "aspect", "exposure_deg"),
+  aspect_cardinal = normalize_cardinal(get_chr(meta_raw, "aspect_cardinal", "exposure", "direction")),
+  icefall_height_m = get_num(meta_raw, "icefall_height_m", "height_m", "height"),
+  approach = get_chr(meta_raw, "approach"),
+  descent  = get_chr(meta_raw, "descent"),
+  first_ascent = get_chr(meta_raw, "first_ascent"),
+  description  = get_chr(meta_raw, "description")
 ) %>%
   filter(!is.na(uid)) %>%
   mutate(dplyr::across(where(is.character), normalize_text))
@@ -311,7 +315,7 @@ if (dir.exists(DIR_SUN)) {
   sun_missing_uids <- sun_loaded$missing_uids
   if (length(sun_loaded$missing_uids) > 0) {
     message(
-      "⚠️ Fehlende Sun-Dateien für UIDs: ",
+      "Warning: missing sun files for UIDs: ",
       paste(sprintf("%03d", sun_loaded$missing_uids), collapse = ", ")
     )
   }
@@ -351,7 +355,7 @@ if (dir.exists(DIR_SUN)) {
       )
   }
 } else {
-  message("⚠️ Sun-Verzeichnis fehlt: ", DIR_SUN)
+  message("Warning: sun directory missing: ", DIR_SUN)
 }
 
 # ----------------------------
@@ -673,10 +677,10 @@ html_lines <- c(
   '          <tr>',
   '            <th data-key="name">Icefall</th>',
   '            <th data-key="difficulty">Difficulty</th>',
-  '            <th data-key="_grade_a" title="A = Technisches Klettern (Aid)">A</th>',
-  '            <th data-key="_grade_m" title="M = Mixed-Klettern (Eis & Fels)">M</th>',
-  '            <th data-key="_grade_wi" title="WI = Wassereis">WI</th>',
-  '            <th data-key="_grade_r">Fels</th>',
+  '            <th data-key="_grade_a" title="A = aid climbing">A</th>',
+  '            <th data-key="_grade_m" title="M = mixed climbing (ice & rock)">M</th>',
+  '            <th data-key="_grade_wi" title="WI = water ice">WI</th>',
+  '            <th data-key="_grade_r">Rock</th>',
   '            <th data-key="elev_m">Elevation (m)</th>',
   '            <th data-key="_dist_km">Distance (km)</th>',
   '            <th data-key="sun_tomorrow_range_txt">Sun tomorrow</th>',
@@ -702,7 +706,7 @@ html_lines <- c(
   '          <button id="closeModal">Close</button>',
   '        </div>',
   '      </div>',
-  '      <img id="modalImg" src="" alt="Diagramm"/>',
+  '      <img id="modalImg" src="" alt="Chart"/>',
   '    </div>',
   '  </div>',
   '',
@@ -727,6 +731,8 @@ message("✅ Wrote HTML: ", OUT_HTML)
 
 DETAIL_DIR <- file.path(OUT_DIR, "icefalls")
 dir.create(DETAIL_DIR, showWarnings = FALSE, recursive = TRUE)
+old_detail_pages <- list.files(DETAIL_DIR, pattern = "^uid_[0-9]+[.]html$", full.names = TRUE)
+if (length(old_detail_pages) > 0) unlink(old_detail_pages)
 
 # Cloudflare Worker + R2 Public base
 API_BASE  <- "https://icefalls-api.carlos-wydra.workers.dev"
@@ -906,7 +912,7 @@ for (i in seq_len(nrow(out))) {
     
     "<div class='wrap'>",
     
-    # top row: Basic Infos + Bilder (empty state initially)
+    # top row: basic info + images (empty state initially)
     "  <div class='grid2'>",
     "    <div class='card'>",
     "      <h2>Basic info</h2>",
@@ -931,14 +937,14 @@ for (i in seq_len(nrow(out))) {
     
     # full-width plot card
     "  <div class='card plotWrap'>",
-    "    <h2>Diagramm</h2>",
-    paste0("    <a href='../", plot_rel, "' target='_blank' rel='noopener' title='Diagramm gro&szlig; &ouml;ffnen'>"),
-    paste0("      <img class='plotImg' src='../", plot_rel, "' alt='Diagramm UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>Kein Plot gefunden.</div>';\"/>"),
+    "    <h2>Chart</h2>",
+    paste0("    <a href='../", plot_rel, "' target='_blank' rel='noopener' title='Open chart full size'>"),
+    paste0("      <img class='plotImg' src='../", plot_rel, "' alt='Chart UID ", uid_pad, "' onerror=\"this.outerHTML='<div class=&quot;muted&quot;>No plot found.</div>';\"/>"),
     "    </a>",
     "    <div class='chartWrap'>",
     "      <h2>Seasonal sunlight</h2>",
     "      <canvas id='sunSeasonChart' class='chartCanvas' width='1200' height='280'></canvas>",
-    "      <div id='sunChartHover' class='chartHint'>Hover: Datum wird angezeigt.</div>",
+    "      <div id='sunChartHover' class='chartHint'>Hover to show the date.</div>",
     "    </div>",
     "  </div>",
     
@@ -957,11 +963,11 @@ for (i in seq_len(nrow(out))) {
     "          <option value='2'>marginal</option>",
     "          <option value='1'>not climbable</option>",
     "        </select>",
-    "        <div class='muted' style='min-width:50px;'>Datum</div>",
+    "        <div class='muted' style='min-width:50px;'>Date</div>",
     "        <input id='shotDate' type='date'/>",
     "      </div>",
     
-    # comment ONLY here (NOT in Basic Infos)
+    # comment ONLY here (NOT in basic info)
     "      <div style='margin-top:10px;'>",
     "        <textarea id='comment' rows='3' placeholder='Comment (optional): ice state, conditions, hazards…' style='width:100%;max-width:100%;'></textarea>",
     "      </div>",
@@ -978,7 +984,7 @@ for (i in seq_len(nrow(out))) {
     # map card
     "    <div class='card'>",
     "      <h2>Location</h2>",
-    paste0("      <div class='muted' style='margin-bottom:8px;'>Koordinaten: ",
+    paste0("      <div class='muted' style='margin-bottom:8px;'>Coordinates: ",
            ifelse(nchar(lat_txt)>0 && nchar(lon_txt)>0, paste0(lat_txt, ", ", lon_txt), "&mdash;"),
            "</div>"),
     "      <div id='map'></div>",
@@ -1176,7 +1182,7 @@ for (i in seq_len(nrow(out))) {
     "    const onLeave = () => {",
     "      lastIdx = -1;",
     "      drawHover(-1);",
-    "      if (elSunChartHover) elSunChartHover.textContent = 'Hover: Datum wird angezeigt.';",
+    "      if (elSunChartHover) elSunChartHover.textContent = 'Hover to show the date.';",
     "    };",
     "",
     "    drawHover(-1);",
@@ -1213,7 +1219,7 @@ for (i in seq_len(nrow(out))) {
     "          if (!url) return '';",
     "          return `",
     "            <a href=\"${url}\" target=\"_blank\" rel=\"noopener\">",
-    "              <img src=\"${url}\" alt=\"Bild\" loading=\"lazy\"/>",
+    "              <img src=\"${url}\" alt=\"Photo\" loading=\"lazy\"/>",
     "            </a>`;",
     "        }).join('');",
     "        return `",

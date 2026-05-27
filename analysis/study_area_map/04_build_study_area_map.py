@@ -112,7 +112,7 @@ def read_raw_inventory() -> pd.DataFrame:
     raw["uid"] = pd.to_numeric(raw["uid"], errors="coerce").astype("Int64")
     raw["latitude_num"] = to_num(raw.get("latitude", pd.Series(index=raw.index, dtype=str)))
     raw["longitude_num"] = to_num(raw.get("longitude", pd.Series(index=raw.index, dtype=str)))
-    raw["elev_num"] = to_num(raw.get("hoehe_dgm5m", pd.Series(index=raw.index, dtype=str)))
+    raw["elev_num"] = to_num(raw.get("elevation_dgm5m", pd.Series(index=raw.index, dtype=str)))
     return raw
 
 

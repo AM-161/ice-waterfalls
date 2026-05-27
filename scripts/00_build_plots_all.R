@@ -4,16 +4,16 @@ suppressPackageStartupMessages({
 })
 
 assign_path <- "data/AWS/icefalls_nearest_station.csv"
-if (!file.exists(assign_path)) stop("Fehlt: ", assign_path)
+if (!file.exists(assign_path)) stop("Missing: ", assign_path)
 
 assign <- read_csv(assign_path, show_col_types = FALSE)
 
-if (!("uid" %in% names(assign))) stop("Spalte 'uid' fehlt in ", assign_path)
+if (!("uid" %in% names(assign))) stop("Column 'uid' is missing in ", assign_path)
 
 uids <- sort(unique(assign$uid))
 uids <- uids[is.finite(uids)]
 
-if (length(uids) == 0) stop("Keine UIDs gefunden.")
+if (length(uids) == 0) stop("No UIDs found.")
 
 # Optional: limit build to a specific UID list (for faster testing)
 # Usage:
@@ -24,10 +24,10 @@ uid_raw <- if (length(uid_arg) > 0) sub("^--uids=", "", uid_arg[1]) else Sys.get
 if (nzchar(uid_raw)) {
   uid_list <- suppressWarnings(as.integer(trimws(unlist(strsplit(uid_raw, "[,;\\s]+")))))
   uid_list <- uid_list[is.finite(uid_list)]
-  if (length(uid_list) == 0) stop("UID_LIMIT/--uids enthaelt keine gueltigen UIDs.")
+  if (length(uid_list) == 0) stop("UID_LIMIT/--uids contains no valid UIDs.")
   uids <- uids[uids %in% uid_list]
-  if (length(uids) == 0) stop("Keine UIDs uebrig nach Filter: ", uid_raw)
-  message("⚙️ UID-Filter aktiv: ", paste(uids, collapse = ", "))
+  if (length(uids) == 0) stop("No UIDs left after filter: ", uid_raw)
+  message("UID filter active: ", paste(uids, collapse = ", "))
 }
 
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
@@ -43,15 +43,15 @@ run_rscript_checked <- function(script, args = character()) {
   invisible(TRUE)
 }
 
-# 0) Inversion einmal berechnen (Cache)
+# 0) Build inversion once (cache)
 inv_script <- "scripts/00_build_inversion_cache.R"
-if (!file.exists(inv_script)) stop("Fehlt Inversion-Skript: ", inv_script)
+if (!file.exists(inv_script)) stop("Missing inversion script: ", inv_script)
 
 run_rscript_checked(inv_script)
 
-# Diagramm-Skript Pfad (anpassen, wie du es ablegst)
+# Plot script path
 plot_script <- "scripts/diagram_uid.R"
-if (!file.exists(plot_script)) stop("Fehlt Diagramm-Skript: ", plot_script)
+if (!file.exists(plot_script)) stop("Missing chart script: ", plot_script)
 
 failed <- integer(0)
 
@@ -61,17 +61,17 @@ for (u in uids) {
   message("==============================")
   ok <- TRUE
   tryCatch({
-    # neuer Prozess pro UID (robuster als source())
+    # New process per UID (more robust than source()).
     run_rscript_checked(plot_script, as.character(u))
   }, error = function(e) {
     ok <<- FALSE
-    message("❌ UID ", u, " fehlgeschlagen: ", e$message)
+    message("UID ", u, " failed: ", e$message)
   })
   if (!ok) failed <- c(failed, u)
 }
 
 if (length(failed) > 0) {
-  stop("Plots fehlgeschlagen für UIDs: ", paste(failed, collapse = ", "))
+  stop("Plots failed for UIDs: ", paste(failed, collapse = ", "))
 }
 
-message("\n✅ Alle Plots gebaut: ", length(uids))
+message("\nAll plots built: ", length(uids))

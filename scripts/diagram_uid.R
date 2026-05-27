@@ -1,10 +1,10 @@
 # =====================================================================
-# Eisfall-Dickenmodell pro UID (uid = 48)
+# Icefall thickness model per UID (uid = 48)
 # - Station: TL/RF (10-min)
-# - INCA timeseries: Wind + Strahlung (UU/VV/GL, stündlich -> LOCF)
-# - NWP Forecast: t2m/rh2m/u10m/v10m/grad (stündlich -> 10-min LOCF)
-# - Topo-Sonne + Wind-Vulnerability LUT
-# - Modellstart immer 01.10. laufende Saison
+# - INCA timeseries: wind + radiation (UU/VV/GL, hourly -> LOCF)
+# - NWP forecast: t2m/rh2m/u10m/v10m/grad (hourly -> 10-min LOCF)
+# - Topographic sun + wind-vulnerability LUT
+# - Model start always Oct 1 of the current season
 # Output: data/plots/ModelRuns/model_uid48.csv
 # =====================================================================
 
@@ -25,19 +25,19 @@ TZ_LOCAL <- "Europe/Vienna"
 # ----------------------------
 # Settings
 # ----------------------------
-# UID per CLI-Argument oder ENV (GitHub Actions)
+# UID from CLI argument or ENV (GitHub Actions)
 args <- commandArgs(trailingOnly = TRUE)
 UID_TEST <- if (length(args) >= 1 && nzchar(args[1])) {
   as.integer(args[1])
 } else {
   as.integer(Sys.getenv("UID_TEST", "48"))
 }
-if (!is.finite(UID_TEST)) stop("UID_TEST ist nicht gültig.")
+if (!is.finite(UID_TEST)) stop("UID_TEST is not valid.")
 
 MODEL_STEP_MIN <- 10
 DT_H   <- MODEL_STEP_MIN / 60
 DT_SEC <- MODEL_STEP_MIN * 60
-W2MJ_STEP <- DT_SEC / 1e6  # W/m² -> MJ/m² pro Zeitschritt
+W2MJ_STEP <- DT_SEC / 1e6  # W/m2 -> MJ/m2 per model step
 
 FORECAST_HOURS <- 60
 END_DATE <- Sys.Date()
@@ -242,7 +242,7 @@ parse_inca_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
   nms <- names(df)
   nms_low <- tolower(nms)
   time_idx <- which(grepl("time|timestamp|date", nms_low))[1]
-  if (is.na(time_idx)) stop("INCA CSV: keine Zeitspalte in ", basename(path))
+  if (is.na(time_idx)) stop("INCA CSV: no time column in ", basename(path))
   time_col <- nms[time_idx]
   
   pick <- function(target) {
@@ -333,7 +333,7 @@ get_inca_point_hourly <- function(uid, start_date, end_date, lon, lat, path_dir 
 
 # ----------------------------
 # NWP forecast (CSV): t2m/rh2m/u10m/v10m/grad (hourly)
-# grad (Ws/m² kumuliert) -> W/m² hourly mean
+# grad (accumulated Ws/m2) -> W/m2 hourly mean
 # ----------------------------
 grad_to_glow_wm2_vec <- function(grad_ws_m2) {
   g <- as.numeric(grad_ws_m2)
@@ -376,7 +376,7 @@ parse_nwp_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
   nms <- names(df)
   nms_low <- tolower(nms)
   time_idx <- which(grepl("time|timestamp|date", nms_low))[1]
-  if (is.na(time_idx)) stop("NWP CSV: keine Zeitspalte in ", basename(path))
+  if (is.na(time_idx)) stop("NWP CSV: no time column in ", basename(path))
   time_col <- nms[time_idx]
   
   pick <- function(target) {
@@ -640,7 +640,7 @@ get_lwd_station_tlrf <- function(start_date, end_date, station_code) {
     mutate(param = "RF")
   
   long <- bind_rows(tl, rf)
-  if (nrow(long) == 0) stop("Keine LWD Daten für Station ", station_code)
+  if (nrow(long) == 0) stop("No LWD data for station ", station_code)
   
   wide <- long %>%
     select(timestamp, param, value) %>%
@@ -660,7 +660,7 @@ get_station_tlrf <- function(start_date, end_date, station_id, source) {
 }
 
 # =====================================================================
-# 1) Inputs laden (nur benötigte Spalten -> schneller)
+# 1) Load inputs (only required columns -> faster)
 # =====================================================================
 stopifnot(file.exists(PATH_ASSIGN), file.exists(PATH_STATIONS), dir.exists(DIR_SUN), file.exists(PATH_WINDLUT))
 
@@ -705,7 +705,7 @@ cap_pairs <- if (file.exists(PATH_CAP)) {
     ))
   )
 } else {
-  message("CAP cache fehlt: ", PATH_CAP, " (CAP-Korrektur bleibt 0)")
+  message("CAP cache missing: ", PATH_CAP, " (CAP correction remains 0)")
   tibble(
     uid = integer(),
     icefall_cap_potential = numeric(),
@@ -728,7 +728,7 @@ find_sun_file_for_uid <- function(uid, dir_sun = DIR_SUN) {
 
 sun_file <- find_sun_file_for_uid(UID_TEST)
 if (is.na(sun_file)) {
-  message("⚠️ Fehlende Sun-Dateien für UIDs: ", sprintf("%03d", UID_TEST))
+  message("Warning: missing sun files for UIDs: ", sprintf("%03d", UID_TEST))
   sun_all <- tibble(
     uid = integer(),
     name = character(),
@@ -752,7 +752,7 @@ wind_lut <- readr::read_csv(
 )
 
 row_uid <- assign %>% filter(uid == UID_TEST) %>% slice(1)
-if (nrow(row_uid) == 0) stop("uid nicht gefunden: ", UID_TEST)
+if (nrow(row_uid) == 0) stop("uid not found: ", UID_TEST)
 
 station_id <- as.character(row_uid$station_id)
 source     <- as.character(row_uid$source)
@@ -835,7 +835,7 @@ if (all(is.na(sun_uid$sun_hours_topo))) {
     )
 }
 
-if (nrow(sun_uid) == 0) message("⚠️ Keine Sun-Daten für uid ", UID_TEST, " (topo_sun_fac bleibt 0)")
+if (nrow(sun_uid) == 0) message("Warning: no sun data for uid ", UID_TEST, " (topo_sun_fac remains 0)")
 
 wind_uid <- wind_lut %>%
   filter(uid == UID_TEST) %>%
@@ -843,7 +843,7 @@ wind_uid <- wind_lut %>%
   select(dir_deg, wind_vuln_0_9)
 
 if (nrow(wind_uid) == 0) {
-  message("Keine Wind-LUT fuer uid ", UID_TEST, " (wind_vuln_0_9=9 fuer alle Richtungen)")
+  message("No wind LUT for uid ", UID_TEST, " (wind_vuln_0_9=9 for all directions)")
   wind_uid <- tibble(
     dir_deg = seq(0, 355, by = 5),
     wind_vuln_0_9 = 9L
@@ -860,8 +860,8 @@ wx10 <- get_station_tlrf(START_DATE, END_DATE, station_id, source) %>%
     RF = to_num(RF)
   )
 
-if (all(is.na(wx10$TL))) stop("TL fehlt komplett.")
-if (all(is.na(wx10$RF))) stop("RF fehlt komplett.")
+if (all(is.na(wx10$TL))) stop("TL is completely missing.")
+if (all(is.na(wx10$RF))) stop("RF is completely missing.")
 
 step_str <- paste0(MODEL_STEP_MIN, " mins")
 
@@ -951,7 +951,7 @@ wx <- bind_rows(
   wx_fc %>% mutate(is_forecast = TRUE)
 ) %>% arrange(time)
 
-# --- Inversion join (global, gleiche Zeit für alle UIDs) ---
+# --- Inversion join (global, same time base for all UIDs) ---
 if (file.exists(PATH_INV_RDS)) {
   inv <- readRDS(PATH_INV_RDS) %>%
     mutate(time = as.POSIXct(time, tz = TZ_LOCAL))
@@ -975,7 +975,7 @@ if (file.exists(PATH_INV_RDS)) {
     grad12_K_per_m = NA_real_,
     grad02_K_per_m = NA_real_
   )
-  message("⚠️ Inversion cache fehlt: ", PATH_INV_RDS, " (inv_active=FALSE)")
+  message("Warning: inversion cache missing: ", PATH_INV_RDS, " (inv_active=FALSE)")
 }
 
 # =====================================================================
@@ -1131,17 +1131,17 @@ coef <- list(
 
 wx <- wx %>%
   mutate(
-    # Roh-Delta z (Forecast optional auf 0 setzen)
+    # Raw delta z (optionally set forecasts to 0)
     dz_raw = if_else(is_forecast, 0, dz_m),
     
-    # physikalisches Profil nur anwenden, wenn Inversion aktiv UND Stationhöhe bekannt
+    # Apply the physical profile only when inversion is active and station elevation is known.
     use_prof = (!is_forecast) & inv_active & is.finite(z_aws) & is.finite(dz_m) &
       is.finite(grad01_K_per_m) & is.finite(grad12_K_per_m),
     
-    # Zielhöhe aus Stationshöhe + dz (funktioniert auch wenn ice_alt_m fehlt)
+    # Target elevation from station elevation + dz (also works if ice_alt_m is missing).
     z_target_m = z_aws + dz_m,
     
-    # piecewise ΔT über zwei Schichten (unter/über Z1=1935m); Vorzeichen korrekt in beide Richtungen
+    # Piecewise dT over two layers (below/above Z1=1935 m); sign is correct in both directions.
     dT_prof = if_else(
       use_prof,
       {
@@ -1158,9 +1158,9 @@ wx <- wx %>%
       NA_real_
     ),
     
-    # Temperatur auf Eisfall-Höhe:
-    # - Standard: konstante Lapse
-    # - Bei inv_active: physikalisches Profil (auch für dz>0 und dz<0)
+    # Temperature at icefall elevation:
+    # - Default: constant lapse
+    # - If inv_active: physical profile (also for dz > 0 and dz < 0)
     TLz_raw = TL - coef$lapse_K_per_m * dz_raw,
     TLz_base = if_else(use_prof, TL + dT_prof, TLz_raw),
     FF_eff = pmin(coef$wind_cap_ms, pmax(0, FF)),
@@ -1396,9 +1396,9 @@ dir.create(dirname(PATH_OUT), showWarnings = FALSE, recursive = TRUE)
 write_csv(mod, PATH_OUT)
 
 # =====================================================================
-# 10) Plot split: Hist (links) + Forecast (rechts grau)
-# - Climbability-Achse NUR rechts außen im Forecast-Panel
-# - Forecast X-Labels + Gridlines NUR bei Tages-Maxima der Climbability
+# 10) Plot split: history (left) + forecast (gray, right)
+# - Climbability axis only on the outer right side of the forecast panel
+# - Forecast x-labels + gridlines only at daily climbability maxima
 # =====================================================================
 has_fc <- any(mod$is_forecast %in% TRUE)
 x_min <- as.POSIXct(START_DATE, tz = TZ_LOCAL)
@@ -1460,7 +1460,7 @@ if (!has_fc) {
   
   forecast_start <- min(mod$time[mod$is_forecast], na.rm = TRUE)
   
-  # ✅ y_min/y_max DEFINIEREN bevor Y_DEN (Fix für deinen Fehler)
+  # Define y_min/y_max before Y_DEN.
   y_min <- min(mod$thickness_m, na.rm = TRUE)
   y_max <- max(mod$thickness_m, na.rm = TRUE)
   Y_DEN <- max(1e-6, y_max - y_min)
@@ -1471,7 +1471,7 @@ if (!has_fc) {
   mod_hist <- mod %>% filter(time >= x_min, time < forecast_start)
   mod_fc   <- mod %>% filter(time >= forecast_start)
   
-  # --- Sonnenfenster im Forecast als gelbe Hintergrund-Bänder (robust) ---
+  # --- Sun windows in the forecast as yellow background bands (robust) ---
   sun_rects_fc <- tibble(
     xmin = as.POSIXct(character(), tz = TZ_LOCAL),
     xmax = as.POSIXct(character(), tz = TZ_LOCAL),
@@ -1502,7 +1502,7 @@ if (!has_fc) {
     }
   }
   
-  # Tages-Maxima im Forecast (für X-Breaks + Gridlines)
+  # Daily maxima in the forecast (for x-breaks + gridlines)
   peak_fc <- mod_fc %>%
     filter(is.finite(climbability)) %>%
     group_by(date) %>%
@@ -1515,7 +1515,7 @@ if (!has_fc) {
   
   bg <- tibble(xmin = forecast_start, xmax = x_max, ymin = -Inf, ymax = Inf)
   
-  # Links (Historie) – KEINE sec.axis (damit sie nicht zwischen Panels landet)
+  # Left (history): no sec.axis so it does not land between panels.
   p_hist <- ggplot(mod_hist, aes(time, thickness_m)) +
     geom_line(color = "black", linewidth = 0.9, show.legend = FALSE) +
     geom_line(
@@ -1544,7 +1544,7 @@ if (!has_fc) {
       axis.title.y.right = element_blank()
     )
   
-  # Rechts (Forecast) – sec.axis RECHTS AUSSEN + X-Breaks nur bei Peaks
+  # Right (forecast): sec.axis on the outer right + x-breaks only at peaks.
   p_fc <- ggplot(mod_fc, aes(time, thickness_m)) +
     geom_rect(data = bg, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
               inherit.aes = FALSE, fill = "grey85", alpha = 0.6, show.legend = FALSE) +
@@ -1590,15 +1590,15 @@ if (!has_fc) {
       panel.grid.major.x = element_line(),
       panel.grid.minor.x = element_blank(),
       
-      plot.margin = margin(5.5, 18, 5.5, 2),  # Platz für rechte Achse
+      plot.margin = margin(5.5, 18, 5.5, 2),  # Room for the right axis
       axis.title.x = element_blank(),
       
-      # linke y-Achse im FC aus
+      # Hide the left y-axis in the forecast panel.
       axis.text.y  = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.y = element_blank(),
       
-      # rechte Achse im FC an
+      # Show the right axis in the forecast panel.
       axis.text.y.right  = element_text(size = 9),
       axis.ticks.y.right = element_line(),
       axis.title.y.right = element_text(margin = margin(l = 6)),
@@ -1637,7 +1637,7 @@ if (!has_fc) {
 
 
 # =====================================================================
-# Export fürs Web (Variante A): PNG nach site/plots/
+# Export for the web (variant A): PNG to site/plots/
 # =====================================================================
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
@@ -1654,4 +1654,4 @@ ggsave(
   bg       = "white"
 )
 
-message("✅ Plot geschrieben: ", plot_file)
+message("Plot written: ", plot_file)

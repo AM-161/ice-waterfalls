@@ -23,7 +23,7 @@ MODEL_STEP_MIN <- 10
 step_str <- paste0(MODEL_STEP_MIN, " mins")
 
 # ----------------------------
-# Zeitraum (wie im Modell)
+# Time range (as in the model)
 # ----------------------------
 FORECAST_HOURS <- 60
 NOW_LOCAL <- with_tz(Sys.time(), TZ_LOCAL)
@@ -167,13 +167,13 @@ season_label <- function(date) {
   ifelse(m >= 10, sprintf("%d_%d", y, y + 1), sprintf("%d_%d", y - 1, y))
 }
 
-# Schalter: Sys.setenv(DEBUG_LWD="1")
+# Switch: Sys.setenv(DEBUG_LWD="1")
 DEBUG_LWD <- identical(Sys.getenv("DEBUG_LWD", "0"), "1")
 
 read_lwd_url <- function(url) {
-  # Manche Clients bekommen bei wiski sporadisch 400/403 – deshalb:
-  # - akzeptiere content types
-  # - setze Referer
+  # Some clients occasionally receive 400/403 from wiski, so:
+  # - accept content types
+  # - set Referer
   # - retry
   resp <- tryCatch(
     request(url) |>
@@ -275,7 +275,7 @@ read_lwd_latest <- function(station_code, param = "LT") {
 }
 
 get_lwd_tl <- function(start_date, end_date, station_code) {
-  # 1) seasonal (01.10..heute)
+  # 1) seasonal (Oct 1 through today)
   seasons <- unique(season_label(seq(as.Date(start_date), as.Date(end_date), by = "day")))
   tl <- bind_rows(lapply(seasons, function(seas) read_lwd_param(station_code, "LT", seas)))
   
@@ -303,7 +303,7 @@ get_lwd_tl <- function(start_date, end_date, station_code) {
 }
 
 # ----------------------------
-# 1) Laden
+# 1) Load
 # ----------------------------
 # IDs:
 #  - GeoSphere: "38"  (Imst)
@@ -315,7 +315,7 @@ mutk <- get_lwd_tl(START_DATE, END_DATE, station_code = "IMUT2")  %>% rename(T1 
 mald <- get_lwd_tl(START_DATE, END_DATE, station_code = "IMUT1")  %>% rename(T2 = TL)  # 2580m
 
 # ----------------------------
-# 2) Auf 10-min Raster bringen + join
+# 2) Align to 10-min grid + join
 # ----------------------------
 min_ts <- min(imst$timestamp, mutk$timestamp, mald$timestamp, na.rm = TRUE)
 max_ts <- max(imst$timestamp, mutk$timestamp, mald$timestamp, na.rm = TRUE)
@@ -348,12 +348,12 @@ inv <- df0 %>%
   left_join(df1, by = "time") %>%
   left_join(df2, by = "time") %>%
   mutate(
-    # Temperaturdifferenzen (°C)
+    # Temperature differences (deg C)
     I01 = T1 - T0,
     I12 = T2 - T1,
     I02 = T2 - T0,
     
-    # Physikalische Gradienten dT/dz (K/m); positiv = Inversion
+    # Physical gradients dT/dz (K/m); positive = inversion
     grad01_K_per_m = I01 / (Z1_m - Z0_m),
     grad12_K_per_m = I12 / (Z2_m - Z1_m),
     grad02_K_per_m = I02 / (Z2_m - Z0_m),
@@ -372,18 +372,18 @@ inv <- df0 %>%
     )
   )
 
-# Persistenz/Hysterese
-win_on  <- as.integer(3 * 60 / MODEL_STEP_MIN)  # 18 Schritte
-win_off <- as.integer(2 * 60 / MODEL_STEP_MIN)  # 12 Schritte
+# Persistence/hysteresis
+win_on  <- as.integer(3 * 60 / MODEL_STEP_MIN)  # 18 steps
+win_off <- as.integer(2 * 60 / MODEL_STEP_MIN)  # 12 steps
 
 roll_all <- function(x, w) zoo::rollapplyr(x, w, FUN = function(v) all(v, na.rm = TRUE), fill = FALSE, partial = TRUE)
 
 cond_on  <- inv$inv_grad_max_C_per_100m >= 0.20
 cond_off <- inv$inv_grad_max_C_per_100m <  0.05
 
-# Persistenz/Hysterese
-win_on  <- as.integer(3 * 60 / MODEL_STEP_MIN)  # 18 Schritte
-win_off <- as.integer(2 * 60 / MODEL_STEP_MIN)  # 12 Schritte
+# Persistence/hysteresis
+win_on  <- as.integer(3 * 60 / MODEL_STEP_MIN)  # 18 steps
+win_off <- as.integer(2 * 60 / MODEL_STEP_MIN)  # 12 steps
 
 roll_all <- function(x, w) zoo::rollapplyr(x, w, FUN = function(v) all(v, na.rm = TRUE),
                                            fill = FALSE, partial = TRUE)
@@ -433,10 +433,10 @@ inv <- inv %>%
   )
 
 # ----------------------------
-# 3) Speichern
+# 3) Save
 # ----------------------------
 dir.create("data/_cache_inversion", recursive = TRUE, showWarnings = FALSE)
 out_rds <- file.path("data/_cache_inversion", sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 saveRDS(inv, out_rds)
 
-message("✅ Inversion cache geschrieben: ", out_rds)
+message("Inversion cache written: ", out_rds)

@@ -1,19 +1,19 @@
-uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;zustieg;abstieg;beschreibung;ausrichtung;topo_url;url;himmelsrichtung
+uid;name;latitude;longitude;elevation_dgm5m;first_ascent;difficulty;icefall_height_m;approach;descent;description;aspect_deg;topo_url;url;aspect_cardinal
 1;Mannerschnitte;47,18785309;10,91448647;951.4833984375;Karl Dung & Hansj”rg Auer, 19. Dezember 2013;WI5-/M4;6 SL;;Abseilen Route orografisch rechts;Abseilschlingen z.T. belassen;309;https://ice.oetztalclimbing.com/topo/detail/mannerschnitte.html;;NW
 2;Baselayer;47,18157945;10,92174323;1359.78515625;Hansj”rg Auer;WI4/M5;300 m, Bis zum Band in Wandmitte;;orographisch links;Eisspur nur ?õu?erst selten vorhanden.;15;https://ice.oetztalclimbing.com/topo/detail/baselayer.html;;N
 3;Zapfenstreich;47,1814644;10,90196581;977.75042724609375;Thomas Scheiber & Hansj”rg Auer;M9;3 SL;;Abseilen ber Rampe orographisch rechts;"Mit Bohrhaken abgesichert. leider zum Teil knstliche Hooks. Viele M”glichkeiten an den Platten weiter links (""Spider"", ""El Gringo"") bevor ganz links die ?Ž–Zwei Welten?Ž£ kommen.";15;https://ice.oetztalclimbing.com/topo/detail/zapfenstreich.html;;N
-4;Zwei Welten;47,1814644;10,90196581;977.75042724609375;Gerry Fiegl & Paul Mair;WI4/M8;6 SL;;Abseilen ber die Route.;"Sch”ne M8-Stelle unten ber ein Rissdach. Ausstieg oben auch ber links m”glich (""Fix und Foxi"").";107;https://ice.oetztalclimbing.com/topo/detail/zwei-welten.html;;O
+4;Zwei Welten;47,1814644;10,90196581;977.75042724609375;Gerry Fiegl & Paul Mair;WI4/M8;6 SL;;Abseilen ber die Route.;"Sch”ne M8-Stelle unten ber ein Rissdach. Ausstieg oben auch ber links m”glich (""Fix und Foxi"").";107;https://ice.oetztalclimbing.com/topo/detail/zwei-welten.html;;E
 6;Kalte Dusche;47,17457496;10,91958106;1185.04345703125;Karl Dung & Hansj”rg Auer;WI5;2 SL;Direkt hinter dem Fu?ballplatz Tumpen ber einen alten Fu?weg (ca. 40 Minuten).;Abseilen siehe ?Ž–Sibirien?Ž£.;Im Winter 2018 deutlich bessere Eisbedingungen als w?õhrend der Erstbegehung im Dezemer 2013.;15;https://ice.oetztalclimbing.com/topo/detail/kalte-dusche.html;;N
 7;Sibirien;47,17457496;10,91958106;1185.04345703125;Lukas Riml & Hansj”rg Auer;WI6/M6;3 SL;Direkt hinter dem Fu?ballplatz Tumpen ber einen alten Fu?weg (ca. 40 Minuten).;Abseilen ber markierte Route (siehe šbersichtsbild). Schlingen und Haken vorhanden.;Alle Normalhaken belassen.;273;https://ice.oetztalclimbing.com/topo/detail/sibirien.html;;W
 8;Vorsaison;47,17457496;10,91958106;1185.04345703125;Karl Dung & Hansj”rg Auer;WI5+/M6-;3 SL;Direkt hinter dem Fu?ballplatz Tumpen ber einen alten Fu?weg (ca. 40 Minuten).;Abseilen siehe ?Ž–Sibirien?Ž£.;Einen Normalhaken verwendet und belassen. Im Winter 2018 deutlich bessere Eisbedinungen als w?õhrend der Erstbegehung im Dezemer 2013.;15;https://ice.oetztalclimbing.com/topo/detail/vorsaison.html;;N
 9;Golden Shower;47,15611614;10,9050394;1091.194091796875;Alex Blmel & Hansj”rg Auer;WI6;3 SL;;Abseilen orographisch rechts an B?õumen.;Sehr r”hrige, letzte Seill?õnge.;15;https://ice.oetztalclimbing.com/topo/detail/golden-shower.html;;N
 10;Reichalm Fall;47,16324699;10,94194281;1614.128662109375;Stefan Holzknecht & Reini Obweger;WI5;6 SL;;šber den Wanderweg Reichalm-Farst;Oft hintersplt und abgel”st. Vorsicht! Sehr langer und etwas komplizierter Zustieg.;188;https://ice.oetztalclimbing.com/topo/detail/reichalm-fall.html;;S
-11;Dripping Elegance;47,12597744;10,90943499;1767.6766357421875;Gerry Fiegl & Albert Leichtfried;WI5+/M10;3 SL;;Abseilen ber die Route.;Mit Bohrhaken abgesichert. šbersichtsbild Winter 2018. Mehr Info: https://www.albertleichtfried.at/index.php?id=67&no_cache=1&tx_ttnews[tt_news]=157;115;https://ice.oetztalclimbing.com/topo/detail/dripping-elegance.html;;SO
+11;Dripping Elegance;47,12597744;10,90943499;1767.6766357421875;Gerry Fiegl & Albert Leichtfried;WI5+/M10;3 SL;;Abseilen ber die Route.;Mit Bohrhaken abgesichert. šbersichtsbild Winter 2018. Mehr Info: https://www.albertleichtfried.at/index.php?id=67&no_cache=1&tx_ttnews[tt_news]=157;115;https://ice.oetztalclimbing.com/topo/detail/dripping-elegance.html;;SE
 12;Nachtfalter;47,10893708;10,95374477;1260.4178466796875;Marc & Tobias Holzknecht;WI5-/M4;4 SL;;Abseilen ber die Route oder Normalabstieg vom Sommer.;Immer entlang der Sportkletterroute ?Ž–Tr?õumerei?Ž£. Links der klassische ?Ž–Eiserner Vorhang?Ž£ (WI5+).;15;https://ice.oetztalclimbing.com/topo/detail/nachtfalter.html;;N
 13;Spongebob;47,10119125;10,96701683;1746.008056640625;Heiko Wilhelm & Hansj”rg Auer;WI7-;2 SL;šber Wanderweg Dorf-Untere Hemrachalm (ca. 1,5h).;Abseilen ber die Route.;"Anspruchsvolle, zweite Seill?õnge. šbersichtsbild Winter 2018. Etwas weiter n”rdlich befindet sich das klassische ?Ž–Rauschwandle?Ž£ (WI6-) mit vielen M”glichkeiten (siehe Querformatbild). Weiter unterhalb, n”rdlich vom Bachverlauf, gibt es ebenfalls einige zus?õtzliche Klettereien. (""Das Gelbe vom Ei"", WI6+ oder als Mixed Variante: ""Feingold"", WI6+/M). Gut sichtbar vom Ort Au. Mehr Info dazu: https://www.albertleichtfried.at/index.php?id=67&no_cache=1&tx_ttnews[tt_news]=155";15;https://ice.oetztalclimbing.com/topo/detail/spongebob.html;;N
 14;Drytooling Klettergarten;47,09844413;10,95780488;1176.862548828125;Reini Obweger, David & Mathias N”ssig;;1 SL;;;Drytooling-Trainingsgel?õnde mit zum Teil gebohrten Hooks.;239;https://ice.oetztalclimbing.com/topo/detail/drytooling-klettergarten.html;;SW
-15;Triple Direkt;47,0869413;10,94041113;1276.218994140625;Lukas Riml & Hansj”rg Auer;WI6/M4;4 SL;;Abseilen ber Wasserfall orographisch rechts.;Hinweis: Links leichter Wasserfall. Auch knapp 200m weiter rechts sch”nes Eis auf Platten.;55;https://ice.oetztalclimbing.com/topo/detail/triple-direkt.html;;NO
-16;Guillotine;47,08371193;10,944314;1176.030517578125;Gerry Fiegl mit Partnern;WI6+/M7+;1 SL;;Abstieg ber Klettersteig.;Ein Normalhaken am Einstieg mit langer Bandschlinge. šbersichtsbild Winter 2018. Hinweis: ?Ž–Lehner Wasserfall?Ž£ (WI5+) knapp links selten m”glich.;49;https://ice.oetztalclimbing.com/topo/detail/guillotine.html;;NO
+15;Triple Direkt;47,0869413;10,94041113;1276.218994140625;Lukas Riml & Hansj”rg Auer;WI6/M4;4 SL;;Abseilen ber Wasserfall orographisch rechts.;Hinweis: Links leichter Wasserfall. Auch knapp 200m weiter rechts sch”nes Eis auf Platten.;55;https://ice.oetztalclimbing.com/topo/detail/triple-direkt.html;;NE
+16;Guillotine;47,08371193;10,944314;1176.030517578125;Gerry Fiegl mit Partnern;WI6+/M7+;1 SL;;Abstieg ber Klettersteig.;Ein Normalhaken am Einstieg mit langer Bandschlinge. šbersichtsbild Winter 2018. Hinweis: ?Ž–Lehner Wasserfall?Ž£ (WI5+) knapp links selten m”glich.;49;https://ice.oetztalclimbing.com/topo/detail/guillotine.html;;NE
 17;Mixed Klettergarten Liftspur;47,08286448;10,96371174;1193.1845703125;Stefan Holzknecht, Reini Obweger, Matthias & Hansj”rg Auer;;1 SL;"Die B186 queren auf H”he der ""Liftspur"". Dann ber die Wiese zu den bereits sichtbaren Eiszapfen.";Abseilen;"Viele M”glichkeiten. Mit Bohrhaken abgesichert. Weiter links die klassische ""Liftspur"" (WI6+). Siehe Bild.";15;https://ice.oetztalclimbing.com/topo/detail/mixed-klettergarten-liftspur.html;;N
 18;Esso Mixed;47,07002952;10,97153602;1203.245849609375;Stefan Holzknecht & Reini Obweger;M6-M7;1 SL;;Abseilen;Zwei Routen an der orographisch rechten Seite. Mit Bohrhaken abgesichert.;299;https://ice.oetztalclimbing.com/topo/detail/esso-mixed.html;;NW
 19;Badle;47,07002952;10,97153602;1203.245849609375;Stefan Holzknecht & Reini Obweger;WI5+;2 SL;;Abseilen;;15;https://ice.oetztalclimbing.com/topo/detail/badle.html;;N
@@ -22,7 +22,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 22;Nordstau;47,05883952;10,96612868;1331.681884765625;Tobias Holzknecht & Hansj”rg Auer;WI5-/M5;5 SL;;šber Wanderweg Burgstein.;Ein Normalhaken verwendet und entfernt. Zudem zwei Bohrhaken in der 3. SL einer bestehen Sommerroute. Schlsselseill?õnge kommt allerdings nachher.;15;https://ice.oetztalclimbing.com/topo/detail/nordstau.html;;N
 23;Pokerface;47,05883952;10,96612868;1331.681884765625;Gerry Fiegl & Fabian Wilhelm;WI6/M4;3 SL;;Abseilen an Eisuhren vom Ende der Eislinie.;Das Masterpiece des jungen Gerry. Linie links ist noch ein Projekt von Stefan Holzknecht und Reini Obweger.;15;https://ice.oetztalclimbing.com/topo/detail/pokerface.html;;N
 24;New Life;47,05883952;10,96612868;1331.681884765625;Reini Obweger mit Partner;WI7-;2 SL;;Abseilen an Eisuhren vom Ende der Eislinie.;Nur sehr selten gute Eisbedingungen. šbersichtsbild Winter 2018.;274;https://ice.oetztalclimbing.com/topo/detail/new-life.html;;W
-25;Via Ali;47,06047859;10,94324338;2005.9752197265625;Marc & Tobias Holzknecht;WI5-;3 SL;"N”rdlich vom Weiler ""Astlehn"" die lange Rinne hinauf.";Abseilen an Eisuhren vom Ende der Eislinie.;Auf Lawinengefahr achten! Langer, mhsamer Zustieg.;146;https://ice.oetztalclimbing.com/topo/detail/via-ali.html;;SO
+25;Via Ali;47,06047859;10,94324338;2005.9752197265625;Marc & Tobias Holzknecht;WI5-;3 SL;"N”rdlich vom Weiler ""Astlehn"" die lange Rinne hinauf.";Abseilen an Eisuhren vom Ende der Eislinie.;Auf Lawinengefahr achten! Langer, mhsamer Zustieg.;146;https://ice.oetztalclimbing.com/topo/detail/via-ali.html;;SE
 26;Lucky Strike;47,01162268;10,96634326;1771.3927001953125;Heiko Wilhelm & Hansj”rg Auer;WI6;1 SL;;Abseilen an Baum (Schlinge vorhanden).;Eine der sch”nsten und eindrucksvollsten Eiss?õulen im Tal. Zustieg ber Fahrweg zur Vorderen Polles Alm. Es gibt auch weitere M”glichkeiten etwas links von ?Ž–Lucky Strike?Ž£ und auch weiter taleinw?õrts an der orographisch rechten Seite. Haupts?õchlich von Fabian Wilhelm erstbegangen.;15;https://ice.oetztalclimbing.com/topo/detail/lucky-strike.html;;N
 27;Fritz Phantom;47,00661867;10,9737247;2455.4208984375;Gerry Fiegl & Hansj”rg Auer;WI5;5 SL;;šber Sdostgrat.;Hochalpine Eiskletterei. Eislinie nur selten vorhanden. Zustieg am besten ber Peerlarsee mit Tourenski.;15;https://ice.oetztalclimbing.com/topo/detail/fritz-phantom.html;;N
 28;Waldesruh Ralley - Bichlfall;47,02797391;10,99501338;1246.4361572265625;Vitus & Hansj”rg Auer;WI6-;5 SL;;Abseilen an Eisuhren.;"Dreiteilige Eis-Ralley. šbersichtsbild Winter 2018. Der erste Fall ist der klassische ?Ž–Bichlfall"" aka ?Ž–Waldesruh"" (WI5). Gebohrter Standplatz direkt an der Kante, orographisch rechts.";244;https://ice.oetztalclimbing.com/topo/detail/waldesruh-ralley-bichlfall.html;;SW
@@ -32,7 +32,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 32;R?õtselburg;47,0081575;10,99938127;1472.281005859375;Mathias N”ssig & Hansj”rg Auer;WI7-;2 SL;Direkt nach der Brcke von der Bundesstra?e bei Aschbach parken und bei der dritten Kehre (Wegweiser) vom Forstweg der Rinne entlang, rechtshaltend zur Wand. (15 min.);Abseilen ber Eisuhren bzw. Baum mit Schlinge.;Sehr anspruchsvolle erste Seill?õnge mit delikatem rechts-links Quergang nach Mixed Einstiegsboulder. Keine Haken verwendet. Diese Seill?õnge wurde von den Erstbegehern mit WI7+ bewertet. In den letzten Jahren hat sich das Eis immer bis zum kleinen Band herunter bildet und oftmals auch noch weiter. Dann WI7- maximal. Etwas links befindet sich der klassische ?Ž–Feierabend?Ž£ (WI5). Vom Ausstieg links oberhalb befinden sich noch weitere M”glichkeiten, zB. wie eine auffallende Eiss?õule. Sie wurde von David N”ssig erstbegangen.;360;https://ice.oetztalclimbing.com/topo/detail/r-tselburg.html;;N
 33;Freizeitstress;47,0081575;10,99938127;1472.281005859375;Reini Obweger & Hansj”rg Auer;WI6/M5;2-3 SL;Vom Weiler Granstein bei S”lden. Siehe Skizze in der Galerie.;Abseilen ber B?õume orographisch links (Schlingen vorhanden).;"Eine der sch”nsten Eisslinien im Tal. Die exakte Lage des Wasserfalls: Breitengrad: 47.0066342316574, L?õngengrad: 10.990730656293067 Gelb: ""Feierabend"", Blau: ""R?õtselburg""";15;https://ice.oetztalclimbing.com/topo/detail/freizeitstress.html;;N
 34;Namenlos;46,97334271;11,01845886;1700.785888671875;Alex Blmel & Hansj”rg Auer;WI5/M5-;2 SL;Von der Stallwiesalm;Abseilen ber Baum (Schlinge vorhanden) bzw. Eisuhr.;Verwendete Normalhaken wurden belassen. šbersichtsbild Winter 2018 (mit deutlich besseren Eisbedingungen). Eisfall von der Shell Tankstelle (Ortseingang S”lden) aus sichtbar. Weitere M”glichkeiten in S”lden: Atterbachfall (WI5+) und Wildmoosf”lle (WI6-).;324;https://ice.oetztalclimbing.com/topo/detail/namenlos.html;;NW
-35;Hohe Brcke;46,90466547;10,96714096;1695.2198486328125;Unbekannt;WI3 ?Ž M6;1 SL;;;Zahlreiche M”glichkeiten. Eine sch”ne Linie mit Bohrhaken. šbersichtsbild mit schwacher Eisbildung im Herbst. Bei Vent bzw. Rofen gibt es noch weitere M”glichkeiten wie zB. den Seflwandfall (WI5-) und die Schlechtbodenf?õlle (WI6).;133;https://ice.oetztalclimbing.com/topo/detail/hohe-bruecke.html;;SO
+35;Hohe Brcke;46,90466547;10,96714096;1695.2198486328125;Unbekannt;WI3 ?Ž M6;1 SL;;;Zahlreiche M”glichkeiten. Eine sch”ne Linie mit Bohrhaken. šbersichtsbild mit schwacher Eisbildung im Herbst. Bei Vent bzw. Rofen gibt es noch weitere M”glichkeiten wie zB. den Seflwandfall (WI5-) und die Schlechtbodenf?õlle (WI6).;133;https://ice.oetztalclimbing.com/topo/detail/hohe-bruecke.html;;SE
 36;Testgolla;47,09844413;10,95780488;1176.862548828125;Juli 1877;M8;485m;šber den Weg;šber den Grad zur Bar;Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor.;239;https://ice.oetztalclimbing.com/topo/detail/testgolla.html;;SW
 37;Klettergarten Oberried - Eispark;47,07646018;10,94993127;1178.9288330078125;Otto & Ali Grner;;1-2 SL;;;"Hier gibt es sehr viele M”glichkeiten wie Daumenschrauber (WI3), Eispanzer (WI4+), Mrbihl (WI4+) oder etwas weiter links oben Honigschlecker (WI5). Zudem viele Meter Eis und Mixed im neuen ""Eispark"" von www.alpin-guide.at.";15;https://ice.oetztalclimbing.com/topo/detail/klettergarten-oberried-eispark.html;;N
 38;Zwieselsteinf?õlle;46,94276424;11,0333006;1694.7689208984375;Unbekannt;WI3 - WI6;bis zu 9 SL;;Am besten Abseilen ber Eisuhren.;Verschiedene M”glichkeiten wie zB. Alzenlehnerfall (WI4-), Bockgartenfall (WI6-), Hoachlehnfall (WI6). Weiter taleinw?õrts befindet sich noch der Taleggfall/Timmlsbachfall (WI5+).;15;https://ice.oetztalclimbing.com/topo/detail/zwieselsteinf-lle.html;;N
@@ -53,14 +53,14 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 53;Amore Fragile;46,9288;10,495;1187.1566162109375;;WI7-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/amore-fragile/;;N
 54;Amphitrite;47,014;11,5028;1434.968994140625;;WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/amphitrite/;;N
 55;Aria 51 - Laserz Nordwand;46,776166;12,81022;1883.644775390625;;M7- / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/aria-51-laserz-nordwand/;;N
-56;Art of Freedom - Serles;47,1305388;11,3843588;1918.4193115234375;;M6+;;;;;25;https://www.bergsteigen.com/touren/eisklettern/art-of-freedom-serles/;;NO
-57;Asylzapfen in St. Gertraudi;47,4039;11,8442;697.3577880859375;;WI4+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/asylzapfen-in-st-gertraudi/;;NO
+56;Art of Freedom - Serles;47,1305388;11,3843588;1918.4193115234375;;M6+;;;;;25;https://www.bergsteigen.com/touren/eisklettern/art-of-freedom-serles/;;NE
+57;Asylzapfen in St. Gertraudi;47,4039;11,8442;697.3577880859375;;WI4+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/asylzapfen-in-st-gertraudi/;;NE
 58;Auf alten Spuren;47,0794;11,6799;2445.396240234375;;M7+ / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/auf-alten-spuren/;;N
 59;Aufnahmeprfung - Tauerntal;47,083;12,5253;1397.98046875;;M9 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/aufnahmepruefung-tauerntal/;;N
 61;Badlands - Sagwandspitze;47,03044;11,61888;2512.7724609375;;A1 / M5 / WI4 / 4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/badlands-sagwandspitze/;;N
 62;Ballerina Rinne;47,5324;12,6498;1830.872802734375;;50ø;;;;;222;https://www.bergsteigen.com/touren/eisklettern/ballerina-rinne/;;SW
 63;Bananenecke - Groáglockner;47,070089;12,69519;3219.220947265625;;M5 / WI4;;;;;225;https://www.bergsteigen.com/touren/eisklettern/bananenecke-grossglockner/;;SW
-64;Bayerisch Schottische Wintergames - Westlicher Geierkopf;47,518127;10,863208;1769.2783203125;;55ø / M5+ / WI3-;;;;;36;https://www.bergsteigen.com/touren/eisklettern/bayerisch-schottische-wintergames-westlicher-geierkopf/;;NO
+64;Bayerisch Schottische Wintergames - Westlicher Geierkopf;47,518127;10,863208;1769.2783203125;;55ø / M5+ / WI3-;;;;;36;https://www.bergsteigen.com/touren/eisklettern/bayerisch-schottische-wintergames-westlicher-geierkopf/;;NE
 65;Beilfall Beilf„lle - Fernautal;47,0015136;11,1491723;2110.7392578125;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/beilfall-beilfaelle-fernautal/;;N
 66;Berufsschule - Treffauer;47,55863386;12,28288876;1796.207275390625;;M7;;;;;274;https://www.bergsteigen.com/touren/eisklettern/berufsschule/;;W
 67;Bese Hexe - Grawa Eisgarten;47,016;11,1937;1484.3887939453125;;WI7- / M9+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/bese-hexe-grawa-eisgarten/;;N
@@ -70,37 +70,37 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 71;Big Brother is watching you - Freiwandspitze;47,037022;12,686294;2274.56298828125;;50ø / WI5- / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/big-brother-is-watching-you-freiwandspitze/;;N
 72;Black Denim - Ochsengarten;47,22065;10,89899;1277.7183837890625;;M5 / WI5;;;;;351;https://www.bergsteigen.com/touren/eisklettern/black-denim-ochsengarten/;;N
 73;Boandlkramer;47,364;12,2751;1712.6077880859375;;M8 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/boandlkramer/;;N
-74;Bruad Henn;47,47237279;12,07189322;762.3936767578125;;WI5+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/bruad-henn/;;NO
+74;Bruad Henn;47,47237279;12,07189322;762.3936767578125;;WI5+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/bruad-henn/;;NE
 75;CapiTalismuskritik - Burgschrofen Kraspestal;47,191304;11,064919;1999.491455078125;;M5+;;;;;350;https://www.bergsteigen.com/touren/eisklettern/capitalismuskritik-burgschrofen-kraspestal/;;N
 76;Catwalk - Hohe Warte;47,035614;11,612;2083.88232421875;;85ø / M5 / WI4+;;;;;2;https://www.bergsteigen.com/touren/eisklettern/catwalk-hohe-warte/;;N
 77;Clean isch tot;47,5182;10,6226;2052.579833984375;;WI4 / M3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/clean-isch-tot/;;N
 78;Daily Dose of Luck - Pinnistal;47,07649;11,347103;2156.5419921875;;WI5 / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/daily-dose-of-luck-pinnistal/;;N
 79;Das 3. Leben - Groáglockner;47,0717;12,6921;3338.139892578125;;M8;;;;;159;https://www.bergsteigen.com/touren/eisklettern/das-3-leben/;;S
 80;Das fnfte Element;47,3727;11,3587;1198.8739013671875;;WI6-;;;;;323;https://www.bergsteigen.com/touren/eisklettern/das-fuenfte-element/;;NW
-81;Das letzte Einhorn;47,09244868;10,81863642;1582.7879638671875;;WI7- / M7;;;;;43;https://www.bergsteigen.com/touren/eisklettern/das-letzte-einhorn/;;NO
+81;Das letzte Einhorn;47,09244868;10,81863642;1582.7879638671875;;WI7- / M7;;;;;43;https://www.bergsteigen.com/touren/eisklettern/das-letzte-einhorn/;;NE
 82;Der Grawa-Gully (Botanikerkamin);47,0158;11,1943;1494.0543212890625;;M5+ / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/der-grawa-gully-botanikerkamin/;;N
 84;Der weiáe Hai - Innergschl”á;47,1276686;12,4607334;1759.0517578125;;M8 / WI6-;;;;;172;https://www.bergsteigen.com/touren/eisklettern/der-weisse-hai-innergschloess/;;S
 85;Die Kohlebagger von Ltzerath - Maningkogel;47,19245827;10,96333822;2571.395263671875;;50ø / M8;;;;;15;https://www.bergsteigen.com/touren/eisklettern/die-kohlebagger-von-luetzerath/;;N
 86;Die Linken Zwerge;47,0163;11,199;1582.6104736328125;;WI5;;;;;320;https://www.bergsteigen.com/touren/eisklettern/die-linken-zwerge/;;NW
-87;Die Uralte;47,45578459;11,98940992;575.7071533203125;;WI5-;;;;;141;https://www.bergsteigen.com/touren/eisklettern/die-uralte/;;SO
+87;Die Uralte;47,45578459;11,98940992;575.7071533203125;;WI5-;;;;;141;https://www.bergsteigen.com/touren/eisklettern/die-uralte/;;SE
 88;D”rnr”schen - Kraspestal;47,191333;11,066194;2013.784423828125;;M6+;;;;;350;https://www.bergsteigen.com/touren/eisklettern/doernroeschen-kraspestal/;;N
 89;Domenicus;47,1147;11,1405;1864.6529541015625;;M8 / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/domenicus/;;N
 90;Dopey - Grawa Eisgarten;47,0158;11,1931;1484.942138671875;;WI7- / M6;;;;;360;https://www.bergsteigen.com/touren/eisklettern/dopey-grawa-eisgarten/;;N
-91;Drachenfels Mixedwand Bergisel;47,246;11,40069;675.517578125;;M4 / M10;;;;;154;https://www.bergsteigen.com/touren/eisklettern/drachenfels-mixedwand-bergisel/;;SO
+91;Drachenfels Mixedwand Bergisel;47,246;11,40069;675.517578125;;M4 / M10;;;;;154;https://www.bergsteigen.com/touren/eisklettern/drachenfels-mixedwand-bergisel/;;SE
 92;Drecksau - Defreggental;46,9177334;12,4287316;1319.1656494140625;;M6 / WI5;;;;;359;https://www.bergsteigen.com/touren/eisklettern/drecksau-defreggental/;;N
 93;Easy Afternoon - Lsens;47,1152757;11,1409144;1876.276123046875;;WI4;;;;;264;https://www.bergsteigen.com/touren/eisklettern/easy-afternoon-luesens/;;W
 94;Easy Day;47,1149;11,1405;1852.6484375;;M8 / WI5-;;;;;296;https://www.bergsteigen.com/touren/eisklettern/easy-day/;;NW
 95;Eibergfall;47,54338492;12,18181293;742.0184326171875;;WI3+ / WI5-;;;;;303;https://www.bergsteigen.com/touren/eisklettern/eibergfall/;;NW
 96;Eintagsfliege;47,10936;10,80075;1379.3665771484375;;M7 / WI5;;;;;5;https://www.bergsteigen.com/touren/eisklettern/eintagsfliege/;;N
 97;Eisarena Brunnalm;46,885;12,3509;2042.144287109375;;WI4;;;;;18;https://www.bergsteigen.com/touren/eisklettern/eisarena-brunnalm/;;N
-98;Eisarena Umbaltal - Sektor Flying Dutchman;47,011;12,2867;1739.729736328125;;WI4+ / M9;;;;;131;https://www.bergsteigen.com/touren/eisklettern/eisarena-umbaltal-sektor-flying-dutchman/;;SO
-99;Eisarena Umbaltal - Sektor Rockmaster;47,011;12,2867;1739.729736328125;;WI6- / M8+;;;;;131;https://www.bergsteigen.com/touren/eisklettern/eisarena-umbaltal-sektor-rockmaster/;;SO
+98;Eisarena Umbaltal - Sektor Flying Dutchman;47,011;12,2867;1739.729736328125;;WI4+ / M9;;;;;131;https://www.bergsteigen.com/touren/eisklettern/eisarena-umbaltal-sektor-flying-dutchman/;;SE
+99;Eisarena Umbaltal - Sektor Rockmaster;47,011;12,2867;1739.729736328125;;WI6- / M8+;;;;;131;https://www.bergsteigen.com/touren/eisklettern/eisarena-umbaltal-sektor-rockmaster/;;SE
 100;Eisarena Umbaltal - Sektor Umbaltaler;47,011;12,2867;1739.729736328125;;WI4 / WI7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/eisarena-umbaltal-sektor-umbaltaler/;;N
 102;Eiswelt Taschachschlucht Pitztal;46,9576729;10,869486;1712.40283203125;;WI4 / M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/eiswelt-taschachschlucht-pitztal/;;N
 103;Eremit - Amphitheater Pinnisalm;47,070523;11,327456;1710.40966796875;;M9- / WI7-;;;;;297;https://www.bergsteigen.com/touren/eisklettern/eremit-amphitheater-pinnisalm/;;NW
 104;Ethik-G„rtner - Lsens;47,1139;11,1407;1971.5274658203125;;M8 / WI6;;;;;288;https://www.bergsteigen.com/touren/eisklettern/ethik-gaertner-luesens/;;W
 105;Fear Control - Schwarze Wand;46,9966175;11,3679942;1920.78173828125;;M8 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/fear-control/;;N
-106;Fear of the dark - Zw”lferkogel Nordwand;47,192544;11,002741;2357.157470703125;;60ø / M6+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/fear-of-the-dark-zwoelferkogel-nordwand/;;NO
+106;Fear of the dark - Zw”lferkogel Nordwand;47,192544;11,002741;2357.157470703125;;60ø / M6+;;;;;28;https://www.bergsteigen.com/touren/eisklettern/fear-of-the-dark-zwoelferkogel-nordwand/;;NE
 107;Fineilspitze Nordwand;46,7832;10,8326;3267.864013671875;;50ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/fineilspitze-nordwand/;;N
 108;Firndreieck - Groáer M”seler;46,9979;11,7806;3076.041015625;;55ø / 2;;;;;15;https://www.bergsteigen.com/touren/eisklettern/firndreieck/;;N
 109;First Base;47,1253;12,0079;1354.4703369140625;;WI6-;;;;;294;https://www.bergsteigen.com/touren/eisklettern/first-base/;;NW
@@ -109,7 +109,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 112;Frosnitzfall;47,04673;12,49409;1361.0638427734375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/frosnitzfall/;;N
 113;Frostk”nig - Kraspestal Burgschrofen;47,1912727;11,0653567;2015.8546142578125;;M5+;;;;;354;https://www.bergsteigen.com/touren/eisklettern/frostkoenig-kraspestal-burgschrofen/;;N
 114;Gaia - Seebenw„nde;47,3745;10,9419;1443.10302734375;;M12 / WI6+;;;;;357;https://www.bergsteigen.com/touren/eisklettern/gaia-seebenwaende/;;N
-115;Gaisalmfall - Achensee;47,4779;11,7008;974.8896484375;;WI4+;;;;;134;https://www.bergsteigen.com/touren/eisklettern/gaisalmfall-achensee/;;SO
+115;Gaisalmfall - Achensee;47,4779;11,7008;974.8896484375;;WI4+;;;;;134;https://www.bergsteigen.com/touren/eisklettern/gaisalmfall-achensee/;;SE
 116;Gamsleichfall;47,2226;10,9883;1863.6619873046875;;WI5- / M3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/gamsleichfall/;;N
 117;Ganot Nordwandrinne;46,962523;12,707483;2503.982177734375;;M4 / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ganot-nordwandrinne/;;N
 118;Gelber Fluss - Kaunertal;46,9684276;10,7435852;1694.2205810546875;;WI5;;;;;264;https://www.bergsteigen.com/touren/eisklettern/gelber-fluss-kaunertal/;;W
@@ -120,7 +120,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 124;Groáglockner Sdostgrat;47,070033;12,697109;3251.288330078125;;60ø / M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/grossglockner-suedostgrat/;;N
 125;Groávenediger SW - Wand;47,1065;12,3425;3340.05322265625;;45ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/grossvenediger-sw-wand/;;N
 126;Grnkar Eisfall;47,1045;11,9963;1572.2916259765625;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/gruenkar-eisfall/;;N
-127;Gruá in den Himmel - Schwarze Wand Nordostwand;47,104918;12,372436;3213.459716796875;;85ø / M4 / WI3;;;;;43;https://www.bergsteigen.com/touren/eisklettern/gruss-in-den-himmel-schwarze-wand-nordostwand/;;NO
+127;Gruá in den Himmel - Schwarze Wand Nordostwand;47,104918;12,372436;3213.459716796875;;85ø / M4 / WI3;;;;;43;https://www.bergsteigen.com/touren/eisklettern/gruss-in-den-himmel-schwarze-wand-nordostwand/;;NE
 128;Gully - Lsens;47,1149029;11,1408768;1881.883544921875;;WI4;;;;;295;https://www.bergsteigen.com/touren/eisklettern/gully-luesens/;;NW
 129;Gully;47,0719;11,3267;1581.392822265625;;WI5;;;;;320;https://www.bergsteigen.com/touren/eisklettern/gully/;;NW
 130;Habicht Nordostwand;47,04956227;11,28617764;2723.382080078125;;45ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/habicht-nordostwand/;;N
@@ -132,16 +132,16 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 137;Hintere Schw„rze Nordwand;46,7750174;10,91099;3308.4248046875;;50ø;;;;;308;https://www.bergsteigen.com/touren/eisklettern/hintere-schwaerze-nordwand/;;NW
 138;Hinterer Spiegelkogel Nordflanke;46,8321;10,9588;3163.140869140625;;40ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hinterer-spiegelkogel-nordflanke/;;N
 139;Hochfeiler Nordwand;46,9742;11,7297;3172.78173828125;;50ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hochfeiler-nordwand/;;N
-141;Hohe Kirche Nordverschneidung;47,034775;11,609877;2206.287353515625;;M6 / 6+/7-;;;;;24;https://www.bergsteigen.com/touren/eisklettern/hohe-kirche-nordverschneidung/;;NO
+141;Hohe Kirche Nordverschneidung;47,034775;11,609877;2206.287353515625;;M6 / 6+/7-;;;;;24;https://www.bergsteigen.com/touren/eisklettern/hohe-kirche-nordverschneidung/;;NE
 142;Hoher First Nordwestflanke;46,8295;11,0706;2847.675048828125;;40ø / 1-;;;;;300;https://www.bergsteigen.com/touren/eisklettern/hoher-first-nordwestflanke/;;NW
-143;Homozack;47,083;12,5253;1397.98046875;;M8 / WI5;;;;;81;https://www.bergsteigen.com/touren/eisklettern/homozack/;;O
+143;Homozack;47,083;12,5253;1397.98046875;;M8 / WI5;;;;;81;https://www.bergsteigen.com/touren/eisklettern/homozack/;;E
 144;Hookuspokus - Kraspestal;47,191333;11,066194;2013.784423828125;;M7-;;;;;350;https://www.bergsteigen.com/touren/eisklettern/hookuspokus-kraspestal/;;N
 145;Ice patrol - Stinkerf„lle;47,451874;10,899612;1329.463134765625;;M8;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ice-patrol-stinkerfaelle/;;N
 146;Iceman - Pinnistal;47,07;11,3266;1671.2239990234375;;M8 / WI5;;;;;295;https://www.bergsteigen.com/touren/eisklettern/iceman-pinnistal/;;NW
 147;Innenbanane - Groáglockner;47,070089;12,69519;3219.220947265625;;M5 / WI4;;;;;225;https://www.bergsteigen.com/touren/eisklettern/innenbanane-grossglockner/;;SW
 148;Institutionalized 2023 - Axamer Lizum;47,1824321;11,2931482;1961.6343994140625;;M8- / 6-;;;;;347;https://www.bergsteigen.com/touren/eisklettern/institutionalized-2023-axamer-lizum/;;N
-150;King Kong;47,1189;10,4713;1146.672119140625;;M7 / WI6;;;;;26;https://www.bergsteigen.com/touren/eisklettern/king-kong/;;NO
-151;Kitzm”rderfall;47,09875929;10,8103323;1569.43505859375;;WI5;;;;;53;https://www.bergsteigen.com/touren/eisklettern/kitzmoerderfall/;;NO
+150;King Kong;47,1189;10,4713;1146.672119140625;;M7 / WI6;;;;;26;https://www.bergsteigen.com/touren/eisklettern/king-kong/;;NE
+151;Kitzm”rderfall;47,09875929;10,8103323;1569.43505859375;;WI5;;;;;53;https://www.bergsteigen.com/touren/eisklettern/kitzmoerderfall/;;NE
 152;Klettergarten Gully - Oberried;47,07652;10,94865;1207.607666015625;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/klettergarten-gully-oberried/;;N
 153;Salto Kamin- Laserz Nordwand;46,776166;12,81022;1883.644775390625;;M6+ / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kopie-tabernakel-laserz-nordwand/;;N
 154;Kraftwerksfall;47,10711385;11,13799095;1956.93994140625;;WI3;;;;;274;https://www.bergsteigen.com/touren/eisklettern/kraftwerksfall/;;W
@@ -151,11 +151,11 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 158;Last Exit 4146 - Muttenkopf;47,01886327;11,36547232;2237.259521484375;;50ø / M7 / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/last-exit-4146-muttenkopf/;;N
 159;Lasur d`amour - Pinnistal;47,0705;11,3271;1681.100341796875;;M6+ / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lasur-damour-pinnistal/;;N
 160;Lavantner Kolmfall;46,778059;12,847744;1521.7384033203125;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lavantner-kolmfall/;;N
-161;Lawinenexpress - Pitztal;47,023063;10,861877;1590.2076416015625;;M7-;;;;;43;https://www.bergsteigen.com/touren/eisklettern/lawinenexpress-pitztal/;;NO
+161;Lawinenexpress - Pitztal;47,023063;10,861877;1590.2076416015625;;M7-;;;;;43;https://www.bergsteigen.com/touren/eisklettern/lawinenexpress-pitztal/;;NE
 162;Limited in Freedom - Sagwand;47,029066;11,627809;2450.248779296875;;WI6 / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/limited-in-freedom-sagwand/;;N
 163;Linker K”pflalmfall;47,1368;11,9943;1192.305908203125;;WI4-;;;;;268;https://www.bergsteigen.com/touren/eisklettern/linker-koepflalmfall/;;W
 164;Linker Kraftwerksfall;47,1078733;11,13876343;2031.9359130859375;;WI5+;;;;;219;https://www.bergsteigen.com/touren/eisklettern/linker-kraftwerksfall-1/;;SW
-165;Linker Westwandfall - Kleiner Magner;47,11124;12,03935;1801.0860595703125;;WI5;;;;;26;https://www.bergsteigen.com/touren/eisklettern/linker-westwandfall-kleiner-magner/;;NO
+165;Linker Westwandfall - Kleiner Magner;47,11124;12,03935;1801.0860595703125;;WI5;;;;;26;https://www.bergsteigen.com/touren/eisklettern/linker-westwandfall-kleiner-magner/;;NE
 166;Linker Zwingenfall;47,1045;11,1364;2053.0478515625;;WI5;;;;;301;https://www.bergsteigen.com/touren/eisklettern/linker-zwingenfall/;;NW
 167;Little Joys For Bigger Happiness;47,04916;11,65013;3047.123779296875;;WI3 / M5;;;;;322;https://www.bergsteigen.com/touren/eisklettern/little-joys-for-bigger-happiness/;;NW
 168;Lost in Pollywood - Ralfkopf;46,961264;12,711184;2513.5419921875;;M5+ / WI4;;;;;357;https://www.bergsteigen.com/touren/eisklettern/lost-in-pollywood-ralfkopf/;;N
@@ -171,20 +171,20 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 178;Moonwalk - Hohe Warte;47,0362;11,616;1969.522216796875;;WI6 / M7;;;;;351;https://www.bergsteigen.com/touren/eisklettern/moonwalk-hohe-warte/;;N
 179;Multiple joys;47,09244868;10,81863642;1582.7879638671875;;M7 / WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/multiple-joys/;;N
 180;Mutmalspitze Nordwand;46,7921;10,9162;3166.982177734375;;45ø;;;;;321;https://www.bergsteigen.com/touren/eisklettern/mutmalspitze-nordwand/;;NW
-181;Nameless - Neurur;47,0260029;10,8609432;1636.9427490234375;;WI5+ / WI5+;;;;;108;https://www.bergsteigen.com/touren/eisklettern/nameless-neurur/;;O
+181;Nameless - Neurur;47,0260029;10,8609432;1636.9427490234375;;WI5+ / WI5+;;;;;108;https://www.bergsteigen.com/touren/eisklettern/nameless-neurur/;;E
 182;Irzweg - Irzw„nde;47,2322424;11,0146259;2530.014892578125;;M3+ / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/nix-dabei/;;N
 183;Notwegfall;46,93893885;10,8984375;2159.705810546875;;WI4;;;;;289;https://www.bergsteigen.com/touren/eisklettern/notwegfall/;;W
 184;Oberer Grawa Eisfall Stubaital;47,010992;11,186804;1620.667236328125;;WI3 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/oberer-grawa-eisfall-stubaital/;;N
-185;Obstanser Wasserfall - Obstanser Eisfall;46,6981105;12,4920904;1610.6572265625;;WI4- / WI4+;;;;;43;https://www.bergsteigen.com/touren/eisklettern/obstanser-wasserfall-obstanser-eisfall/;;NO
+185;Obstanser Wasserfall - Obstanser Eisfall;46,6981105;12,4920904;1610.6572265625;;WI4- / WI4+;;;;;43;https://www.bergsteigen.com/touren/eisklettern/obstanser-wasserfall-obstanser-eisfall/;;NE
 186;Eispark Osttirol;47,1262;12,4787;1540.252685546875;;WI5 / WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/osttiroler-eiskletterpark/;;N
 187;Ostwand Couloir - Lsener Fernerkogel;47,10121;11,12906;2260.234375;;55ø / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ostwand-couloir-luesener-fernerkogel/;;N
 188;Paracelsus;47,1149;11,1405;1852.6484375;;WI5+ / M6;;;;;296;https://www.bergsteigen.com/touren/eisklettern/paracelsus/;;NW
-189;Pechtl Arena & Zapfen;47,61082877;12,46471882;683.917724609375;;WI3+ / WI5+;;;;;50;https://www.bergsteigen.com/touren/eisklettern/pechtl-arena-zapfen/;;NO
-190;Pechtl Gully - Erpfendorf;47,61173312;12,46364594;668.806884765625;;WI3- / M3;;;;;28;https://www.bergsteigen.com/touren/eisklettern/pechtl-gully-erpfendorf/;;NO
+189;Pechtl Arena & Zapfen;47,61082877;12,46471882;683.917724609375;;WI3+ / WI5+;;;;;50;https://www.bergsteigen.com/touren/eisklettern/pechtl-arena-zapfen/;;NE
+190;Pechtl Gully - Erpfendorf;47,61173312;12,46364594;668.806884765625;;WI3- / M3;;;;;28;https://www.bergsteigen.com/touren/eisklettern/pechtl-gully-erpfendorf/;;NE
 191;Pendling Eisfall;47,5695;12,1116;1292.354248046875;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/pendling-eisfall/;;N
 192;Petit Hiking - Groáglockner;47,07086216;12,69000763;3221.632568359375;;M6+;;;;;173;https://www.bergsteigen.com/touren/eisklettern/petit-hiking-grossglockner/;;S
-193;Pick`n Weed - Maningkogl Nordwand;47,1929;10,9606;2580.4794921875;;M5- / M5+;;;;;41;https://www.bergsteigen.com/touren/eisklettern/pickn-weed-maningkogl-nordwand/;;NO
-194;Pinzgeralm Eisfall;47,6431;12,4469;640.94329833984375;;WI5-;;;;;25;https://www.bergsteigen.com/touren/eisklettern/pinzgeralm-eisfall/;;NO
+193;Pick`n Weed - Maningkogl Nordwand;47,1929;10,9606;2580.4794921875;;M5- / M5+;;;;;41;https://www.bergsteigen.com/touren/eisklettern/pickn-weed-maningkogl-nordwand/;;NE
+194;Pinzgeralm Eisfall;47,6431;12,4469;640.94329833984375;;WI5-;;;;;25;https://www.bergsteigen.com/touren/eisklettern/pinzgeralm-eisfall/;;NE
 195;Pitztaler Eisexpress;46,8867;10,8472;3442.342529296875;;55ø / 1;;;;;341;https://www.bergsteigen.com/touren/eisklettern/pitztaler-eisexpress/;;N
 196;Gallyer - Pitztaler Eisrinne;46,98364866;10,8772587;1929.157958984375;;WI4;;;;;265;https://www.bergsteigen.com/touren/eisklettern/pitztaler-eisrinne/;;W
 197;Plan B, Zw”lferkogel Nordwand;47,1925;11,008;2571.390625;;M5- / WI4;;;;;331;https://www.bergsteigen.com/touren/eisklettern/plan-b-zwoelferkogel-nordwand/;;NW
@@ -195,7 +195,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 202;Rechte Nordwestwand - Schrammacher;47,04014;11,57676;1343.20458984375;;80ø / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rechte-nordwestwand-schrammacher/;;N
 203;Rechter Flittneralm Eisfall;47,0456;11,5917;1485.80615234375;;WI3+;;;;;209;https://www.bergsteigen.com/touren/eisklettern/rechter-flittneralm-eisfall/;;SW
 204;Rechter und linker Rauchenbichlfall;47,10936;10,80075;1379.3665771484375;;WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rechter-und-linker-rauchenbichlfall/;;N
-205;Rechter Westwandfall - Kleiner Magner;47,1102;12,03933;1851.844482421875;;WI4+ / M4;;;;;89;https://www.bergsteigen.com/touren/eisklettern/rechter-westwandfall-kleiner-magner/;;O
+205;Rechter Westwandfall - Kleiner Magner;47,1102;12,03933;1851.844482421875;;WI4+ / M4;;;;;89;https://www.bergsteigen.com/touren/eisklettern/rechter-westwandfall-kleiner-magner/;;E
 206;Reislehn Eisfall;46,98357591;10,87882519;2045.642333984375;;WI4+;;;;;221;https://www.bergsteigen.com/touren/eisklettern/reislehn-eisfall/;;SW
 207;Rocket Rustical - Teischnitztal;47,055932;12,6796681;2795.064208984375;;WI5+ / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rocket-rustical-teischnitztal/;;N
 208;R”tenspitze Nordwand;46,7769;10,945;3177.85986328125;;45ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/roetenspitze-nordwand/;;N
@@ -210,7 +210,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 218;Schall und Rauch - Kraspestal;47,19127272;11,06475592;2004.795166015625;;M5+;;;;;350;https://www.bergsteigen.com/touren/eisklettern/schall-und-rauch-1/;;N
 219;Schattseitfall;47,1246;11,9991;1445.6812744140625;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schattseitfall/;;N
 220;Scheisskluppenfall;47,1976;11,1273;1601.60791015625;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/scheisskluppenfall/;;N
-221;Schildalm Eisfall;47,10192186;12,50621796;1505.6591796875;;WI2-;;;;;78;https://www.bergsteigen.com/touren/eisklettern/schildalm-eisfall/;;O
+221;Schildalm Eisfall;47,10192186;12,50621796;1505.6591796875;;WI2-;;;;;78;https://www.bergsteigen.com/touren/eisklettern/schildalm-eisfall/;;E
 222;Schitter Eisfall - Neustift Stubaital;47,10213389;11,30815029;1186.8162841796875;;WI3+;;;;;322;https://www.bergsteigen.com/touren/eisklettern/schitter-eisfall-neustift-stubaital/;;NW
 223;Schleicherlaufen;47,11507;11,14059;1844.84619140625;;WI5+ / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schleicherlaufen/;;N
 224;Schneelehnfall;46,95400485;10,88491917;1888.4805908203125;;WI4+;;;;;208;https://www.bergsteigen.com/touren/eisklettern/schneelehnfall/;;SW
@@ -218,7 +218,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 227;Schrammacher Diagonale;47,02895;11,63195;2478.891845703125;;M5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schrammacher-diagonale/;;N
 228;Schrammacher Nordwand Direttissima;47,03742457;11,64965208;2963.851318359375;;WI6 / M7;;;;;189;https://www.bergsteigen.com/touren/eisklettern/schrammacher-nordwand-direttissima/;;S
 229;Schrankogel Nordost-Flanke;47,045;11,1021;3280.73779296875;;50ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schrankogel-nordost-flanke/;;N
-230;Schwarze Wand Nordostwand Eisschlucht;47,1057457;12,3712635;3185.40185546875;;85ø / M5;;;;;68;https://www.bergsteigen.com/touren/eisklettern/schwarze-wand-nordostwand-eisschlucht/;;O
+230;Schwarze Wand Nordostwand Eisschlucht;47,1057457;12,3712635;3185.40185546875;;85ø / M5;;;;;68;https://www.bergsteigen.com/touren/eisklettern/schwarze-wand-nordostwand-eisschlucht/;;E
 231;Schwarze Witwe;47,04742;11,61647;2023.1395263671875;;WI6 / M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schwarze-witwe/;;N
 232;Schwerer als ein lockerer Arch - Beilfall Groáen Tr”gler;47,0006227;11,1519643;2210.085205078125;;M9-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schwerer-als-ein-lockerer-arch/;;N
 233;Seebenseefall;47,3747;10,9414;1394.6375732421875;;WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/seebenseefall/;;N
@@ -253,8 +253,8 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 263;Thriller - Hohe Warte;47,033896;11,617838;2174.12353515625;;WI5+;;;;;350;https://www.bergsteigen.com/touren/eisklettern/thriller-hohe-warte/;;N
 264;Tr„nen der Sehnsucht;46,983;10,8795;2068.12255859375;;WI6 / M6;;;;;343;https://www.bergsteigen.com/touren/eisklettern/traenen-der-sehnsucht/;;N
 265;Tristenkopf - Nordrinne;47,3306701;11,9578378;2177.902587890625;;M2+ / 60ø / 2+/3-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/tristenkopf-nordrinne/;;N
-266;"Urfall direct ""Eierpecker""";47,0049;11,2253;1813.2435302734375;;M8 / WI5-;;;;;53;https://www.bergsteigen.com/touren/eisklettern/urfall-direct-eierpecker/;;NO
-267;Urfall;47,005;11,2257;1736.8583984375;;WI5+;;;;;30;https://www.bergsteigen.com/touren/eisklettern/urfall/;;NO
+266;"Urfall direct ""Eierpecker""";47,0049;11,2253;1813.2435302734375;;M8 / WI5-;;;;;53;https://www.bergsteigen.com/touren/eisklettern/urfall-direct-eierpecker/;;NE
+267;Urfall;47,005;11,2257;1736.8583984375;;WI5+;;;;;30;https://www.bergsteigen.com/touren/eisklettern/urfall/;;NE
 268;Via Margit;47,12452739;11,99958086;1452.040283203125;;M8+ / WI6-;;;;;12;https://www.bergsteigen.com/touren/eisklettern/via-margit/;;N
 269;Victimes des ‚tique(ttes) - Lsens;47,1139;11,1407;1971.5274658203125;;M10 / WI3;;;;;288;https://www.bergsteigen.com/touren/eisklettern/victimes-des-etiquettes/;;W
 270;Vordere Reiselehn Eisfall;46,98398579;10,87792397;1991.3533935546875;;WI5+;;;;;249;https://www.bergsteigen.com/touren/eisklettern/vordere-reiselehn-eisfall/;;W
@@ -270,7 +270,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 282;Westl. Marzell Spitze Nordwestwand;46,76998362;10,88925362;3192.146240234375;;50ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/westl-marzell-spitze-nordwestwand/;;N
 283;Westwandrinne;47,0038;11,8422;3052.8037109375;;45ø / M3;;;;;281;https://www.bergsteigen.com/touren/eisklettern/westwandrinne/;;W
 284;White gold - Gl”dis;46,962661;12,723854;2897.19140625;;M5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/white-gold-gloedis/;;N
-286;Wildspitze Nordwand;46,8885;10,8672;3551.107421875;;50ø;;;;;25;https://www.bergsteigen.com/touren/eisklettern/wildspitze-nordwand/;;NO
+286;Wildspitze Nordwand;46,8885;10,8672;3551.107421875;;50ø;;;;;25;https://www.bergsteigen.com/touren/eisklettern/wildspitze-nordwand/;;NE
 287;Wildspitze Nordwestgrat;46,8914;10,8643;3393.588134765625;;40ø;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wildspitze-nordwestgrat/;;N
 288;Wildspitze Sdcouloir;46,8797;10,8669;3224.383544921875;;45ø;;;;;219;https://www.bergsteigen.com/touren/eisklettern/wildspitze-suedcouloir/;;SW
 289;Wind of Change - Zw”lferkogel Nordwand;47,1925;11,008;2571.390625;;M5;;;;;331;https://www.bergsteigen.com/touren/eisklettern/wind-of-change-zwoelferkogel-nordwand/;;NW
@@ -278,22 +278,22 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 291;Wde Henn;47,47192315;12,06401825;847.60821533203125;;WI7-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wuede-henn/;;N
 292;Wunschkonzert - Rosshag Eisfall;47,0841;11,7645;1186.4222412109375;;WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wunschkonzert-rosshag-eisfall/;;N
 293;Xice - Niederer Prijakt Westwand;46,91358;12,70585;2728.54833984375;;M6 / WI5;;;;;298;https://www.bergsteigen.com/touren/eisklettern/xice-niederer-prijakt-westwand/;;NW
-294;Zedlacher Eisfall - Tauerntal;47,02621;12,51287;1348.9278564453125;;WI4+ / M4;;;;;96;https://www.bergsteigen.com/touren/eisklettern/zedlacher-eisfall-tauerntal/;;O
+294;Zedlacher Eisfall - Tauerntal;47,02621;12,51287;1348.9278564453125;;WI4+ / M4;;;;;96;https://www.bergsteigen.com/touren/eisklettern/zedlacher-eisfall-tauerntal/;;E
 295;Zemmschlucht Eisfall;47,1405;11,8232;801.40863037109375;;WI3-;;;;;343;https://www.bergsteigen.com/touren/eisklettern/zemmschlucht-eisfall/;;N
 296;Zemmschlucht Eisschild;47,1429;11,8299;765.6168212890625;;WI4-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/zemmschlucht-eisschild/;;N
 297;Zuckerhtl Nordwand;46,9652;11,15352;3403.491943359375;;55ø / 1;;;;;15;https://www.bergsteigen.com/touren/eisklettern/zuckerhuetl-nordwand/;;N
 298;Zwingenfall;47,10414171;11,13586664;2032.79931640625;;WI4-;;;;;306;https://www.bergsteigen.com/touren/eisklettern/zwingenfall/;;NW
 299;Nordwandprinzessin - Zw”lferkogel Nordwand;47,19047073;11,00349426;2644.860107421875;;M5+ / WI4;;;;;294;https://www.bergsteigen.com/touren/eisklettern/zwoelferkogel-nordwand-nordwandprinzessin/;;NW
-300;30 Jahre Frieden - Kessel Eisarena;47,73240000;13,69600000;809.4066162109375;;WI5;;;;;43;https://www.bergsteigen.com/touren/eisklettern/30-jahre-frieden-kessel-eisarena/;;NO
+300;30 Jahre Frieden - Kessel Eisarena;47,73240000;13,69600000;809.4066162109375;;WI5;;;;;43;https://www.bergsteigen.com/touren/eisklettern/30-jahre-frieden-kessel-eisarena/;;NE
 301;50m Zapfen;47,77311196;13,19682777;700.7706298828125;;WI6-;;;;;4;https://www.bergsteigen.com/touren/eisklettern/50m-zapfen/;;N
 302;747 Variante - Jumbo Jet - Langental;46,57109000;11,81658000;;;M7 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/747-variante-jumbo-jet/;;N
 303;A-Vitamin - Altenberg;47,70300000;15,66490000;1355.4427490234375;;WI5+ / M5;;;;;325;https://www.bergsteigen.com/touren/eisklettern/a-vitamin/;;NW
-304;Ad Astra - Mittagsspitze;47,30815500;10,18974200;1486.7352294921875;;M6;;;;;39;https://www.bergsteigen.com/touren/eisklettern/ad-astra-mittagsspitze/;;NO
+304;Ad Astra - Mittagsspitze;47,30815500;10,18974200;1486.7352294921875;;M6;;;;;39;https://www.bergsteigen.com/touren/eisklettern/ad-astra-mittagsspitze/;;NE
 305;Adrenalin;47,08380000;13,09170000;1356.3934326171875;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/adrenalin/;;N
 306;Affogato - Reintal;46,91222300;11,99005400;;;WI7 / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/affogato-reintal/;;N
 307;Airbus - Langental;46,57109000;11,81658000;;;M8 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/airbus-val-lietres/;;N
 308;Airport - Langental;46,57109000;11,81658000;;;WI5+ / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/airport-langental/;;N
-309;Akarfall;47,10260000;13,21140000;1323.8770751953125;;WI5-;;;;;76;https://www.bergsteigen.com/touren/eisklettern/akarfall/;;O
+309;Akarfall;47,10260000;13,21140000;1323.8770751953125;;WI5-;;;;;76;https://www.bergsteigen.com/touren/eisklettern/akarfall/;;E
 310;Al Dente - Rosengarten;46,44569200;11,61579000;;;WI4 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/al-dente-rosengarten/;;N
 311;Aldischlauch;47,65720000;13,03680000;;;WI2+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/aldischlauch/;;N
 312;Alice im Wunderland;47,36710000;15,46220000;898.0531005859375;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/alice-im-wunderland/;;N
@@ -307,7 +307,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 320;Angerer Eisklettergarten - Reintal / Taufers;46,94400000;12,08182000;;;WI2 / M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/angerer-eisklettergarten-reintal-taufers/;;N
 321;Antrisch und Urig - Reintal / Taufers;46,93278160;12,12027900;2277.007080078125;;WI4+ / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/antrisch-und-urig-reintal-taufers/;;N
 322;Aquädukt - Wasserkopf Nordwand;46,89623500;12,05023500;;;M5 / 4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/aquaedukt-wasserkopf-nordwand/;;N
-323;Aramis Eisfall;47,64430000;13,11820000;565.169189453125;;WI5;;;;;77;https://www.bergsteigen.com/touren/eisklettern/aramis-eisfall/;;O
+323;Aramis Eisfall;47,64430000;13,11820000;565.169189453125;;WI5;;;;;77;https://www.bergsteigen.com/touren/eisklettern/aramis-eisfall/;;E
 324;Argos - Reintal;46,92139600;12,01637200;;;M9 / WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/argos-reintal/;;N
 325;Astner - Troi - Monte Cristallo Nordwand;46,57581490;12,20480310;;;55° / WI5 / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/astner-troi-monte-cristallo-nordwand/;;N
 326;Ataraxia - Altenberg;47,70300000;15,66490000;1355.4427490234375;;M8+ / WI6;;;;;325;https://www.bergsteigen.com/touren/eisklettern/ataraxia-altenberg/;;NW
@@ -318,7 +318,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 331;AV - Eisschlauch;47,72900000;15,75550000;1069.0042724609375;;WI5 / M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/av-eisschlauch/;;N
 332;Avatar- Pordoi Nordwestwand;46,50514100;11,80543200;;;M6 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/avatar-pordoi-nordwestwand/;;N
 333;B-Vitamin - Altenberg;47,70300000;15,66490000;1355.4427490234375;;M6+ / WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/b-vitamin-altenberg/;;N
-334;Back to the roots;47,20390000;12,24690000;1290.899169921875;;WI6;;;;;71;https://www.bergsteigen.com/touren/eisklettern/back-to-the-roots/;;O
+334;Back to the roots;47,20390000;12,24690000;1290.899169921875;;WI6;;;;;71;https://www.bergsteigen.com/touren/eisklettern/back-to-the-roots/;;E
 335;Backline - Hochgall Nordwand;46,91770100;12,14770100;2993.730712890625;;50° / M5 / 4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/backline-hochgall-nordwand/;;N
 336;Bärenköpfe Ostrinne;47,14480000;12,52550000;2608.36279296875;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/baerenkoepfe-ostrinne/;;N
 337;Bärenkopf Nordwand;47,13240000;12,72900000;3239.734375;;45° / 1;;;;;15;https://www.bergsteigen.com/touren/eisklettern/baerenkopf-nordwand/;;N
@@ -336,7 +336,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 349;Bow man - Glemmtal;47,36111000;12,76655000;1161.2135009765625;;WI6 / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/bow-man-glemmtal/;;N
 350;Braune Spur;47,16380000;12,62220000;1658.0059814453125;;WI4;;;;;306;https://www.bergsteigen.com/touren/eisklettern/braune-spur/;;NW
 351;Brause;47,54950000;13,61550000;671.88531494140625;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/brause/;;N
-352;Breithorn Nordwand (NNW);45,95210000;7,75519000;3164.7841796875;;60°;;;;;49;https://www.bergsteigen.com/touren/eisklettern/breithorn-nordwand-nnw/;;NO
+352;Breithorn Nordwand (NNW);45,95210000;7,75519000;3164.7841796875;;60°;;;;;49;https://www.bergsteigen.com/touren/eisklettern/breithorn-nordwand-nnw/;;NE
 353;Brunegghorn NO-Wand;46,12750000;7,74643000;3607.913330078125;;60°;;;;;14;https://www.bergsteigen.com/touren/eisklettern/brunegghorn-no-wand/;;N
 354;Buchwald Eisfall;46,46852300;11,21324000;;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/buchwald-eisfall/;;N
 355;Buddhabrot - Hinteres Seebachtal;47,01617000;13,25555000;1498.0579833984375;;WI5;;;;;312;https://www.bergsteigen.com/touren/eisklettern/buddhabrot-hinteres-seebachtal/;;NW
@@ -366,22 +366,22 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 379;Culo sporgente - Kolfuschg;46,53852500;11,83008700;;;WI5+ / M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/culo-sporgente/;;N
 380;Damokles - Mölltal Kaltenbrunnerwald;46,88159300;12,89121400;1114.6712646484375;;M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/damokles-moelltal-kaltenbrunnerwald/;;N
 381;Damokles sei Taschenfeitl - Mölltal Kaltenbrunnerwald;46,88159300;12,89121400;1114.6712646484375;;WI6+ / M8;;;;;275;https://www.bergsteigen.com/touren/eisklettern/damokles-sei-taschenfeitl-moelltal-kaltenbrunnerwald/;;W
-382;Das Schweigen der Lämmer - Hintersee;47,19139400;12,47135200;1315.55078125;;M7+ / WI6+;;;;;72;https://www.bergsteigen.com/touren/eisklettern/das-schweigen-der-laemmer-hintersee/;;O
+382;Das Schweigen der Lämmer - Hintersee;47,19139400;12,47135200;1315.55078125;;M7+ / WI6+;;;;;72;https://www.bergsteigen.com/touren/eisklettern/das-schweigen-der-laemmer-hintersee/;;E
 383;Das Schwert des Damokles - Colfuschg;46,54301000;11,85402000;;;85° / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/das-schwert-des-damokles-sella/;;N
 384;Deep Blue;47,86530000;15,26710000;636.1854248046875;;WI5;;;;;335;https://www.bergsteigen.com/touren/eisklettern/deep-blue/;;NW
 385;Defensive Zone - Vorderes Seebachtal;47,01611600;13,20207700;1500.8660888671875;;WI5+ / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/defensive-zone-vorderes-seebachtal/;;N
-386;Der blaue Engel - Tourmäuer;47,86540000;15,26600000;644.6314697265625;;WI6-;;;;;37;https://www.bergsteigen.com/touren/eisklettern/der-blaue-engel-tourmaeuer/;;NO
+386;Der blaue Engel - Tourmäuer;47,86540000;15,26600000;644.6314697265625;;WI6-;;;;;37;https://www.bergsteigen.com/touren/eisklettern/der-blaue-engel-tourmaeuer/;;NE
 387;Der gespaltene König - Pflerscher Tribulaun Südwand;46,98350595;11,33628379;2641.81201171875;;WI4 / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/der-gespaltene-koenig-pflerscher-tribulaun-suedwand-1/;;N
 388;Der gespaltene König - Pflerscher Tribulaun Südwand;46,98360000;11,33610000;2648.201171875;;85°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/der-gespaltene-koenig-pflerscher-tribulaun-suedwand/;;N
 389;Der Pilz - Zillergrund;;;;;WI6;;;;;;https://www.bergsteigen.com/touren/eisklettern/der-pilz-zillergrund/;;
 390;Der seltene Heinrich - Wildgall Nordostwand;46,903364;12,138297;2854;;M5;;;;;;https://www.bergsteigen.com/touren/eisklettern/der-seltene-heinrich-wildgall-nordostwand/;;
 391;Der weiße Pinguin - Außergschlöß;47,12525260;12,46096210;1685.143798828125;;WI5 / M4;;;;;355;https://www.bergsteigen.com/touren/eisklettern/der-weisse-pinguin-aussergschloess/;;N
 392;Desni Slap - Prisank;46,43206600;13,76164600;;;WI5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/desni-slap-prisnak/;;N
-393;Devils Dance - Grünseefälle;47,15740000;12,61600000;1884.055419921875;;WI4;;;;;58;https://www.bergsteigen.com/touren/eisklettern/devils-dance-gruenseefaelle/;;NO
+393;Devils Dance - Grünseefälle;47,15740000;12,61600000;1884.055419921875;;WI4;;;;;58;https://www.bergsteigen.com/touren/eisklettern/devils-dance-gruenseefaelle/;;NE
 394;Diamante - Val Travenanzes;46,57766400;12,06656100;;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/diamante-val-travenanzes/;;N
 395;Die 3 Musketiere - Maltal;46,98833700;13,37350500;1326.3482666015625;;WI5+ / WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/die-3-musketiere-maltal/;;N
 396;Die Abenteuer des Augie March;47,10426000;12,64810000;2703.03076171875;;M7 / WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/die-abenteuer-des-augie-march/;;N
-397;Die Brücke von Khazad -Dûm;47,60320000;15,11380000;1716.635498046875;;M8+ / WI6-;;;;;77;https://www.bergsteigen.com/touren/eisklettern/die-bruecke-von-khazad-dum/;;O
+397;Die Brücke von Khazad -Dûm;47,60320000;15,11380000;1716.635498046875;;M8+ / WI6-;;;;;77;https://www.bergsteigen.com/touren/eisklettern/die-bruecke-von-khazad-dum/;;E
 398;Die linke Hand des Teufels - Pirschschneid;47,55104000;11,47320000;;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/die-linke-hand-des-teufels-pirschschneid/;;N
 399;Diesbachfall;47,49870000;12,80410000;715.26043701171875;;WI3+;;;;;230;https://www.bergsteigen.com/touren/eisklettern/diesbachfall/;;SW
 400;Direkt Nord - Mittlerer Maurerkeeskopf;47,07629000;12,26722000;3292.167236328125;;M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/direkt-nord-mittlerer-maurerkeeskopf/;;N
@@ -412,26 +412,26 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 425;Eiskrampus;47,20300000;12,71490000;1758.2030029296875;;WI4-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/eiskrampus/;;N
 426;Eissalon;;;;;WI4-;;;;;;https://www.bergsteigen.com/touren/eisklettern/eissalon/;;
 427;Eistänzer - Bletterbachschlucht Gorz;46,35750000;11,43620000;;;WI6+ / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/eistaenzer-bletterbachschlucht/;;N
-428;Eisträumer;47,13130000;12,62900000;2231.64453125;;WI4;;;;;81;https://www.bergsteigen.com/touren/eisklettern/eistraeumer/;;O
-429;Eiswalzer - Grünseefälle;47,15510000;12,61820000;1951.0899658203125;;WI5+;;;;;67;https://www.bergsteigen.com/touren/eisklettern/eiswalzer-gruenseefaelle/;;NO
-430;Eiswelt Murau;47,11044363;14,16330814;801.238525390625;;WI5-;;;;;80;https://www.bergsteigen.com/touren/eisklettern/eiswelt-murau/;;O
+428;Eisträumer;47,13130000;12,62900000;2231.64453125;;WI4;;;;;81;https://www.bergsteigen.com/touren/eisklettern/eistraeumer/;;E
+429;Eiswalzer - Grünseefälle;47,15510000;12,61820000;1951.0899658203125;;WI5+;;;;;67;https://www.bergsteigen.com/touren/eisklettern/eiswalzer-gruenseefaelle/;;NE
+430;Eiswelt Murau;47,11044363;14,16330814;801.238525390625;;WI5-;;;;;80;https://www.bergsteigen.com/touren/eisklettern/eiswelt-murau/;;E
 431;El Aspirante - Felbertauern Nord;47,16410000;12,53390000;1671.8143310546875;;M6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/el-aspirante-felbertauern-nord/;;N
 432;El Nino - Felbertauern Nord;47,16410000;12,53390000;1671.8143310546875;;M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/el-nino-felbertauern-nord/;;N
-433;Erlkönig;47,22660000;12,58580000;1027.09521484375;;WI5-;;;;;35;https://www.bergsteigen.com/touren/eisklettern/erlkoenig/;;NO
+433;Erlkönig;47,22660000;12,58580000;1027.09521484375;;WI5-;;;;;35;https://www.bergsteigen.com/touren/eisklettern/erlkoenig/;;NE
 434;Evolution - Langental;46,57032000;11,80343000;;;M9+ / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/evolution-langental/;;N
 435;Exit;46,67030000;12,15030000;;;M8-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/exit/;;N
 436;Eywa - Pordoi Westwand;46,50404500;11,80174400;;;WI6 / M6 / 5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/eywa-pordoi-westwand/;;N
-437;Facilides Direkt - Großglockner;47,07550000;12,75140000;2369.66015625;;75°;;;;;107;https://www.bergsteigen.com/touren/eisklettern/facilides-direkt/;;O
+437;Facilides Direkt - Großglockner;47,07550000;12,75140000;2369.66015625;;75°;;;;;107;https://www.bergsteigen.com/touren/eisklettern/facilides-direkt/;;E
 438;Fahrenheit - Grünseefälle;47,15484600;12,61861400;1911.844482421875;;M8 / WI6-;;;;;10;https://www.bergsteigen.com/touren/eisklettern/fahrenheit-gruenseefaelle/;;N
 439;Fallbachwand;47,12570000;9,96286000;836.02032470703125;;WI5- / M4;;;;;0;https://www.bergsteigen.com/touren/eisklettern/fallbachwand/;;N
-440;Falleralmfall - Matlatal;47,00787800;13,43648000;919.64752197265625;;WI3+;;;;;41;https://www.bergsteigen.com/touren/eisklettern/falleralmfall-matlatal/;;NO
+440;Falleralmfall - Matlatal;47,00787800;13,43648000;919.64752197265625;;WI3+;;;;;41;https://www.bergsteigen.com/touren/eisklettern/falleralmfall-matlatal/;;NE
 441;Farchtenseefall;46,67919500;13,47466100;1047.9808349609375;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/farchtenseefall/;;N
 442;Federweissfall - Anlauftal;47,06690000;13,12850000;1583.2801513671875;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/federweissfall/;;N
 443;Felber Mixed - Felbertal;47,16390000;12,53430000;1627.8671875;;M6+ / M8-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/felber-mixed-felbertal/;;N
 444;Feng Shui - Mölltal Kaltenbrunnerwald;46,88159300;12,89121400;1114.6712646484375;;WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/feng-shui-moelltal-kaltenbrunnerwald/;;N
-445;Fenstergucker - Anlauftal;47,06660000;13,12890000;1579.17138671875;;WI5;;;;;23;https://www.bergsteigen.com/touren/eisklettern/fenstergucker-1/;;NO
+445;Fenstergucker - Anlauftal;47,06660000;13,12890000;1579.17138671875;;WI5;;;;;23;https://www.bergsteigen.com/touren/eisklettern/fenstergucker-1/;;NE
 446;Feuertaufe - Hochflachkofel Westwand;46,89778190;12,11708580;;;55° / M5+ / WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/feuertaufe-hochflachkofel-westwand/;;N
-447;Fletschhorn Nordwand;46,17510000;8,00298000;3185.650390625;;60°;;;;;26;https://www.bergsteigen.com/touren/eisklettern/fletschhorn-nordwand/;;NO
+447;Fletschhorn Nordwand;46,17510000;8,00298000;3185.650390625;;60°;;;;;26;https://www.bergsteigen.com/touren/eisklettern/fletschhorn-nordwand/;;NE
 448;Fossil - Bletterbachschlucht Gorz;46,35836270;11,43632150;;;M7+ / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/fossil-bletterbachschlucht-gorz/;;N
 449;Fragments of Light - M&N;47,01498000;13,31596000;3022.25;;70° / M6 / WI4 / 5;;;;;291;https://www.bergsteigen.com/touren/eisklettern/fragments-of-light-mn/;;W
 450;French Style - Hochstaufen;47,75696000;12,85271000;;;60° / M6- / M5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/french-style-hochstaufen/;;N
@@ -440,23 +440,23 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 453;Fronau Eisfall;47,68030000;12,83640000;;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/fronau-eisfall/;;N
 454;Froschmaul;47,21680000;13,11630000;940.1473388671875;;WI3;;;;;323;https://www.bergsteigen.com/touren/eisklettern/froschmaul/;;NW
 455;Fuchsfarm - Napplach;46,87688900;13,28390100;671.08209228515625;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/fuchsfarm-napplach/;;N
-456;Fuck the system - Felbertauern Nord;47,16680000;12,53340000;1574.5982666015625;;M7+ / WI5;;;;;105;https://www.bergsteigen.com/touren/eisklettern/fuck-the-system-felbertauern-nord/;;O
+456;Fuck the system - Felbertauern Nord;47,16680000;12,53340000;1574.5982666015625;;M7+ / WI5;;;;;105;https://www.bergsteigen.com/touren/eisklettern/fuck-the-system-felbertauern-nord/;;E
 457;Full contact - Murfreit Turm;46,53983100;11,80236500;;;M9;;;;;15;https://www.bergsteigen.com/touren/eisklettern/full-contact-murfreit-turm/;;N
 458;Fuscherkarkopf (FKK) - Nordwand;47,10130000;12,74470000;3098.038330078125;;50° / 2;;;;;6;https://www.bergsteigen.com/touren/eisklettern/fuscherkarkopf-fkk-nordwand/;;N
 459;Futura - Sappada;;;;;WI3+;;;;;;https://www.bergsteigen.com/touren/eisklettern/futura-sappada/;;
 460;Futura West - Sappada;46,57933200;12,63915600;;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/futura-west-sappada/;;N
 461;Futurewall - Gastein;47,07136000;13,06948000;1452.033447265625;;WI6 / M9;;;;;15;https://www.bergsteigen.com/touren/eisklettern/futurewall-gastein/;;N
-462;Gaisloch - Rax;47,72580000;15,74950000;1335.047607421875;;WI5 / M7;;;;;38;https://www.bergsteigen.com/touren/eisklettern/gaisloch-rax/;;NO
-463;Gamseckfall - Maltatal;47,01630000;13,40620000;1421.438232421875;;WI4+;;;;;79;https://www.bergsteigen.com/touren/eisklettern/gamseckfall-maltatal/;;O
+462;Gaisloch - Rax;47,72580000;15,74950000;1335.047607421875;;WI5 / M7;;;;;38;https://www.bergsteigen.com/touren/eisklettern/gaisloch-rax/;;NE
+463;Gamseckfall - Maltatal;47,01630000;13,40620000;1421.438232421875;;WI4+;;;;;79;https://www.bergsteigen.com/touren/eisklettern/gamseckfall-maltatal/;;E
 464;Gläserne Madonna - Grünseefälle;47,15720000;12,61620000;1882.8387451171875;;WI5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/glaeserne-madonna-gruenseefaelle/;;N
 465;Glaspalast;47,28500000;13,07740000;798.90277099609375;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/glaspalast/;;N
 466;Glaucom Eisfall - Luttach;46,97429630;11,88754550;;;WI4- / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/glaucom-eisfall-luttach/;;N
 467;Glockner NW - Aschenbrenner;47,07760000;12,69710000;3200.230224609375;;70° / 4+;;;;;18;https://www.bergsteigen.com/touren/eisklettern/glockner-nw-aschenbrenner/;;N
 468;Gnadenlos;46,51760000;10,53090000;;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/gnadenlos/;;N
 469;Godzilla - Langental;46,57960000;11,79960000;;;M9+ / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/godzilla-langental/;;N
-470;Göll Ostwand;47,60090000;13,07580000;1513.6895751953125;;50°;;;;;56;https://www.bergsteigen.com/touren/eisklettern/goell-ostwand/;;NO
-471;Gösser Virus - Felbertauern Nord;47,16680000;12,53340000;1574.5982666015625;;M7;;;;;105;https://www.bergsteigen.com/touren/eisklettern/goesser-virus-felbertauern-nord/;;O
-472;Grabenwaldfall - Mallnitzer Tauerntal;46,99515600;13,11524100;1646.58544921875;;WI3+;;;;;96;https://www.bergsteigen.com/touren/eisklettern/grabenwaldfall-mallnitzer-tauerntal/;;O
+470;Göll Ostwand;47,60090000;13,07580000;1513.6895751953125;;50°;;;;;56;https://www.bergsteigen.com/touren/eisklettern/goell-ostwand/;;NE
+471;Gösser Virus - Felbertauern Nord;47,16680000;12,53340000;1574.5982666015625;;M7;;;;;105;https://www.bergsteigen.com/touren/eisklettern/goesser-virus-felbertauern-nord/;;E
+472;Grabenwaldfall - Mallnitzer Tauerntal;46,99515600;13,11524100;1646.58544921875;;WI3+;;;;;96;https://www.bergsteigen.com/touren/eisklettern/grabenwaldfall-mallnitzer-tauerntal/;;E
 473;Gran Paradiso - Nordwestwand;45,52120000;7,26441000;3649.04541015625;;55° / WI3;;;;;321;https://www.bergsteigen.com/touren/eisklettern/gran-paradiso-nordwestwand/;;NW
 474;Grandes Jorasses - direktes Leichentuch;45,87290000;6,98651000;3356.791748046875;;90°;;;;;3;https://www.bergsteigen.com/touren/eisklettern/grandes-jorasses-direktes-leichentuch/;;N
 475;Grießbachfall;47,20630000;12,73140000;1455.6141357421875;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/griessbachfall/;;N
@@ -465,7 +465,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 478;Grosser und Kleiner Prissianer Eisfall;46,50594200;11,19084000;;;WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/grosser-und-kleiner-prissianer-eisfall/;;N
 479;Großlaabfall - Mallnitzer Tauerntal;46,99440400;13,11118400;1785.7388916015625;;WI5+;;;;;312;https://www.bergsteigen.com/touren/eisklettern/grosslaabfall-mallnitzer-tauerntal/;;NW
 480;Grotte Gampenpass;46,53140000;11,13820000;;;M12;;;;;15;https://www.bergsteigen.com/touren/eisklettern/grotte-gampenpass/;;N
-481;Grundeis - Maltatal;46,99917837;13,44812393;868.755615234375;;WI6+;;;;;38;https://www.bergsteigen.com/touren/eisklettern/grundeis-maltatal/;;NO
+481;Grundeis - Maltatal;46,99917837;13,44812393;868.755615234375;;WI6+;;;;;38;https://www.bergsteigen.com/touren/eisklettern/grundeis-maltatal/;;NE
 482;Guasborscht;46,67040000;12,15050000;;;M6 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/guasborscht/;;N
 483;Gullyvers Reisen - Val Lasties;46,51106700;11,79553700;;;M6 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/gullyvers-reisen-val-lasties/;;N
 484;Gussenbauerrinne;47,01604152;13,31841230;3098.30029296875;;55°;;;;;300;https://www.bergsteigen.com/touren/eisklettern/gussenbauerrinne/;;NW
@@ -474,7 +474,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 487;Hakenschreck - Hörndlwand;47,70787550;12,58781080;;;M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hakenschreck-hoerndlwand/;;N
 488;Hakuna Matata, Wasserkopf Nordwand;46,89590000;12,05440000;;;M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hakuna-matata-wasserkopf-nordwand/;;N
 489;Happy New Year - Langental;46,57187900;11,80095200;;;M6+ / M5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/happy-new-year-langental/;;N
-490;Hausfreund - Goldeck;46,78115300;13,47809600;685.49072265625;;WI3;;;;;96;https://www.bergsteigen.com/touren/eisklettern/hausfreund-goldeck/;;O
+490;Hausfreund - Goldeck;46,78115300;13,47809600;685.49072265625;;WI3;;;;;96;https://www.bergsteigen.com/touren/eisklettern/hausfreund-goldeck/;;E
 491;Heckmair-Route Eiger Nordwand;46,58200000;7,99445000;2294.75146484375;;60° / M6 / WI5 / 5;;;;;339;https://www.bergsteigen.com/touren/eisklettern/heckmair-route-eiger-nordwand/;;N
 492;Hello woman of my dreams + Diva's line;46,15970000;10,51080000;;;M8;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hello-woman-of-my-dreams-divas-line/;;N
 493;Helmlos-Hirnlos - Koflachgraben;46,66518600;13,62050800;821.82086181640625;;WI4-;;;;;320;https://www.bergsteigen.com/touren/eisklettern/helmlos-hirnlos-koflachgraben/;;NW
@@ -484,14 +484,14 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 497;Himmelsleiter - Amphitheater Pinnisalm;;;;;WI7- / 7;;;;;;https://www.bergsteigen.com/touren/eisklettern/himmelsleiter-amphitheater-pinnisalm/;;
 498;Himmelsleiter - Val Travenanzes;46,57686000;12,06119000;;;WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/himmelsleiter-val-travenanzes/;;N
 499;Hintersee Eisfall;47,19444061;12,46700406;1505.470947265625;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hintersee-eisfall/;;N
-500;Eisschild - Felbertal - Felbertauern Nord;47,19409700;12,46991020;1389.2603759765625;;WI4+;;;;;87;https://www.bergsteigen.com/touren/eisklettern/hintersee-eisschild/;;O
+500;Eisschild - Felbertal - Felbertauern Nord;47,19409700;12,46991020;1389.2603759765625;;WI4+;;;;;87;https://www.bergsteigen.com/touren/eisklettern/hintersee-eisschild/;;E
 501;Hochalmfall;47,02480000;13,40110000;1185.1580810546875;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hochalmfall/;;N
 502;Hochferner Nordwand;46,98330000;11,70780000;2647.50341796875;;55°;;;;;307;https://www.bergsteigen.com/touren/eisklettern/hochferner-nordwand/;;NW
 503;Hochgall Nordwand;46,91770000;12,14510000;2979.843994140625;;50°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hochgall-nordwand/;;N
 504;Hochgolling - Nordwand;47,26616730;13,75185500;2349.410888671875;;85° / 4+;;;;;297;https://www.bergsteigen.com/touren/eisklettern/hochgolling-nordwand/;;NW
 505;Hochschober Nordflanke;46,94500000;12,69810000;3012.72412109375;;45°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hochschober-nordflanke/;;N
 506;Hochtstubofen Nordwand;47,26890000;14,11360000;2230.056640625;;WI3 / M3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hochtstubofen-nordostwand/;;N
-507;Hochzeitsmarsch - Maltatal;46,99694400;13,44638900;989.056640625;;WI5;;;;;68;https://www.bergsteigen.com/touren/eisklettern/hochzeitsmarsch-maltatal/;;O
+507;Hochzeitsmarsch - Maltatal;46,99694400;13,44638900;989.056640625;;WI5;;;;;68;https://www.bergsteigen.com/touren/eisklettern/hochzeitsmarsch-maltatal/;;E
 508;Höhkarfall - Anlauftal;47,06660000;13,13230000;1524.0611572265625;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/hoehkarfall/;;N
 509;Höllkogel Direkte Südwand / Gerade Südschlucht;47,79410000;13,66400000;935.00994873046875;;M3;;;;;291;https://www.bergsteigen.com/touren/eisklettern/hoellkogel-direkte-suedwand-gerade-suedschlucht/;;W
 510;Hohe Kammer - Nordwand Couloir;47,20743000;12,70022000;2153.552001953125;;60° / M5;;;;;3;https://www.bergsteigen.com/touren/eisklettern/hohe-kammer-nordwand-couloir/;;N
@@ -520,7 +520,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 533;Kammerwandgrotte - Reichenau;47,71055000;15,85388000;808.69891357421875;;WI3 / WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kammerwandgrotte-reichenau/;;N
 534;Karwendeleisfall - Karwendelbahn Mittenwald;47,43040000;11,29510000;2207.93359375;;WI5 / M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/karwendeleisfall-karwendelbahn-mittenwald/;;N
 535;Kasmarie;47,69760000;12,79860000;;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kasmarie/;;N
-536;Kerschhacklfall - Maltatal;47,00290100;13,44328400;903.3642578125;;WI5+;;;;;52;https://www.bergsteigen.com/touren/eisklettern/kerschhacklfall-maltatal/;;NO
+536;Kerschhacklfall - Maltatal;47,00290100;13,44328400;903.3642578125;;WI5+;;;;;52;https://www.bergsteigen.com/touren/eisklettern/kerschhacklfall-maltatal/;;NE
 537;Kessel-Eisarena;47,73260000;13,69620000;797.271240234375;;WI5+ / M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kessel-eisarena/;;N
 538;Kessel über Lindenbrunner Wasserfall;47,99420000;15,60090000;603.09564208984375;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kessel-ueber-lindenbrunner-wasserfall/;;N
 539;Kesselfall;47,21872282;12,73004293;1074.88427734375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kesselfall/;;N
@@ -536,7 +536,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 549;Höllendonner - Höllental Rax;47,72900000;15,75550000;1069.0042724609375;;WI4 / M4;;;;;284;https://www.bergsteigen.com/touren/eisklettern/kopie-av-eisschlauch/;;W
 550;Hybrid - Mur de Pisciadù;46,54230000;11,82380000;;;M8+ / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kopie-eisfall-mur-de-pisciadu/;;N
 551;Via l cajin - Pordoi Westwand;46,50404500;11,80174400;;;WI6 / 7 / 7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kopie-eywa-pordoi-westwand/;;N
-552;Ursprung Eisfall - Reintal / Taufers;46,93108260;12,11599740;2165.19970703125;;WI3 / WI4;;;;;69;https://www.bergsteigen.com/touren/eisklettern/kopie-knecht-ruprecht-reintal-taufers/;;O
+552;Ursprung Eisfall - Reintal / Taufers;46,93108260;12,11599740;2165.19970703125;;WI3 / WI4;;;;;69;https://www.bergsteigen.com/touren/eisklettern/kopie-knecht-ruprecht-reintal-taufers/;;E
 553;Ursprung Couloir - Reintal / Taufers;46,92971760;12,11408340;;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kopie-ursprung-eisfall-reintal-taufers/;;N
 554;Birthday Crack - Langental;46,57786870;11,79980670;;;M5+ / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/kopie-zauberfloete-und-papageno-langental/;;N
 555;Krampen Eisgully;47,67140000;15,53260000;797.1531982421875;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/krampen-eisgully/;;N
@@ -554,20 +554,20 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 567;Le Tre Grazie - Sappada;46,57545795;12,64664769;;;70° / WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/le-tre-grazie-sappada/;;N
 568;Lee - Großer Rauchkofel;46,89568500;12,04055800;;;M5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lee-rauchkofel/;;N
 569;Left from Love - Cima de lis Codis;46,43133400;13,47351200;;;M7+ / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/left-from-love-cima-de-lis-codis/;;N
-570;Lenzspitze NO-Wand;46,10770000;7,87020000;3853.86474609375;;55° / 3;;;;;52;https://www.bergsteigen.com/touren/eisklettern/lenzspitze-no-wand/;;NO
+570;Lenzspitze NO-Wand;46,10770000;7,87020000;3853.86474609375;;55° / 3;;;;;52;https://www.bergsteigen.com/touren/eisklettern/lenzspitze-no-wand/;;NE
 571;Let it go - Bletterbachschlucht - Butterloch;46,36250000;11,41660000;;;WI7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/let-it-go-bletterbachschlucht-butterloch/;;N
 572;Lifeline - Madrisa Nordwand;46,94750000;9,88722200;2209.021728515625;;M6+ / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lifeline-madrisa-nordwand/;;N
 573;Lindenbrunner Wasserfall;47,99420000;15,60090000;603.09564208984375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lindenbrunner-wasserfall/;;N
 574;Linker Breiteneben Fall;47,26582742;13,20827007;932.03564453125;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-breiteneben-fall/;;N
 575;Linker Doppellutscher;47,07750000;13,09410000;1377.1588134765625;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-doppellutscher/;;N
-576;Linker Gamseckfall;47,70490000;15,66880000;1337.8853759765625;;WI5;;;;;24;https://www.bergsteigen.com/touren/eisklettern/linker-gamseckfall/;;NO
+576;Linker Gamseckfall;47,70490000;15,66880000;1337.8853759765625;;WI5;;;;;24;https://www.bergsteigen.com/touren/eisklettern/linker-gamseckfall/;;NE
 577;Linker Kraftwerksfall;47,76181595;13,18573952;591.42901611328125;;WI5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-kraftwerksfall/;;N
 578;Linker Nordportalfall;47,16420000;12,53410000;1613.1302490234375;;WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-nordportalfall/;;N
 579;Linker Schanigbachfall - Mallnitzer Tauerntal;46,99568800;13,10848700;1778.3780517578125;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-schanigbachfall-mallnitzer-tauerntal/;;N
 580;Linker Schergenwieser Eisfall;47,60109926;11,57641411;;;WI3-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-schergenwieser-eisfall/;;N
 581;Linker und Rechter Hochgolling Fall;47,27239300;13,76740600;2016.2049560546875;;M6 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-und-rechter-hochgolling-fall/;;N
 582;Linker und Rechter Kuanzen Tschatter Eisfall;46,47474540;10,67510540;;;WI4 / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/linker-und-rechter-kuanzen-tschatter-eisfall/;;N
-583;Links Aussen;47,16390000;12,53430000;1627.8671875;;WI5+;;;;;84;https://www.bergsteigen.com/touren/eisklettern/links-aussen/;;O
+583;Links Aussen;47,16390000;12,53430000;1627.8671875;;WI5+;;;;;84;https://www.bergsteigen.com/touren/eisklettern/links-aussen/;;E
 584;Little Hulk;47,59507000;15,13477000;1434.7838134765625;;WI6- / M5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/little-hulk/;;N
 585;Lo Specchio di Biancaneve - Sappada;46,55292100;12,69345500;;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lo-specchio-di-biancaneve-sappada/;;N
 586;Löxalmfall;47,08621793;13,56418848;1199.56591796875;;WI5+;;;;;233;https://www.bergsteigen.com/touren/eisklettern/loexalmfall/;;SW
@@ -578,29 +578,29 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 591;Lúa - Langental;46,57700000;11,78940000;;;M10 / WI6+ / 6+/7-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lua-langental/;;N
 592;Lucky Strike - Val Travenanzes;46,57766400;12,06656100;;;M8 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lucky-strike-val-travenanzes/;;N
 593;Lujanta - Sella;46,54546000;11,82760000;;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lujanta-sella/;;N
-594;Lumberjack;47,16490000;12,53430000;1599.1446533203125;;M7;;;;;61;https://www.bergsteigen.com/touren/eisklettern/lumberjack/;;NO
+594;Lumberjack;47,16490000;12,53430000;1599.1446533203125;;M7;;;;;61;https://www.bergsteigen.com/touren/eisklettern/lumberjack/;;NE
 595;Lumina - Wildgall Nordostpfeiler;46,90450000;12,13690000;2922.561279296875;;60° / M8- / A0;;;;;15;https://www.bergsteigen.com/touren/eisklettern/lumina-wildgall-nordostpfeiler/;;N
 596;Lung Eisfall;47,20787860;12,51389980;1285.7432861328125;;WI4;;;;;249;https://www.bergsteigen.com/touren/eisklettern/lung-eisfall/;;W
-597;Lyskamm Nordwand;45,92753300;7,83809900;3824.748291015625;;M4 / 55° / 4/4+;;;;;27;https://www.bergsteigen.com/touren/eisklettern/lyskamm-nordwand/;;NO
+597;Lyskamm Nordwand;45,92753300;7,83809900;3824.748291015625;;M4 / 55° / 4/4+;;;;;27;https://www.bergsteigen.com/touren/eisklettern/lyskamm-nordwand/;;NE
 598;Malaga;47,59641121;15,13817310;1479.6702880859375;;WI5;;;;;340;https://www.bergsteigen.com/touren/eisklettern/malaga/;;N
 599;Mario - Dösner Tal;46,98180400;13,22350500;1573.338623046875;;WI6 / M3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mario-doesner-tal/;;N
 600;Marmolada NW-Wand;46,43910666;11,84208155;;;45°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/marmolada-nw-wand/;;N
 601;Matrix;47,59507000;15,13477000;1434.7838134765625;;WI6-;;;;;317;https://www.bergsteigen.com/touren/eisklettern/matrix/;;NW
-602;Matterhorn Nordwand - Schmid Route;45,98331000;7,66889400;3195.407470703125;;80° / WI4+ / M4 / 5-/5;;;;;32;https://www.bergsteigen.com/touren/eisklettern/matterhorn-nordwand-schmid-route/;;NO
+602;Matterhorn Nordwand - Schmid Route;45,98331000;7,66889400;3195.407470703125;;80° / WI4+ / M4 / 5-/5;;;;;32;https://www.bergsteigen.com/touren/eisklettern/matterhorn-nordwand-schmid-route/;;NE
 603;Mauerblümchen - Sektor Bahnwärter - Hochstegtunnel Gesäuse;47,59166700;14,69666700;588.116943359375;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mauerbluemchen-sektor-bahnwaerter-hochstegtunnel-gesaeuse/;;N
-604;Mayerlrampe - Großglockner;47,07840000;12,69270000;3248.470947265625;;70° / 3;;;;;48;https://www.bergsteigen.com/touren/eisklettern/mayerlrampe/;;NO
+604;Mayerlrampe - Großglockner;47,07840000;12,69270000;3248.470947265625;;70° / 3;;;;;48;https://www.bergsteigen.com/touren/eisklettern/mayerlrampe/;;NE
 605;Mein Schatz - Hinteres Seebachtal;47,01575100;13,25713100;1518.5775146484375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mein-schatz-hinteres-seebachtal/;;N
 606;MfG Rastentalfall - Reintal;46,93540000;12,05120000;;;M9 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mfg-rastentalfall-reintal/;;N
-607;Michltal - Geünter - Eisfall;47,03380800;12,30581800;1819.0670166015625;;WI4+;;;;;34;https://www.bergsteigen.com/touren/eisklettern/michltal-geuenter/;;NO
+607;Michltal - Geünter - Eisfall;47,03380800;12,30581800;1819.0670166015625;;WI4+;;;;;34;https://www.bergsteigen.com/touren/eisklettern/michltal-geuenter/;;NE
 608;Milchtrinker Eisfall - Reintal / Taufers;46,93627660;12,04305410;;;WI4-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/milchtrinker-eisfall-reintal-taufers/;;N
 609;Mission Impossible - Langental;46,57563000;11,78717000;;;90° / WI6 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mission-impossible-langental/;;N
 610;Mittlerer Maralmfall - Maltatal;47,03156000;13,39284000;1349.804931640625;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mittlerer-maralmfall-maltatal/;;N
-611;Mittlerer Nordportalfall;47,16430000;12,53410000;1605.575439453125;;WI5;;;;;77;https://www.bergsteigen.com/touren/eisklettern/mittlerer-nordportalfall/;;O
+611;Mittlerer Nordportalfall;47,16430000;12,53410000;1605.575439453125;;WI5;;;;;77;https://www.bergsteigen.com/touren/eisklettern/mittlerer-nordportalfall/;;E
 612;Mixedland Adlitzgräben;47,65740000;15,79250000;873.53582763671875;;M6- / M10;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mixedland-adlitzgraeben/;;N
 613;Monozack;47,47069000;12,84473000;743.7325439453125;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/monozack/;;N
 614;Monte Pasquale Nordwestwand;46,44770000;10,59450000;;;50°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/monte-pasquale-nordwestwand/;;N
-615;Monte Rosa Ostwand;45,94220000;7,88745000;3115.470703125;;55° / 3-;;;;;91;https://www.bergsteigen.com/touren/eisklettern/monte-rosa-ostwand/;;O
-616;Morbus Brexit - Aggenstein Nordostwand;47,53762000;10,55979000;1768.0960693359375;;M7 / WI4+;;;;;59;https://www.bergsteigen.com/touren/eisklettern/morbus-brexit-aggenstein-nordostwand/;;NO
+615;Monte Rosa Ostwand;45,94220000;7,88745000;3115.470703125;;55° / 3-;;;;;91;https://www.bergsteigen.com/touren/eisklettern/monte-rosa-ostwand/;;E
+616;Morbus Brexit - Aggenstein Nordostwand;47,53762000;10,55979000;1768.0960693359375;;M7 / WI4+;;;;;59;https://www.bergsteigen.com/touren/eisklettern/morbus-brexit-aggenstein-nordostwand/;;NE
 617;Mordor - Anlauftal;47,06770000;13,12590000;1823.462890625;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/mordor/;;N
 618;Mürzstegerfall;47,68020000;15,48900000;787.58184814453125;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/muerzstegerfall/;;N
 619;Namenlos - Bletterbachschlucht - Butterloch;46,35921300;11,43303400;;;WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/namenlos-bletterbachschlucht-butterloch/;;N
@@ -611,7 +611,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 624;Nollen - Route (Nordwestbollwerk);46,56170000;7,97908000;3021.58203125;;70°;;;;;300;https://www.bergsteigen.com/touren/eisklettern/nollen-route-nordwestbollwerk/;;NW
 625;Nordportal Gully;47,16680000;12,53340000;1574.5982666015625;;WI5 / M3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/nordportal-gully/;;N
 626;Nosferatu - Mixedvariante;46,50440000;11,19480000;;;M9 / WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/nosferatu-mixedvariante/;;N
-627;Now or Never - Göll Ostwand;47,59705100;13,08050000;1472.9111328125;;70° / M5;;;;;96;https://www.bergsteigen.com/touren/eisklettern/now-or-never-goell-ostwand/;;O
+627;Now or Never - Göll Ostwand;47,59705100;13,08050000;1472.9111328125;;70° / M5;;;;;96;https://www.bergsteigen.com/touren/eisklettern/now-or-never-goell-ostwand/;;E
 628;Nur für Wenige - Sella;46,54315000;11,85376000;;;80° / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/nur-fuer-wenige-sella/;;N
 629;Nutze den Tag - Felbertauern Nord;47,15437800;12,54418900;1940.794189453125;;M5;;;;;263;https://www.bergsteigen.com/touren/eisklettern/nutze-den-tag-felbertauern-nord/;;W
 630;Oberer Teil / Thun-Klamm;47,25708298;12,73680210;837.32672119140625;;WI4 / M10;;;;;15;https://www.bergsteigen.com/touren/eisklettern/oberer-teil-thun-klamm/;;N
@@ -634,9 +634,9 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 647;Powerplay - Vorderes Seebachtal;47,01611600;13,20207700;1500.8660888671875;;WI5+;;;;;347;https://www.bergsteigen.com/touren/eisklettern/powerplay-vorderes-seebachtal/;;N
 648;Präludium Göll Ostwand;47,60055000;13,06918000;1661.39599609375;;85° / WI3+ / M4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/praeludium-goell-ostwand/;;N
 649;Premio Darwin - Langental;46,57032000;11,80343000;;;WI5+ / M7-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/premio-darwin-langental/;;N
-650;Psycho Eisfall;47,64460000;13,11830000;535.05126953125;;WI7;;;;;123;https://www.bergsteigen.com/touren/eisklettern/psycho-eisfall/;;SO
+650;Psycho Eisfall;47,64460000;13,11830000;535.05126953125;;WI7;;;;;123;https://www.bergsteigen.com/touren/eisklettern/psycho-eisfall/;;SE
 651;Pumpolaris;47,47069000;12,84473000;743.7325439453125;;WI5;;;;;175;https://www.bergsteigen.com/touren/eisklettern/pumpolaris/;;S
-652;Punkheitserreger - Aggenstein;47,53794280;10,56067760;1650.48876953125;;50° / M6;;;;;60;https://www.bergsteigen.com/touren/eisklettern/punkheitserreger-aggenstein/;;NO
+652;Punkheitserreger - Aggenstein;47,53794280;10,56067760;1650.48876953125;;50° / M6;;;;;60;https://www.bergsteigen.com/touren/eisklettern/punkheitserreger-aggenstein/;;NE
 653;Queen;47,16690000;12,53240000;1616.5306396484375;;M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/queen/;;N
 654;Räuber Hotzenplotz - Reintal;46,92055000;12,00406000;;;M9 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/raeuber-hotzenplotz-reintal/;;N
 655;Rapunzel - Heiligkreuzkofel;46,62372500;11,94862000;;;WI6+ / M8;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rapunzel-heiligkreuzkofel/;;N
@@ -644,13 +644,13 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 657;Rechte Gipfelrinne - Bosruck;47,62617000;14,34746000;1586.6502685546875;;55°;;;;;19;https://www.bergsteigen.com/touren/eisklettern/rechte-gipfelrinne-bosruck/;;N
 658;Rechte Nordwandrinne - Scheißhäuslrinne;47,05630000;12,95540000;2707.096923828125;;50° / 3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rechte-nordwandrinne-scheisshaeuslrinne/;;N
 659;Rechter Doppellutscher;47,07720000;13,09470000;1428.8853759765625;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rechter-doppellutscher/;;N
-660;Rechter Dreifaltigkeitsfall;47,00970000;13,43070000;1037.6697998046875;;WI3;;;;;43;https://www.bergsteigen.com/touren/eisklettern/rechter-dreifaltigkeitsfall/;;NO
+660;Rechter Dreifaltigkeitsfall;47,00970000;13,43070000;1037.6697998046875;;WI3;;;;;43;https://www.bergsteigen.com/touren/eisklettern/rechter-dreifaltigkeitsfall/;;NE
 661;Rechter Gamseckfall (Nr.1);47,70430000;15,66820000;1325.711181640625;;WI3+;;;;;294;https://www.bergsteigen.com/touren/eisklettern/rechter-gamseckfall-nr1/;;NW
-662;Rechter Nordportalfall;47,16480000;12,53450000;1583.111083984375;;WI5;;;;;78;https://www.bergsteigen.com/touren/eisklettern/rechter-nordportalfall/;;O
-663;Rechter Ödalmfall;47,15520000;12,53570000;1766.619873046875;;WI3;;;;;47;https://www.bergsteigen.com/touren/eisklettern/rechter-oedalmfall/;;NO
+662;Rechter Nordportalfall;47,16480000;12,53450000;1583.111083984375;;WI5;;;;;78;https://www.bergsteigen.com/touren/eisklettern/rechter-nordportalfall/;;E
+663;Rechter Ödalmfall;47,15520000;12,53570000;1766.619873046875;;WI3;;;;;47;https://www.bergsteigen.com/touren/eisklettern/rechter-oedalmfall/;;NE
 664;Rechts von Stella Cadente Sella Campolongopass;46,52862000;11,84259000;;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rechts-von-stella-cadente-sella-campolongopass/;;N
 665;Redmixed - Hörndlwand;47,70750200;12,58628500;;;M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/redmixed-hoerndlwand/;;N
-666;Reiteralm Eisfall;47,22368154;12,48559713;1054.3935546875;;WI3+;;;;;75;https://www.bergsteigen.com/touren/eisklettern/reiteralm-eisfall/;;O
+666;Reiteralm Eisfall;47,22368154;12,48559713;1054.3935546875;;WI3+;;;;;75;https://www.bergsteigen.com/touren/eisklettern/reiteralm-eisfall/;;E
 667;Remember to R.M;47,21890000;13,11930000;931.98468017578125;;WI3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/remember-to-rm/;;N
 668;Riffl Nordwand;47,12450000;12,66580000;3114.23974609375;;60° / 1;;;;;15;https://www.bergsteigen.com/touren/eisklettern/riffl-nordwand/;;N
 669;Ringo - Val di Gares;46,30674900;11,88266200;;;WI5+ / M8;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ringo-val-di-gares/;;N
@@ -661,9 +661,9 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 674;Roundabout - Geierwand-Stubachtal;47,22890208;12,58059025;994.257080078125;;WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/roundabout-geierwand-stubachtal/;;N
 675;Rubi Love - Rubihorn Nordwand;47,42770000;10,31380000;;;M7;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rubi-love-rubihorn-nordwand/;;N
 676;Rubihorn Nordwand;47,42760000;10,31300000;;;45° / 4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/rubihorn-nordwand/;;N
-677;Ruinenorgel;47,27890000;13,07190000;957.0264892578125;;WI5+;;;;;128;https://www.bergsteigen.com/touren/eisklettern/ruinenorgel/;;SO
+677;Ruinenorgel;47,27890000;13,07190000;957.0264892578125;;WI5+;;;;;128;https://www.bergsteigen.com/touren/eisklettern/ruinenorgel/;;SE
 678;Ruppertsklamm;50,31690000;7,62703000;95.98057556152344;;WI2;;;;;170;https://www.bergsteigen.com/touren/eisklettern/ruppertsklamm/;;S
-679;Säkularis - Großglockner Nordwand;47,07816000;12,69407000;3209.493408203125;;60° / M8 / WI3 / 3;;;;;53;https://www.bergsteigen.com/touren/eisklettern/saekularis-grossglockner-nordwand/;;NO
+679;Säkularis - Großglockner Nordwand;47,07816000;12,69407000;3209.493408203125;;60° / M8 / WI3 / 3;;;;;53;https://www.bergsteigen.com/touren/eisklettern/saekularis-grossglockner-nordwand/;;NE
 680;Säule Karlgraben;47,57990000;15,15240000;983.99609375;;WI4;;;;;242;https://www.bergsteigen.com/touren/eisklettern/saeule-karlgraben/;;SW
 681;Sau hladno! - Cima Tosa;46,15490000;10,86504000;;;M5 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/sau-hladno-cima-tosa/;;N
 682;Saukenrinne;47,49400000;12,81070000;709.57891845703125;;WI4;;;;;228;https://www.bergsteigen.com/touren/eisklettern/saukenrinne/;;SW
@@ -675,36 +675,36 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 688;Schareck - Rechte Eisrinne;47,04800000;13,01360000;2472.928466796875;;45° / WI3 / 1+;;;;;348;https://www.bergsteigen.com/touren/eisklettern/schareck-rechte-eisrinne/;;N
 689;Schattenspiel - Königspitze Nordostwand;46,48270000;10,58310000;;;M6 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schattenspiel-koenigspitze-nordostwand/;;N
 690;Schattseitköpfl Nordwand;47,12570000;12,68930000;3002.6416015625;;60° / 2;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schattseitkoepfl-nordwand/;;N
-691;Schatzwand Nord à la Bardeck/Aigner;47,81498900;13,32026200;992.72833251953125;;60° / M3;;;;;33;https://www.bergsteigen.com/touren/eisklettern/schatzwand-nord-a-la-bardeckaigner/;;NO
+691;Schatzwand Nord à la Bardeck/Aigner;47,81498900;13,32026200;992.72833251953125;;60° / M3;;;;;33;https://www.bergsteigen.com/touren/eisklettern/schatzwand-nord-a-la-bardeckaigner/;;NE
 692;Schauu..;47,25749404;12,73719907;839.99432373046875;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schauu/;;N
-693;Scheibenauerbrücke - Hieflau Gesäuse;47,59903900;14,72567400;516.17144775390625;;WI4- / M7+;;;;;108;https://www.bergsteigen.com/touren/eisklettern/scheibenauerbruecke-hieflau-gesaeuse/;;O
+693;Scheibenauerbrücke - Hieflau Gesäuse;47,59903900;14,72567400;516.17144775390625;;WI4- / M7+;;;;;108;https://www.bergsteigen.com/touren/eisklettern/scheibenauerbruecke-hieflau-gesaeuse/;;E
 694;Schleier Wasserfall - Hallstatt;47,55110000;13,62360000;668.17047119140625;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schleier-wasserfall-hallstatt/;;N
 695;Schleierfall;47,84220000;15,22070000;759.7977294921875;;WI3;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schleierfall/;;N
 696;Schlems Doba - Madrisa Nordwand;46,94500000;9,88555000;2494.30810546875;;WI5 / WI5;;;;;17;https://www.bergsteigen.com/touren/eisklettern/schlems-doba-madrisa-nordwand/;;N
 697;Schlund Mixedbereich;47,81550000;15,50630000;893.5029296875;;M8 / M9+;;;;;357;https://www.bergsteigen.com/touren/eisklettern/schlund-mixedbereich/;;N
-698;Schnapp Dir die ....;47,25880000;12,73790000;803.11614990234375;;M8;;;;;101;https://www.bergsteigen.com/touren/eisklettern/schnapp-dir-die/;;O
+698;Schnapp Dir die ....;47,25880000;12,73790000;803.11614990234375;;M8;;;;;101;https://www.bergsteigen.com/touren/eisklettern/schnapp-dir-die/;;E
 699;Schneewinkelkopf Nordwand;47,09910000;12,66210000;3222.422607421875;;70° / 1-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schneewinkelkopf-nordwand/;;N
 700;Schneiderrinne Light - Großglockner;47,07730000;12,69900000;3190.33154296875;;75°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schneiderrinne-light/;;N
 701;Schöne Aussicht;;;;;WI4-;;;;;;https://www.bergsteigen.com/touren/eisklettern/schoene-aussicht-1/;;
-702;Schöntalfall - Feistringgraben;47,56870000;15,26090000;816.85015869140625;;WI3;;;;;95;https://www.bergsteigen.com/touren/eisklettern/schoentalfall-feistringgraben/;;O
+702;Schöntalfall - Feistringgraben;47,56870000;15,26090000;816.85015869140625;;WI3;;;;;95;https://www.bergsteigen.com/touren/eisklettern/schoentalfall-feistringgraben/;;E
 703;Schöttlkarspitze Westwand;47,49343350;11,32748930;;;M5-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schoettlkarspitze-westwand/;;N
 704;Schoßrinn Eisfall;47,74240000;12,29780000;;;WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/schossrinn-eisfall/;;N
-705;Schottenfeldgasse - Grünseefälle;47,15690000;12,61660000;1932.4024658203125;;WI5+;;;;;34;https://www.bergsteigen.com/touren/eisklettern/schottenfeldgasse-gruenseefaelle/;;NO
+705;Schottenfeldgasse - Grünseefälle;47,15690000;12,61660000;1932.4024658203125;;WI5+;;;;;34;https://www.bergsteigen.com/touren/eisklettern/schottenfeldgasse-gruenseefaelle/;;NE
 706;Score in Unterzahl - Vorderes Seebachtal;47,01611600;13,20207700;1500.8660888671875;;WI5 / M7-;;;;;347;https://www.bergsteigen.com/touren/eisklettern/score-in-unterzahl-vorderes-seebachtal/;;N
 707;Seebachfall - Tauerntal;47,07640500;12,52767000;1286.5517578125;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/seebachfall-tauerntal/;;N
 708;Seeblick Eisfall - Sparber bei Strobl;47,70093931;13,46224308;763.47088623046875;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/seeblick-eisfall-sparber-bei-strobl/;;N
 709;Seezapfen - Hintersee;47,19427469;12,46913910;1445.0323486328125;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/seezapfen-hintersee/;;N
 710;Sektor Abstellgleis- Hochstegtunnel Gesäuse;47,59166700;14,69666700;588.116943359375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/sektor-abstellgleis-hochstegtunnel-gesaeuse/;;N
-711;Seltene Erden - Wildgall Nordostwand;46,90450000;12,13690000;2922.561279296875;;M5;;;;;93;https://www.bergsteigen.com/touren/eisklettern/seltene-erden-wildgall-nordostwand/;;O
+711;Seltene Erden - Wildgall Nordostwand;46,90450000;12,13690000;2922.561279296875;;M5;;;;;93;https://www.bergsteigen.com/touren/eisklettern/seltene-erden-wildgall-nordostwand/;;E
 712;Selvaggia Sorte Variante Papert/Lindič - Cima Tosa;46,15490000;10,86504000;;;M6 / WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/selvaggia-sorte-variante-papertlindic-cima-tosa/;;N
 713;Senza piombo - Langental;46,57700000;11,78940000;;;M10 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/senza-piombo-langental/;;N
 714;Silmarill;47,85980000;15,27660000;667.577392578125;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/silmarill/;;N
 715;Simplbach;47,60925195;13,62804651;536.37353515625;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/simplbach/;;N
 716;Singing in the Rain;47,20640000;12,73160000;1449.3463134765625;;WI7-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/singing-in-the-rain/;;N
-717;Sisi`s Alptraum - Loser;47,67136000;13,78724000;1681.0001220703125;;90° / M7 / WI6;;;;;64;https://www.bergsteigen.com/touren/eisklettern/sisis-alptraum-loser/;;NO
+717;Sisi`s Alptraum - Loser;47,67136000;13,78724000;1681.0001220703125;;90° / M7 / WI6;;;;;64;https://www.bergsteigen.com/touren/eisklettern/sisis-alptraum-loser/;;NE
 718;Sloppy Nomic - Rauchkofel Nordwand;46,96061300;11,99758120;;;M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/sloppy-nomic-rauchkofel-nordwand/;;N
 719;Sogno Canadese - Val Travenanzes;46,57766400;12,06656100;;;WI5+ / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/sogno-canadese-val-travenanzes/;;N
-720;Solo für zwei;47,04471608;13,04446220;1959.138671875;;WI4-;;;;;85;https://www.bergsteigen.com/touren/eisklettern/solo-fuer-zwei/;;O
+720;Solo für zwei;47,04471608;13,04446220;1959.138671875;;WI4-;;;;;85;https://www.bergsteigen.com/touren/eisklettern/solo-fuer-zwei/;;E
 721;solo per un altro hashtag inkl. extension - Val Lasties;46,51430400;11,80337600;;;M5+ / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/solo-per-un-altro-hashtag-inkl-extension-val-lasties/;;N
 722;Solospiel - Loser;47,67111110;13,78694444;1707.8447265625;;90° / M7 / M6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/solospiel-loser/;;N
 723;Sonnentanz - Lagental;46,57697000;11,78936000;;;M7+ / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/sonnentanz-lagental/;;N
@@ -714,12 +714,12 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 727;Space Shuttle - Kleine Rodelheilspitze;46,54237600;11,81096520;;;M9- / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/space-shuttle-kleine-rodelheilspitze/;;N
 728;Spaß Sport..;47,25710000;12,73700000;833.43853759765625;;WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/spass-sport/;;N
 729;Speikarena Eisfälle;47,69518400;12,91265800;;;WI3+ / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/speikarena-eisfaelle/;;N
-730;Spiegel der Steinernen Jungfrau;47,55753000;14,78416000;631.65625;;M9 / WI5+;;;;;93;https://www.bergsteigen.com/touren/eisklettern/spiegel-der-steinernen-jungfrau/;;O
+730;Spiegel der Steinernen Jungfrau;47,55753000;14,78416000;631.65625;;M9 / WI5+;;;;;93;https://www.bergsteigen.com/touren/eisklettern/spiegel-der-steinernen-jungfrau/;;E
 731;Spiegelkabinett;47,28270000;13,07750000;794.20953369140625;;WI3+;;;;;271;https://www.bergsteigen.com/touren/eisklettern/spiegelkabinett/;;W
 732;Spieglein an der Wand;47,05880164;13,02817583;1865.9588623046875;;WI3+;;;;;5;https://www.bergsteigen.com/touren/eisklettern/spieglein-an-der-wand/;;N
 733;Spindrift - Murfreit Turm;46,53870900;11,80106300;;;WI5 / M4 / 5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/spindrift-murfreit-turm/;;N
 734;Spitzborscht;46,67030000;12,15030000;;;M8 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/spitzborscht/;;N
-735;Spitzmauer Ostwand;47,69405200;14,06889400;1697.8050537109375;;70° / WI3 / 3/3+;;;;;115;https://www.bergsteigen.com/touren/eisklettern/spitzmauer-ostwand/;;SO
+735;Spitzmauer Ostwand;47,69405200;14,06889400;1697.8050537109375;;70° / WI3 / 3/3+;;;;;115;https://www.bergsteigen.com/touren/eisklettern/spitzmauer-ostwand/;;SE
 736;Springer - Köngispitze Nordwand;46,48550000;10,57910000;;;M7 / WI6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/springer-koengispitze-nordwand/;;N
 737;Srednji Slap - Prisank;46,43206600;13,76164600;;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/srednji-slap-prisnak/;;N
 738;Stangenwand Ostschlucht;47,60655000;15,12195100;1897.612060546875;;50° / WI3 / 3+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/stangenwand-ostschlucht/;;N
@@ -731,7 +731,7 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 744;Steinkar Galerie - Felbertauern Nord;47,15030936;12,54388265;1837.931396484375;;WI5-;;;;;262;https://www.bergsteigen.com/touren/eisklettern/steinkar-galerie-felbertauern-nord/;;W
 745;Stella Cadente - Sternschnuppe - Sella Campolongopass;46,52862000;11,84259000;;;M8 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/stella-cadente-sternschnuppe-sella-campolongopass/;;N
 746;Stierkopf - Eibergfall;47,54044500;12,17933500;573.5726318359375;;M9 / M9;;;;;15;https://www.bergsteigen.com/touren/eisklettern/stierkopf-eiberg-fall/;;N
-747;Streifschuss;46,68283500;13,62735500;787.582275390625;;WI2+;;;;;52;https://www.bergsteigen.com/touren/eisklettern/streifschuss/;;NO
+747;Streifschuss;46,68283500;13,62735500;787.582275390625;;WI2+;;;;;52;https://www.bergsteigen.com/touren/eisklettern/streifschuss/;;NE
 748;Südwandwächter - Großglockner;47,07460600;12,69545325;3658.52880859375;;M5 / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/suedwandwaechter-grossglockner/;;N
 749;Sunblocker - Gindlhorn;47,54278700;14,05567600;958.5311279296875;;M7 / WI5-;;;;;223;https://www.bergsteigen.com/touren/eisklettern/sunblocker-gindlhorn/;;SW
 750;Superdirekte Nordwand - Zugspitze;47,43011100;10,98662800;1850.3486328125;;M6 / A3 / 5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/superdirekte-nordwand-zugspitze/;;N
@@ -744,20 +744,20 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 757;Teufelskamp Nordwand;47,08780000;12,67970000;3417.438232421875;;50°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/teufelskamp-nordwand/;;N
 758;The End - Val di Gares;46,30674900;11,88266200;;;WI4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/the-end-val-di-gares/;;N
 759;The Nameless Route - Rubihorn Nordwand;47,42770000;10,31380000;;;M6+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/the-nameless-route-rubihorn-nordwand/;;N
-760;The sweet taste oft he unexpected - Koflachgraben;46,66858200;13,61025300;889.9586181640625;;M6- / WI4-;;;;;55;https://www.bergsteigen.com/touren/eisklettern/the-sweet-taste-oft-he-unexpected-koflachgraben/;;NO
+760;The sweet taste oft he unexpected - Koflachgraben;46,66858200;13,61025300;889.9586181640625;;M6- / WI4-;;;;;55;https://www.bergsteigen.com/touren/eisklettern/the-sweet-taste-oft-he-unexpected-koflachgraben/;;NE
 761;The Wall;47,29204904;13,50717545;1124.3236083984375;;WI3;;;;;275;https://www.bergsteigen.com/touren/eisklettern/the-wall/;;W
 762;The White Edition - Gfölaner Bruch;46,57620000;10,73224100;;;M7+ / WI5+ / 6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/the-white-edition-gfoelaner-bruch/;;N
-763;Theo-Riml-Gedenkweg - Großglockner;47,07740000;12,69960000;3147.0732421875;;90°;;;;;38;https://www.bergsteigen.com/touren/eisklettern/theo-riml-gedenkweg/;;NO
+763;Theo-Riml-Gedenkweg - Großglockner;47,07740000;12,69960000;3147.0732421875;;90°;;;;;38;https://www.bergsteigen.com/touren/eisklettern/theo-riml-gedenkweg/;;NE
 764;Thors Hammer - Hinteres Seebachtal;47,01575100;13,25713100;1518.5775146484375;;WI6 / M7;;;;;240;https://www.bergsteigen.com/touren/eisklettern/thors-hammer-hinteres-seebachtal/;;SW
 765;Thron der Götter - Hinteres Seebachtal;47,01617000;13,25555000;1498.0579833984375;;WI5+;;;;;312;https://www.bergsteigen.com/touren/eisklettern/thron-der-goetter-hinteres-seebachtal/;;NW
 766;Tigermaul - Langental;46,57136000;11,81302000;;;M8 / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/tigermaul-langental/;;N
-767;Time - Untersberg;47,72367000;13,01039000;1503.8848876953125;;50° / M7 / WI5;;;;;39;https://www.bergsteigen.com/touren/eisklettern/time-untersberg/;;NO
-768;Titanus Nove - Matlatal;47,02018000;13,40712600;1222.1944580078125;;M8;;;;;128;https://www.bergsteigen.com/touren/eisklettern/titanus-nove-matlatal/;;SO
+767;Time - Untersberg;47,72367000;13,01039000;1503.8848876953125;;50° / M7 / WI5;;;;;39;https://www.bergsteigen.com/touren/eisklettern/time-untersberg/;;NE
+768;Titanus Nove - Matlatal;47,02018000;13,40712600;1222.1944580078125;;M8;;;;;128;https://www.bergsteigen.com/touren/eisklettern/titanus-nove-matlatal/;;SE
 769;Toolf(l)ight - Felbertauern Nord;47,17200000;12,53300000;1500.7139892578125;;M6 / WI5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/toolflight-felbertauern-nord/;;N
 770;Torstein Eisrinne;47,47560000;13,58770000;2696.357177734375;;55°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/torstein-eisrinne-1/;;N
-771;Totes Weib - Frein;47,73197300;15,48572000;856.58551025390625;;M8;;;;;73;https://www.bergsteigen.com/touren/eisklettern/totes-weib-frein/;;O
+771;Totes Weib - Frein;47,73197300;15,48572000;856.58551025390625;;M8;;;;;73;https://www.bergsteigen.com/touren/eisklettern/totes-weib-frein/;;E
 772;Tour Ronde Nordwand;45,84620220;6,90899220;3411.77294921875;;60°;;;;;358;https://www.bergsteigen.com/touren/eisklettern/tour-ronde-nordwand/;;N
-773;Tower Ridge - Ben Newis;56,80155500;-5,00093260;851.4383544921875;;50° / M4-;;;;;29;https://www.bergsteigen.com/touren/eisklettern/tower-ridge-ben-newis/;;NO
+773;Tower Ridge - Ben Newis;56,80155500;-5,00093260;851.4383544921875;;50° / M4-;;;;;29;https://www.bergsteigen.com/touren/eisklettern/tower-ridge-ben-newis/;;NE
 774;Trafoier Eiswand;46,49700000;10,51170000;;;55° / 2;;;;;15;https://www.bergsteigen.com/touren/eisklettern/trafoier-eiswand/;;N
 775;Traumfänger - Sigmund-Thun-Klamm;47,25826589;12,73749948;820.87823486328125;;M9+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/traumfaenger-sigmund-thun-klamm/;;N
 776;Traumsprung;47,25820000;12,73740000;822.39007568359375;;WI5+;;;;;6;https://www.bergsteigen.com/touren/eisklettern/traumsprung/;;N
@@ -773,14 +773,14 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 786;Ultima Minuta - Langental;46,57032000;11,80343000;;;M8- / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/ultima-minuta-langental/;;N
 787;Unterer Teil / Thun-Klamm;47,25882305;12,73826122;793.690185546875;;WI4 / M10;;;;;15;https://www.bergsteigen.com/touren/eisklettern/unterer-teil-thun-klamm/;;N
 788;;;;;;;;;;;;https://www.bergsteigen.com/touren/eisklettern/utopia-reintas-taufers/;;
-789;Venediger NO-Flanke;47,11210000;12,34450000;3340.105224609375;;55° / 3+;;;;;48;https://www.bergsteigen.com/touren/eisklettern/venediger-no-flanke/;;NO
+789;Venediger NO-Flanke;47,11210000;12,34450000;3340.105224609375;;55° / 3+;;;;;48;https://www.bergsteigen.com/touren/eisklettern/venediger-no-flanke/;;NE
 790;Vergissmeinnicht;47,11186067;12,98064709;1358.6156005859375;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vergissmeinnicht-1/;;N
 791;Vertainspitze Nordwand;46,54250000;10,63670000;;;80°;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vertainspitze-nordwand/;;N
 792;Via Snowboard- Sass Pordoi;46,50525900;11,80563600;;;M4 / WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/via-snowboard-sass-pordoi/;;N
 793;Vogelwild - Wildgall Nordostwand;46,90450000;12,13690000;2922.561279296875;;60° / M5+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vogelwild-wildgall-nordostwand/;;N
 794;Vorderer Maralmfall - Maltal;47,03321600;13,39167000;1356.4698486328125;;WI3+ / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vorderer-maralmfall-maltal/;;N
 795;Vzhodna Smer - Mala Rinka Nordwand;46,36630000;14,57230000;1881.259521484375;;WI3 / M4;;;;;15;https://www.bergsteigen.com/touren/eisklettern/vzhodna-smer-mala-rinka-nordwand/;;N
-796;Wageralm Gully;47,19856303;12,51061678;1408.856201171875;;WI5+;;;;;75;https://www.bergsteigen.com/touren/eisklettern/wageralm-gully/;;O
+796;Wageralm Gully;47,19856303;12,51061678;1408.856201171875;;WI5+;;;;;75;https://www.bergsteigen.com/touren/eisklettern/wageralm-gully/;;E
 797;Wageralmfall;47,20144243;12,50946879;1332.3375244140625;;WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wageralmfall/;;N
 798;Warmduscher;47,58630000;12,98090000;;;WI6-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/warmduscher/;;N
 799;Warmup - Mölltal Kaltenbrunnerwald;46,88159300;12,89121400;1114.6712646484375;;WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/warmup-moelltal-kaltenbrunnerwald/;;N
@@ -802,8 +802,8 @@ uid;name;latitude;longitude;hoehe_dgm5m;erstbegehnung;schwierigkeit;eisfallhhe;z
 815;Wildgerlostal Eisfälle;;;;;WI4 / WI6;;;;;;https://www.bergsteigen.com/touren/eisklettern/wildgerlostal-eisfaelle/;;
 816;Wintasun - Maltatal;47,01684300;13,40647700;1340.125244140625;;WI4+;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wintasun-maltatal/;;N
 817;Wurmaul-Eisfall;46,91340568;11,62584192;;;45° / WI5;;;;;15;https://www.bergsteigen.com/touren/eisklettern/wurmaul-eisfall/;;N
-818;Yaba;47,85790000;15,27530000;683.98150634765625;;WI5+ / M4;;;;;27;https://www.bergsteigen.com/touren/eisklettern/yaba/;;NO
-819;Zauber der Vergänglichkeit - Hochbrett;47,50603000;13,30892000;1650.8585205078125;;WI5+ / M4;;;;;137;https://www.bergsteigen.com/touren/eisklettern/zauber-der-vergaenglichkeit-hochbrett/;;SO
+818;Yaba;47,85790000;15,27530000;683.98150634765625;;WI5+ / M4;;;;;27;https://www.bergsteigen.com/touren/eisklettern/yaba/;;NE
+819;Zauber der Vergänglichkeit - Hochbrett;47,50603000;13,30892000;1650.8585205078125;;WI5+ / M4;;;;;137;https://www.bergsteigen.com/touren/eisklettern/zauber-der-vergaenglichkeit-hochbrett/;;SE
 820;Zauberflöte und Papageno - Langental;46,57960000;11,79960000;;;M9 / WI6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/zauberfloete-und-papageno-langental/;;N
 821;Zebru Nordwand;46,49510000;10,55640000;;;55° / 3-;;;;;15;https://www.bergsteigen.com/touren/eisklettern/zebru-nordwand/;;N
 822;Zeit zum Warten - Matlatal;47,01630000;13,40620000;1421.438232421875;;WI6 / M6;;;;;15;https://www.bergsteigen.com/touren/eisklettern/zeit-zum-warten-matlatal/;;N

@@ -155,24 +155,28 @@ first_existing_col <- function(df, candidates) {
 
 normalize_cardinal <- function(x) {
   x <- toupper(trimws(as.character(x)))
-  x <- gsub("NORD", "N", x, fixed = TRUE)
-  x <- gsub("SUED", "S", x, fixed = TRUE)
-  x <- gsub("SUD", "S", x, fixed = TRUE)
-  x <- gsub("OST", "O", x, fixed = TRUE)
-  x <- gsub("EAST", "O", x, fixed = TRUE)
+  x <- gsub("NORTH", "N", x, fixed = TRUE)
+  x <- gsub("SOUTH", "S", x, fixed = TRUE)
+  x <- gsub("EAST", "E", x, fixed = TRUE)
   x <- gsub("WEST", "W", x, fixed = TRUE)
-  x <- gsub("[^NOSWE]", "", x)
+  x <- gsub("[^NSEW]", "", x)
+  x[x == "NO"] <- "NE"
+  x[x == "O"] <- "E"
+  x[x == "SO"] <- "SE"
+  x[x == "NNO"] <- "NNE"
+  x[x == "ONO"] <- "ENE"
+  x[x == "OSO"] <- "ESE"
+  x[x == "SSO"] <- "SSE"
   x
 }
 
 cardinal_to_degree <- function(x) {
   key <- normalize_cardinal(x)
   lut <- c(
-    "N" = 0, "NNO" = 22.5, "NO" = 45, "ONO" = 67.5,
-    "O" = 90, "OSO" = 112.5, "SO" = 135, "SSO" = 157.5,
+    "N" = 0, "NNE" = 22.5, "NE" = 45, "ENE" = 67.5,
+    "E" = 90, "ESE" = 112.5, "SE" = 135, "SSE" = 157.5,
     "S" = 180, "SSW" = 202.5, "SW" = 225, "WSW" = 247.5,
-    "W" = 270, "WNW" = 292.5, "NW" = 315, "NNW" = 337.5,
-    "NE" = 45, "SE" = 135, "E" = 90
+    "W" = 270, "WNW" = 292.5, "NW" = 315, "NNW" = 337.5
   )
   out <- unname(lut[key])
   out[is.na(out)] <- NA_real_
@@ -269,8 +273,8 @@ build_meta <- function(path) {
   if (is.na(lat_col) || is.na(lon_col)) {
     stop("Could not find latitude/longitude columns in ", path)
   }
-  aspect_num <- to_num(raw$ausrichtung)
-  aspect_cardinal <- raw$himmelsrichtung
+  aspect_num <- to_num(raw$aspect_deg)
+  aspect_cardinal <- normalize_cardinal(raw$aspect_cardinal)
   aspect_pref <- aspect_num
   use_cardinal <- !is.na(aspect_cardinal) & (is.na(aspect_pref) | !is_degree_consistent_with_cardinal(aspect_pref, aspect_cardinal))
   aspect_pref[use_cardinal] <- cardinal_to_degree(aspect_cardinal[use_cardinal])
@@ -279,9 +283,9 @@ build_meta <- function(path) {
     name = as.character(raw$name),
     latitude = to_num(raw[[lat_col]]),
     longitude = to_num(raw[[lon_col]]),
-    elev_m = to_num(raw$hoehe_dgm5m),
-    difficulty = as.character(raw$schwierigkeit),
-    height_hint_m = parse_height_hint_m(raw$eisfallhhe),
+    elev_m = to_num(raw$elevation_dgm5m),
+    difficulty = as.character(raw$difficulty),
+    height_hint_m = parse_height_hint_m(raw$icefall_height_m),
     source_aspect_deg = aspect_num,
     aspect_cardinal = as.character(aspect_cardinal),
     preferred_aspect_deg = aspect_pref,
