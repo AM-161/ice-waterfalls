@@ -38,6 +38,7 @@ DT_SEC <- MODEL_STEP_MIN * 60
 W2MJ_STEP <- DT_SEC / 1e6  # W/m2 -> MJ/m2 per model step
 
 END_DATE <- Sys.Date()
+END_DATE_EXT <- END_DATE
 
 PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
