@@ -15,6 +15,8 @@ uids <- uids[is.finite(uids)]
 
 if (length(uids) == 0) stop("No UIDs found.")
 
+strict_plots <- tolower(Sys.getenv("STRICT_PLOTS", "false")) %in% c("1", "true", "yes", "y")
+
 # Optional: limit build to a specific UID list (for faster testing)
 # Usage:
 #   Rscript scripts/00_build_plots_all.R --uids=12,34,56
@@ -47,7 +49,21 @@ run_rscript_checked <- function(script, args = character()) {
 inv_script <- "scripts/00_build_inversion_cache.R"
 if (!file.exists(inv_script)) stop("Missing inversion script: ", inv_script)
 
-run_rscript_checked(inv_script)
+inv_ok <- TRUE
+tryCatch({
+  run_rscript_checked(inv_script)
+}, error = function(e) {
+  inv_ok <<- FALSE
+  warning(
+    "Inversion cache build failed; continuing with per-UID fallback if possible: ",
+    e$message,
+    call. = FALSE
+  )
+})
+
+if (!inv_ok && strict_plots) {
+  stop("Inversion cache build failed and STRICT_PLOTS is enabled.")
+}
 
 # Plot script path
 plot_script <- "scripts/diagram_uid.R"
@@ -71,7 +87,23 @@ for (u in uids) {
 }
 
 if (length(failed) > 0) {
-  stop("Plots failed for UIDs: ", paste(failed, collapse = ", "))
+  built <- length(uids) - length(failed)
+  fail_msg <- paste0(
+    "Plots failed for ",
+    length(failed),
+    " of ",
+    length(uids),
+    " UIDs: ",
+    paste(failed, collapse = ", ")
+  )
+  writeLines(as.character(failed), "site/plots_failed_uids.txt", useBytes = TRUE)
+
+  if (strict_plots || built == 0) {
+    stop(fail_msg)
+  }
+
+  warning(fail_msg, call. = FALSE)
+  message("Continuing because at least one plot was built. Failed UID list written to site/plots_failed_uids.txt")
 }
 
-message("\nAll plots built: ", length(uids))
+message("\nPlots built: ", length(uids) - length(failed), " / ", length(uids))
