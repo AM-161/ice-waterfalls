@@ -16,4 +16,3 @@ The scripts in this folder may generate large cache or output files. Those gener
 - `icefall_structure/`: derives route structure, aspect, slope, and QA data.
 - `cold_air_pooling/`: derives cold-air-pooling lookup tables.
 - `study_area_map/`: creates publication-style thesis map exports.
-- `historical_climate/`: case-study scripts for historical climate comparisons.

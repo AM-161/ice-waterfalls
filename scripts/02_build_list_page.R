@@ -19,8 +19,8 @@ suppressPackageStartupMessages({
 
 TZ_LOCAL <- "Europe/Vienna"
 
-# Tomorrow in local TZ (used for sun + model summaries)
-tomorrow <- as.Date(with_tz(Sys.time(), TZ_LOCAL) + days(1))
+# Current local day (used for sun summaries)
+today <- as.Date(with_tz(Sys.time(), TZ_LOCAL))
 
 # ----------------------------
 # Paths
@@ -332,26 +332,26 @@ if (dir.exists(DIR_SUN)) {
   }
   
   sun <- sun_raw %>%
-    filter(.data$date == tomorrow) %>%
+    filter(.data$date == today) %>%
     group_by(uid) %>%
     summarise(
       sunrise_topo_local = parse_time_iso_z(first_nonempty(sunrise_topo), out_tz = TZ_LOCAL),
       sunset_topo_local  = parse_time_iso_z(first_nonempty(sunset_topo),  out_tz = TZ_LOCAL),
-      sun_hours_tomorrow_h = to_num(first_nonempty(sun_hours_topo)),
-      sun_tomorrow_range_txt = dplyr::if_else(
+      sun_hours_today_h = to_num(first_nonempty(sun_hours_topo)),
+      sun_today_range_txt = dplyr::if_else(
         is.na(sunrise_topo_local) | is.na(sunset_topo_local),
         NA_character_,
         paste0(fmt_hm(sunrise_topo_local), "-", fmt_hm(sunset_topo_local))
       ),
-      sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h),
+      sun_duration_today_txt = fmt_duration_h(sun_hours_today_h),
       .groups = "drop"
     )
   
-  if (all(is.na(sun$sun_hours_tomorrow_h))) {
+  if (all(is.na(sun$sun_hours_today_h))) {
     sun <- sun %>%
       mutate(
-        sun_hours_tomorrow_h = as.numeric(difftime(sunset_topo_local, sunrise_topo_local, units = "hours")),
-        sun_duration_tomorrow_txt = fmt_duration_h(sun_hours_tomorrow_h)
+        sun_hours_today_h = as.numeric(difftime(sunset_topo_local, sunrise_topo_local, units = "hours")),
+        sun_duration_today_txt = fmt_duration_h(sun_hours_today_h)
       )
   }
 } else {
@@ -359,17 +359,15 @@ if (dir.exists(DIR_SUN)) {
 }
 
 # ----------------------------
-# 4) Model summary (tomorrow)
+# 4) Model summary (latest historical value)
 # ----------------------------
 summarise_uid_model <- function(uid) {
   f <- file.path(DIR_MODELS, sprintf("model_uid%s.csv", uid))
   
   empty <- tibble(
     uid = uid,
-    thickness_tomorrow_07_m = NA_real_,
-    climb_max_tomorrow = NA_real_,
-    climb_max_time_local = NA_character_,
-    thickness_at_climb_max_m = NA_real_
+    thickness_latest_m = NA_real_,
+    thickness_latest_time_local = NA_character_
   )
   
   if (!file.exists(f) || file.info(f)$size <= 0) return(empty)
@@ -381,37 +379,18 @@ summarise_uid_model <- function(uid) {
     mutate(
       time = parse_time_any(.data$time, tz = TZ_LOCAL),
       date = as.Date(with_tz(time, TZ_LOCAL)),
-      thickness_m  = if ("thickness_m" %in% names(df)) to_num(.data$thickness_m) else NA_real_,
-      climbability = if ("climbability" %in% names(df)) to_num(.data$climbability) else NA_real_
+      thickness_m = if ("thickness_m" %in% names(df)) to_num(.data$thickness_m) else NA_real_
     ) %>%
-    filter(!is.na(time))
+    filter(!is.na(time), is.finite(thickness_m)) %>%
+    arrange(time)
   
-  df_day <- df %>% filter(date == tomorrow)
-  if (nrow(df_day) == 0) return(empty)
-  
-  # thickness at ~07:00 local (closest)
-  t07 <- as.POSIXct(paste0(format(tomorrow, "%Y-%m-%d"), " 07:00:00"), tz = TZ_LOCAL)
-  i07 <- which.min(abs(as.numeric(difftime(df_day$time, t07, units = "mins"))))
-  thickness_07 <- df_day$thickness_m[i07]
-  
-  if (all(!is.finite(df_day$climbability))) {
-    climb_max <- NA_real_
-    climb_time <- NA_character_
-    thick_at_best <- NA_real_
-  } else {
-    imax <- which.max(df_day$climbability)
-    climb_max <- df_day$climbability[imax]
-    climb_time_obj <- with_tz(df_day$time[imax], TZ_LOCAL)
-    climb_time <- if (as.Date(climb_time_obj) == tomorrow) format(climb_time_obj, "%H:%M") else NA_character_
-    thick_at_best <- df_day$thickness_m[imax]
-  }
+  if (nrow(df) == 0) return(empty)
+  latest <- df[nrow(df), , drop = FALSE]
   
   tibble(
     uid = uid,
-    thickness_tomorrow_07_m = thickness_07,
-    climb_max_tomorrow = climb_max,
-    climb_max_time_local = climb_time,
-    thickness_at_climb_max_m = thick_at_best
+    thickness_latest_m = latest$thickness_m[[1]],
+    thickness_latest_time_local = format(with_tz(latest$time[[1]], TZ_LOCAL), "%d.%m.%Y %H:%M")
   )
 }
 
@@ -452,22 +431,22 @@ if (!is.null(sun)) {
 } else {
   if (!"topo_url" %in% names(out)) out$topo_url <- NA_character_
   if (!"topo_slug" %in% names(out)) out$topo_slug <- NA_character_
-  out$sun_tomorrow_range_txt <- NA_character_
-  out$sun_hours_tomorrow_h <- NA_real_
-  out$sun_duration_tomorrow_txt <- NA_character_
+  out$sun_today_range_txt <- NA_character_
+  out$sun_hours_today_h <- NA_real_
+  out$sun_duration_today_txt <- NA_character_
 }
 
 out <- out %>%
   mutate(
     sun_status = dplyr::case_when(
       uid %in% sun_missing_uids ~ "missing_file",
-      is.finite(sun_hours_tomorrow_h) & !is.na(sun_tomorrow_range_txt) ~ "has_values",
+      is.finite(sun_hours_today_h) & !is.na(sun_today_range_txt) ~ "has_values",
       TRUE ~ "no_values_day"
     ),
-    sun_tomorrow_range_txt = dplyr::case_when(
+    sun_today_range_txt = dplyr::case_when(
       sun_status == "missing_file" ~ "NO SUN DATA",
       sun_status == "no_values_day" ~ "no direct sunlight",
-      TRUE ~ sun_tomorrow_range_txt
+      TRUE ~ sun_today_range_txt
     )
   )
 
@@ -483,11 +462,9 @@ if ("topo_url.y" %in% names(out) || "topo_slug.y" %in% names(out)) {
 out <- out %>%
   mutate(
     plot_url = sprintf("plots/uid_%03d.png", uid),
-    thickness_tomorrow_07_txt = fmt_num(thickness_tomorrow_07_m, 2),
-    climb_max_tomorrow_txt    = fmt_pct(climb_max_tomorrow, 0),
-    thickness_at_best_txt     = fmt_num(thickness_at_climb_max_m, 2)
+    thickness_latest_txt = fmt_num(thickness_latest_m, 2)
   ) %>%
-  arrange(desc(climb_max_tomorrow), desc(thickness_tomorrow_07_m))
+  arrange(desc(thickness_latest_m))
 
 # ----------------------------
 # 6) Write JSON
@@ -500,7 +477,7 @@ message("✅ Wrote JSON: ", OUT_JSON)
 #    Important offline fix:
 #    - Use Base64-embedded JSON (no fetch needed for file://)
 # ----------------------------
-tom_str <- format(tomorrow, "%d.%m.%Y")
+today_str <- format(today, "%d.%m.%Y")
 
 embedded_json <- jsonlite::toJSON(out, auto_unbox = TRUE, na = "null")
 embedded_b64  <- jsonlite::base64_enc(charToRaw(enc2utf8(embedded_json)))
@@ -583,7 +560,7 @@ html_lines <- c(
   '    <a href="index.html">🏠 Home</a>',
   '    <a href="map.html">Map</a>',
   '    <a href="list.html"><b>Overview</b></a>',
-  paste0('    <span class="muted">Tomorrow: ', tom_str, ' (TZ: Europe/Vienna)</span>'),
+  paste0('    <span class="muted">Today: ', today_str, ' (TZ: Europe/Vienna)</span>'),
   '  </header>',
   '',
   '  <div class="wrap">',
@@ -651,7 +628,7 @@ html_lines <- c(
   '          <div class="section">',
   '            <div class="section-title">Sun</div>',
   '            <div class="row">',
-  '              <label>Sun tomorrow (h)</label>',
+  '              <label>Sun today (h)</label>',
   '              <input id="sunMin" type="range" min="0" max="12" step="0.25" value="0" title="Sun duration (topography)">',
   '              <input id="sunMax" type="range" min="0" max="12" step="0.25" value="12" title="Sun duration (topography)">',
   '              <span class="muted" id="sunRangeTxt">0.0 – 12.0 h</span>',
@@ -683,10 +660,9 @@ html_lines <- c(
   '            <th data-key="_grade_r">Rock</th>',
   '            <th data-key="elev_m">Elevation (m)</th>',
   '            <th data-key="_dist_km">Distance (km)</th>',
-  '            <th data-key="sun_tomorrow_range_txt">Sun tomorrow</th>',
-  '            <th data-key="sun_hours_tomorrow_h">Sun duration</th>',
-  '            <th data-key="thickness_tomorrow_07_m">Ice thickness tomorrow ~07:00 (m)</th>',
-  '            <th data-key="climb_max_tomorrow">Max climbability tomorrow (time)</th>',
+  '            <th data-key="sun_today_range_txt">Sun today</th>',
+  '            <th data-key="sun_hours_today_h">Sun duration</th>',
+  '            <th data-key="thickness_latest_m">Latest ice thickness (m)</th>',
   '            <th data-key="_last_upload_ts">Latest upload</th>',
   '            <th>Details</th>',
   '            <th>Topo</th>',
@@ -805,9 +781,9 @@ for (i in seq_len(nrow(out))) {
   lat_txt <- if (is.finite(lat)) sprintf("%.6f", lat) else ""
   lon_txt <- if (is.finite(lon)) sprintf("%.6f", lon) else ""
 
-  sun_range_txt <- as.character(r$sun_tomorrow_range_txt[[1]])
+  sun_range_txt <- as.character(r$sun_today_range_txt[[1]])
   if (is.na(sun_range_txt) || sun_range_txt == "") sun_range_txt <- "&mdash;"
-  sun_duration_txt <- as.character(r$sun_duration_tomorrow_txt[[1]])
+  sun_duration_txt <- as.character(r$sun_duration_today_txt[[1]])
   if (is.na(sun_duration_txt) || sun_duration_txt == "") sun_duration_txt <- "&mdash;"
 
   sun_series_json <- "[]"
@@ -920,7 +896,7 @@ for (i in seq_len(nrow(out))) {
     paste0("        <div class='k' >Difficulty</div><div><b>", ifelse(nchar(diff)>0, diff, "&mdash;"), "</b></div>"),
     paste0("        <div class='k'>Aspect</div><div><b>", aspect_txt, "</b></div>"),
     paste0("        <div class='k'>Elevation a.s.l.</div><div><b>", elev_txt, "</b></div>"),
-    paste0("        <div class='k'>Sunlight tomorrow</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
+    paste0("        <div class='k'>Sunlight today</div><div><b>", sun_range_txt, "</b> <span class='muted'>(", sun_duration_txt, ")</span></div>"),
     paste0("        <div class='k'>Topo</div><div>", ifelse(nchar(topo_url)>0, paste0("<a href='", topo_url, "' target='_blank' rel='noopener'>Topo</a>"), "<span class='muted'>&mdash;</span>"), "</div>"),
     "      </div>",
     "    </div>",
@@ -957,11 +933,11 @@ for (i in seq_len(nrow(out))) {
     "      <div class='muted' style='margin-bottom:10px;'>By uploading you confirm that you own the rights to the image. Please do not include personal data.</div>",
     
     "      <div style='display:flex;gap:10px;flex-wrap:wrap;align-items:center;'>",
-    "        <div class='muted' style='min-width:110px;'>Climbability</div>",
+    "        <div class='muted' style='min-width:110px;'>Ice condition</div>",
     "        <select id='rating'>",
     "          <option value='3'>good</option>",
     "          <option value='2'>marginal</option>",
-    "          <option value='1'>not climbable</option>",
+    "          <option value='1'>poor</option>",
     "        </select>",
     "        <div class='muted' style='min-width:50px;'>Date</div>",
     "        <input id='shotDate' type='date'/>",
@@ -1023,7 +999,7 @@ for (i in seq_len(nrow(out))) {
     "    v = Number(v);",
     "    if (v === 3) return 'good';",
     "    if (v === 2) return 'marginal';",
-    "    if (v === 1) return 'not climbable';",
+    "    if (v === 1) return 'poor';",
     "    return String(v);",
     "  }",
     "",
@@ -1227,7 +1203,7 @@ for (i in seq_len(nrow(out))) {
     "            <div style=\"display:grid;gap:6px;\">${imgs}</div>",
     "            <div class=\"cap\">",
     "              <b>${d}</b>",
-    "              <div class=\"muted\">Climbability: ${escHtml(rt)}</div>",
+    "              <div class=\"muted\">Condition: ${escHtml(rt)}</div>",
     "              ${cHtml}",
     "            </div>",
     "          </div>`;",

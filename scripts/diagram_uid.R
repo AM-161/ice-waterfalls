@@ -2,10 +2,9 @@
 # Icefall thickness model per UID (uid = 48)
 # - Station: TL/RF (10-min)
 # - INCA timeseries: wind + radiation (UU/VV/GL, hourly -> LOCF)
-# - NWP forecast: t2m/rh2m/u10m/v10m/grad (hourly -> 10-min LOCF)
 # - Topographic sun + wind-vulnerability LUT
 # - Model start always Oct 1 of the current season
-# Output: data/plots/ModelRuns/model_uid48.csv
+# Output: data/ModelRuns/model_uid48.csv
 # =====================================================================
 
 suppressPackageStartupMessages({
@@ -17,7 +16,6 @@ suppressPackageStartupMessages({
   library(readr)
   library(ggplot2)
   library(zoo)
-  library(patchwork)
 })
 
 TZ_LOCAL <- "Europe/Vienna"
@@ -39,10 +37,7 @@ DT_H   <- MODEL_STEP_MIN / 60
 DT_SEC <- MODEL_STEP_MIN * 60
 W2MJ_STEP <- DT_SEC / 1e6  # W/m2 -> MJ/m2 per model step
 
-FORECAST_HOURS <- 60
 END_DATE <- Sys.Date()
-NOW_LOCAL <- with_tz(Sys.time(), TZ_LOCAL)
-END_DATE_EXT <- as.Date(NOW_LOCAL + hours(FORECAST_HOURS))
 
 PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
@@ -54,7 +49,6 @@ PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
 
 PATH_INCA_DIR <- "data/inca_nordtirol/point_timeseries"
-PATH_NWP_DIR  <- "data/nwp_2500m_forecast/point_forecasts"
 
 PATH_OUT      <- sprintf("data/ModelRuns/model_uid%s.csv", UID_TEST)
 
@@ -330,169 +324,6 @@ get_inca_point_hourly <- function(uid, start_date, end_date, lon, lat, path_dir 
     ) %>%
     select(time, FF_inca, DD_inca, GLOW_inca)
 }
-
-# ----------------------------
-# NWP forecast (CSV): t2m/rh2m/u10m/v10m/grad (hourly)
-# grad (accumulated Ws/m2) -> W/m2 hourly mean
-# ----------------------------
-grad_to_glow_wm2_vec <- function(grad_ws_m2) {
-  g <- as.numeric(grad_ws_m2)
-  g[!is.finite(g)] <- NA_real_
-  if (all(is.na(g))) return(g)
-  
-  g <- zoo::na.locf(g, na.rm = FALSE)
-  g <- zoo::na.locf(g, na.rm = FALSE, fromLast = TRUE)
-  
-  inc <- c(g[1], diff(g))
-  reset <- inc < 0
-  inc[reset] <- g[reset]
-  inc <- pmax(0, inc)
-  inc / 3600
-}
-
-get_nwp_metadata_cached <- function(base_dir = PATH_NWP_DIR, max_age_min = 20) {
-  dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
-  cache <- file.path(base_dir, "nwp_metadata_cache.json")
-  
-  if (file.exists(cache)) {
-    age_min <- as.numeric(difftime(Sys.time(), file.info(cache)$mtime, units = "mins"))
-    if (is.finite(age_min) && age_min <= max_age_min) {
-      txt <- paste(readLines(cache, warn = FALSE), collapse = "\n")
-      return(jsonlite::fromJSON(txt, simplifyVector = TRUE))
-    }
-  }
-  
-  meta_url <- "https://dataset.api.hub.geosphere.at/v1/timeseries/forecast/nwp-v1-1h-2500m/metadata"
-  resp <- request(meta_url) |> req_user_agent("icefall-model/1.0 (R httr2)") |> req_perform()
-  txt <- resp_body_string(resp)
-  writeLines(txt, cache, useBytes = TRUE)
-  jsonlite::fromJSON(txt, simplifyVector = TRUE)
-}
-
-parse_nwp_timeseries_csv_file <- function(path, tz_local = TZ_LOCAL) {
-  df <- read_geosphere_csv(path)
-  if (is.null(df) || nrow(df) == 0) return(tibble(time = as.POSIXct(character(), tz = tz_local)))
-  
-  nms <- names(df)
-  nms_low <- tolower(nms)
-  time_idx <- which(grepl("time|timestamp|date", nms_low))[1]
-  if (is.na(time_idx)) stop("NWP CSV: no time column in ", basename(path))
-  time_col <- nms[time_idx]
-  
-  pick <- function(target) {
-    i <- which(nms_low == tolower(target)); if (length(i)) return(nms[i[1]])
-    i <- which(grepl(paste0("^", tolower(target), "($|[^a-z0-9])"), nms_low)); if (length(i)) return(nms[i[1]])
-    i <- which(grepl(tolower(target), nms_low)); if (length(i)) return(nms[i[1]])
-    NA_character_
-  }
-  
-  cols <- list(
-    t2m  = pick("t2m"),
-    rh2m = pick("rh2m"),
-    u10m = pick("u10m"),
-    v10m = pick("v10m"),
-    grad = pick("grad")
-  )
-  
-  out <- tibble(time_utc = parse_time_any_utc(df[[time_col]]))
-  for (nm in names(cols)) {
-    cc <- cols[[nm]]
-    out[[nm]] <- if (!is.na(cc)) suppressWarnings(as.numeric(df[[cc]])) else NA_real_
-  }
-  
-  out %>%
-    filter(!is.na(time_utc)) %>%
-    mutate(time = with_tz(time_utc, tz_local)) %>%
-    select(time, t2m, rh2m, u10m, v10m, grad)
-}
-
-
-download_nwp_point_uid_fc <- function(uid, lat, lon, start_time_utc, end_time_utc,
-                                      forecast_offset = 0,
-                                      base_dir = PATH_NWP_DIR, verbose = TRUE) {
-  dir.create(base_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  meta <- get_nwp_metadata_cached(base_dir = base_dir)
-  last_ref <- meta[["last_forecast_reftime"]]
-  ref_tag <- gsub("[:+]", "", last_ref)
-  ref_tag <- gsub("[^0-9T-]", "", ref_tag)
-  
-  outfile <- file.path(
-    base_dir,
-    sprintf(
-      "nwp_uid%s_fc_off%s_ref%s_%s_%s.csv",
-      uid, forecast_offset, ref_tag,
-      format(start_time_utc, "%Y%m%d%H%M"),
-      format(end_time_utc,   "%Y%m%d%H%M")
-    )
-  )
-  
-  if (file.exists(outfile) && file.info(outfile)$size > 0) return(outfile)
-  
-  base_url <- "https://dataset.api.hub.geosphere.at/v1/timeseries/forecast/nwp-v1-1h-2500m"
-  start_q <- format(start_time_utc, "%Y-%m-%dT%H:%M")
-  end_q   <- format(end_time_utc,   "%Y-%m-%dT%H:%M")
-  
-  if (verbose) message("NWP FC uid ", uid, ": download ", start_q, " .. ", end_q)
-  
-  resp <- request(base_url) |>
-    req_retry(max_tries = 5) |>
-    req_error(is_error = function(r) FALSE) |>
-    req_url_query(
-      parameters = "t2m,rh2m,u10m,v10m,grad",
-      start = start_q,
-      end   = end_q,
-      lat_lon = paste0(lat, ",", lon),
-      forecast_offset = as.integer(forecast_offset),
-      output_format = "csv"
-    ) |>
-    req_user_agent("icefall-model/1.0 (R httr2)") |>
-    req_perform()
-  
-  if (resp_status(resp) >= 400) {
-    msg <- tryCatch(resp_body_string(resp), error = function(e) "")
-    stop("NWP download failed (HTTP ", resp_status(resp), "). ", msg)
-  }
-  
-  writeLines(resp_body_string(resp), outfile, useBytes = TRUE)
-  Sys.sleep(0.2)
-  outfile
-}
-
-get_nwp_point_forecast_hourly <- function(uid, start_time, end_time, lon, lat,
-                                          forecast_offset = 0,
-                                          base_dir = PATH_NWP_DIR,
-                                          verbose = TRUE) {
-  start_utc <- with_tz(as.POSIXct(start_time, tz = TZ_LOCAL), "UTC")
-  end_utc   <- with_tz(as.POSIXct(end_time,   tz = TZ_LOCAL), "UTC")
-  
-  f <- download_nwp_point_uid_fc(uid, lat, lon, start_utc, end_utc,
-                                 forecast_offset = forecast_offset,
-                                 base_dir = base_dir, verbose = verbose)
-  
-  hr <- parse_nwp_timeseries_csv_file(f, tz_local = TZ_LOCAL) %>%
-    arrange(time) %>%
-    filter(time >= with_tz(start_utc, TZ_LOCAL),
-           time <= with_tz(end_utc,   TZ_LOCAL)) %>%
-    distinct(time, .keep_all = TRUE)
-  
-  if (nrow(hr) == 0) {
-    return(tibble(time = as.POSIXct(character(), tz = TZ_LOCAL),
-                  TL = numeric(), RF = numeric(), FF = numeric(), DD = numeric(), GLOW = numeric()))
-  }
-  
-  glow <- grad_to_glow_wm2_vec(hr$grad)
-  
-  tibble(
-    time = hr$time,
-    TL   = hr$t2m,
-    RF   = hr$rh2m,
-    FF   = sqrt(hr$u10m^2 + hr$v10m^2),
-    DD   = (atan2(hr$u10m, hr$v10m) * 180/pi + 180) %% 360,
-    GLOW = glow
-  )
-}
-
 
 # ----------------------------
 # Station weather TL/RF (GeoSphere JSON OR LWD CSV)
@@ -912,45 +743,6 @@ wx <- wx %>%
     time <  as.POSIXct(END_DATE + 1, tz = TZ_LOCAL)
   )
 
-# =====================================================================
-# 5) NWP Forecast (60h) hourly -> 10-min LOCF
-# =====================================================================
-HIST_END <- max(wx$time, na.rm = TRUE)
-FC_END   <- HIST_END + hours(FORECAST_HOURS)
-
-nwp_hr <- get_nwp_point_forecast_hourly(
-  uid = UID_TEST,
-  start_time = HIST_END,
-  end_time   = FC_END,
-  lon = ice_lon, lat = ice_lat,
-  forecast_offset = 0,
-  base_dir = PATH_NWP_DIR,
-  verbose = TRUE
-)
-
-wx_fc <- tibble(time = seq(HIST_END + minutes(MODEL_STEP_MIN), FC_END, by = step_str)) %>%
-  mutate(time_hr = floor_date(time, "hour")) %>%
-  left_join(nwp_hr %>% rename(time_hr = time), by = "time_hr") %>%
-  select(-time_hr) %>%
-  arrange(time) %>%
-  mutate(
-    TL   = zoo::na.locf(TL,   na.rm = FALSE),
-    RF   = zoo::na.locf(RF,   na.rm = FALSE),
-    FF   = zoo::na.locf(FF,   na.rm = FALSE),
-    DD   = zoo::na.locf(DD,   na.rm = FALSE),
-    GLOW = zoo::na.locf(GLOW, na.rm = FALSE),
-    TL   = zoo::na.locf(TL,   na.rm = FALSE, fromLast = TRUE),
-    RF   = zoo::na.locf(RF,   na.rm = FALSE, fromLast = TRUE),
-    FF   = zoo::na.locf(FF,   na.rm = FALSE, fromLast = TRUE),
-    DD   = zoo::na.locf(DD,   na.rm = FALSE, fromLast = TRUE),
-    GLOW = zoo::na.locf(GLOW, na.rm = FALSE, fromLast = TRUE)
-  )
-
-wx <- bind_rows(
-  wx %>% mutate(is_forecast = FALSE),
-  wx_fc %>% mutate(is_forecast = TRUE)
-) %>% arrange(time)
-
 # --- Inversion join (global, same time base for all UIDs) ---
 if (file.exists(PATH_INV_RDS)) {
   inv <- readRDS(PATH_INV_RDS) %>%
@@ -1131,11 +923,10 @@ coef <- list(
 
 wx <- wx %>%
   mutate(
-    # Raw delta z (optionally set forecasts to 0)
-    dz_raw = if_else(is_forecast, 0, dz_m),
+    dz_raw = dz_m,
     
     # Apply the physical profile only when inversion is active and station elevation is known.
-    use_prof = (!is_forecast) & inv_active & is.finite(z_aws) & is.finite(dz_m) &
+    use_prof = inv_active & is.finite(z_aws) & is.finite(dz_m) &
       is.finite(grad01_K_per_m) & is.finite(grad12_K_per_m),
     
     # Target elevation from station elevation + dz (also works if ice_alt_m is missing).
@@ -1301,340 +1092,50 @@ mod <- wx %>%
   )
 
 # =====================================================================
-# 8) Climbability (0..1) + Hist daily smoothing
+# 8) Save
 # =====================================================================
-H_MIN <- 0.07; H_OPT <- 0.45
-T_OPT <- -3.5;  T_MIN <- -20; T_MAX <- 1.5
-RANGE_T <- max(T_OPT - T_MIN, T_MAX - T_OPT)
+mod <- mod %>% mutate(date = as.Date(time))
 
-T3_OPT <- -6; T3_MIN <- -20; T3_MAX <- 0
-RANGE_T3 <- max(T3_OPT - T3_MIN, T3_MAX - T3_OPT)
-
-RH_OPT <- 0.70; RH_SIG <- 0.20
-CORE_T3_BUFFER_C_PER_M <- 8.0
-CORE_CLIMB_BONUS_MULT <- 1.5
-CORE_CLIMB_BONUS_DECAY_M <- 0.25
-WIN_72H <- as.integer(72 * 60 / MODEL_STEP_MIN)
-WIN_24H <- as.integer(24 * 60 / MODEL_STEP_MIN)
-WIN_48H <- as.integer(48 * 60 / MODEL_STEP_MIN)
-WIN_120H <- as.integer(120 * 60 / MODEL_STEP_MIN)
-
-score_T_fun_vec <- function(Tv, Topt, Tmin, Tmax, rangeT) {
-  s <- 1 - abs(Tv - Topt) / rangeT
-  s[Tv <= Tmin | Tv >= Tmax] <- 0
-  s[!is.finite(s)] <- NA_real_
-  pmax(0, s)
-}
-
-mod <- mod %>%
-  mutate(
-    thaw_flag = TLz > 0,
-    thaw_transition = c(0, abs(diff(as.integer(thaw_flag)))),
-    TLz_72h = zoo::rollapplyr(
-      TLz, width = WIN_72H,
-      FUN = function(x) mean(x, na.rm = TRUE),
-      fill = NA_real_, partial = TRUE
-    ),
-    PDH_24h = zoo::rollapplyr(
-      PDH * DT_H, width = WIN_24H,
-      FUN = function(x) sum(x, na.rm = TRUE),
-      fill = NA_real_, partial = TRUE
-    ),
-    PDH_72h = zoo::rollapplyr(
-      PDH * DT_H, width = WIN_72H,
-      FUN = function(x) sum(x, na.rm = TRUE),
-      fill = NA_real_, partial = TRUE
-    ),
-    SW_48h_MJ = zoo::rollapplyr(
-      SW_MJ_step, width = WIN_48H,
-      FUN = function(x) sum(x, na.rm = TRUE),
-      fill = NA_real_, partial = TRUE
-    ),
-    thaw_cycles_120h = zoo::rollapplyr(
-      thaw_transition, width = WIN_120H,
-      FUN = function(x) sum(x, na.rm = TRUE) / 2,
-      fill = NA_real_, partial = TRUE
-    ),
-    TLz_72h_eff = TLz_72h - CORE_T3_BUFFER_C_PER_M * core_ice_m,
-    core_climb_bonus_m = core_ice_m * CORE_CLIMB_BONUS_MULT *
-      clamp01(1 - thickness_m / CORE_CLIMB_BONUS_DECAY_M),
-    climb_thickness_m = thickness_m + core_climb_bonus_m,
-    score_h  = pmin(1, pmax(0, (climb_thickness_m - H_MIN) / (H_OPT - H_MIN))),
-    score_T  = score_T_fun_vec(TLz,     T_OPT,  T_MIN,  T_MAX,  RANGE_T),
-    score_T3 = score_T_fun_vec(TLz_72h_eff,  T3_OPT, T3_MIN, T3_MAX, RANGE_T3),
-    score_RH = exp(-((RF/100) - RH_OPT)^2 / (2 * RH_SIG^2)),
-    score_rot_warm = exp(-0.14 * coalesce(PDH_24h, 0) - 0.05 * coalesce(PDH_72h, 0)),
-    score_rot_sun = exp(-0.06 * coalesce(SW_48h_MJ, 0)),
-    score_rot_cycle = exp(-0.30 * coalesce(thaw_cycles_120h, 0)),
-    score_structure_raw = score_rot_warm * score_rot_sun * score_rot_cycle,
-    core_structure_floor = 0.10 + 0.45 * clamp01(core_ice_m / 0.12),
-    score_structure = pmax(score_structure_raw, core_structure_floor),
-    climbability = score_h * score_T * score_T3 * score_RH * score_structure,
-    core_climb_floor = 0.22 * retention_fac_uid * clamp01(core_ice_m / 0.08) *
-      exp(-0.08 * coalesce(PDH_24h, 0) - 0.03 * coalesce(PDH_72h, 0) - 0.05 * coalesce(SW_48h_MJ, 0)),
-    climbability = pmax(climbability, core_climb_floor),
-    climbability = ifelse(climb_thickness_m < H_MIN, NA_real_, climbability),
-    climbability = pmin(1, pmax(0, climbability)),
-    date = as.Date(time)
-  )
-
-mean_na <- function(x) { m <- mean(x, na.rm = TRUE); if (is.nan(m)) NA_real_ else m }
-
-climb_hist_daily <- mod %>%
-  filter(!is_forecast) %>%
-  group_by(date) %>%
-  summarise(
-    time = as.POSIXct(paste0(first(date), " 12:00:00"), tz = TZ_LOCAL),
-    climbability = mean_na(climbability),
-    .groups = "drop"
-  )
-
-# =====================================================================
-# 9) Save
-# =====================================================================
 dir.create(dirname(PATH_OUT), showWarnings = FALSE, recursive = TRUE)
 write_csv(mod, PATH_OUT)
 
 # =====================================================================
-# 10) Plot split: history (left) + forecast (gray, right)
-# - Climbability axis only on the outer right side of the forecast panel
-# - Forecast x-labels + gridlines only at daily climbability maxima
+# 9) Plot historical ice thickness
 # =====================================================================
-has_fc <- any(mod$is_forecast %in% TRUE)
 x_min <- as.POSIXct(START_DATE, tz = TZ_LOCAL)
 x_max <- max(mod$time, na.rm = TRUE)
 
-if (!has_fc) {
-  y_min <- min(mod$thickness_m, na.rm = TRUE)
-  y_max <- max(mod$thickness_m, na.rm = TRUE)
-  Y_DEN <- max(1e-6, y_max - y_min)
-  
-  mod <- mod %>% mutate(climb_y = y_min + climbability * Y_DEN)
-  climb_hist_daily <- climb_hist_daily %>% mutate(climb_y = y_min + climbability * Y_DEN)
-  
-  plt <- ggplot(mod, aes(time, thickness_m)) +
-    geom_line(aes(color = "Ice thickness"), linewidth = 0.9) +
-    geom_line(
-      data = climb_hist_daily,
-      aes(time, climb_y, color = "Climbability"),
-      inherit.aes = FALSE,
-      linewidth = 0.8,
-      na.rm = TRUE
-    ) +
-    coord_cartesian(xlim = c(x_min, x_max), ylim = c(y_min, y_max)) +
-    scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
-    scale_y_continuous(
-      name = "Ice thickness (m)",
-      sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
-    ) +
-    scale_color_manual(
-      name = "Legend",
-      values = c("Ice thickness" = "black", "Climbability" = "red")
-    ) +
-    guides(color = guide_legend(order = 1)) +
-    labs(
-      subtitle = paste(
-        c(
-          if (!is.na(ice_fallheight_m)) paste0("Icefall height: ", round(ice_fallheight_m, 0), " m"),
-          if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
-          paste0("Station: ", station_id, " (", source, ")"),
-          paste0("dist ", round(dist_km, 2), " km"),
-          paste0("dz ", round(dz_m, 0), " m"),
-          if (cap_pair_confidence_uid > 0) paste0("CAP delta ", round(cap_delta_uid, 2))
-        ),
-        collapse = " | "
+plt <- ggplot(mod, aes(time, thickness_m)) +
+  geom_line(color = "black", linewidth = 0.9, na.rm = TRUE) +
+  coord_cartesian(xlim = c(x_min, x_max)) +
+  scale_x_datetime(
+    date_breaks = "1 month",
+    date_labels = "%b",
+    timezone = TZ_LOCAL,
+    guide = guide_axis(check.overlap = TRUE)
+  ) +
+  scale_y_continuous(name = "Ice thickness (m)") +
+  labs(
+    title = paste0("Modeled ice thickness - ", ice_name, " (UID ", sprintf("%03d", UID_TEST), ")"),
+    subtitle = paste(
+      c(
+        if (!is.na(ice_fallheight_m)) paste0("Icefall height: ", round(ice_fallheight_m, 0), " m"),
+        if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
+        paste0("Station: ", station_id, " (", source, ")"),
+        paste0("dist ", round(dist_km, 2), " km"),
+        paste0("dz ", round(dz_m, 0), " m"),
+        if (cap_pair_confidence_uid > 0) paste0("CAP delta ", round(cap_delta_uid, 2))
       ),
-      x = "Time"
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(
-      axis.text.x = element_text(size = 9, lineheight = 0.95),
-      legend.position = "bottom",
-      legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 9),
-      legend.key = element_rect(fill = NA, colour = NA),
-      legend.box = "horizontal"
-    )
-  
-} else {
-  
-  forecast_start <- min(mod$time[mod$is_forecast], na.rm = TRUE)
-  
-  # Define y_min/y_max before Y_DEN.
-  y_min <- min(mod$thickness_m, na.rm = TRUE)
-  y_max <- max(mod$thickness_m, na.rm = TRUE)
-  Y_DEN <- max(1e-6, y_max - y_min)
-  
-  mod <- mod %>% mutate(climb_y = y_min + climbability * Y_DEN)
-  climb_hist_daily <- climb_hist_daily %>% mutate(climb_y = y_min + climbability * Y_DEN)
-  
-  mod_hist <- mod %>% filter(time >= x_min, time < forecast_start)
-  mod_fc   <- mod %>% filter(time >= forecast_start)
-  
-  # --- Sun windows in the forecast as yellow background bands (robust) ---
-  sun_rects_fc <- tibble(
-    xmin = as.POSIXct(character(), tz = TZ_LOCAL),
-    xmax = as.POSIXct(character(), tz = TZ_LOCAL),
-    ymin = numeric(),
-    ymax = numeric()
+      collapse = " | "
+    ),
+    caption = paste0("10-min model (dt=", MODEL_STEP_MIN, " min): FDH/PDH + CAP + SW(toposun) + Wind(vuln) + Dryness + Saturation"),
+    x = "Time"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(size = 9, lineheight = 0.95),
+    plot.title = element_text(face = "bold")
   )
-  
-  if (nrow(mod_fc) > 0) {
-    tmp <- mod_fc %>%
-      arrange(time) %>%
-      filter(!is.na(time)) %>%
-      mutate(
-        is_sun = topo_sun_fac == 1,
-        run = cumsum(is_sun != dplyr::lag(is_sun, default = dplyr::first(is_sun)))
-      )
-    
-    tmp_sun <- tmp %>% filter(is_sun)
-    
-    if (nrow(tmp_sun) > 0) {
-      sun_rects_fc <- tmp_sun %>%
-        group_by(run) %>%
-        reframe(
-          xmin = min(time),
-          xmax = max(time) + minutes(MODEL_STEP_MIN),
-          ymin = -Inf,
-          ymax =  Inf
-        )
-    }
-  }
-  
-  # Daily maxima in the forecast (for x-breaks + gridlines)
-  peak_fc <- mod_fc %>%
-    filter(is.finite(climbability)) %>%
-    group_by(date) %>%
-    slice_max(order_by = climbability, n = 1, with_ties = FALSE) %>%
-    ungroup() %>%
-    transmute(
-      peak_time  = time,
-      peak_label = format(time, "%d.%m\n%H:%M")
-    )
-  
-  bg <- tibble(xmin = forecast_start, xmax = x_max, ymin = -Inf, ymax = Inf)
-  
-  # Left (history): no sec.axis so it does not land between panels.
-  p_hist <- ggplot(mod_hist, aes(time, thickness_m)) +
-    geom_line(color = "black", linewidth = 0.9, show.legend = FALSE) +
-    geom_line(
-      data = climb_hist_daily,
-      aes(time, climb_y),
-      inherit.aes = FALSE,
-      color = "red",
-      linewidth = 0.85,
-      na.rm = TRUE,
-      show.legend = FALSE
-    ) +
-    coord_cartesian(xlim = c(x_min, forecast_start), ylim = c(y_min, y_max)) +
-    scale_x_datetime(date_breaks = "1 month", date_labels = "%b", timezone = TZ_LOCAL, guide = guide_axis(check.overlap = TRUE)) +
-    scale_y_continuous(name = "Ice thickness (m)") +
-    scale_color_manual(
-      name = "Legend",
-      values = c("Ice thickness" = "black", "Climbability" = "red")
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(
-      plot.margin = margin(5.5, 2, 5.5, 5.5),
-      axis.text.x = element_text(size = 9, lineheight = 0.95),
-      axis.title.x = element_blank(),
-      axis.text.y.right  = element_blank(),
-      axis.ticks.y.right = element_blank(),
-      axis.title.y.right = element_blank()
-    )
-  
-  # Right (forecast): sec.axis on the outer right + x-breaks only at peaks.
-  p_fc <- ggplot(mod_fc, aes(time, thickness_m)) +
-    geom_rect(data = bg, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-              inherit.aes = FALSE, fill = "grey85", alpha = 0.6, show.legend = FALSE) +
-    geom_rect(
-      data = sun_rects_fc,
-      aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = "Sun exposure"),
-      inherit.aes = FALSE,
-      alpha = 0.25,
-      show.legend = TRUE
-    ) +
-    geom_line(aes(color = "Ice thickness"), linewidth = 0.9, show.legend = TRUE) +
-    geom_line(aes(y = climb_y, color = "Climbability"), linewidth = 0.8, na.rm = TRUE, show.legend = TRUE) +
-    coord_cartesian(xlim = c(forecast_start, x_max), ylim = c(y_min, y_max)) +
-    scale_x_datetime(
-      breaks = peak_fc$peak_time,
-      labels = peak_fc$peak_label,
-      minor_breaks = NULL,
-      timezone = TZ_LOCAL,
-      guide = guide_axis(check.overlap = TRUE)
-    ) +
-    scale_y_continuous(
-      name = NULL,
-      sec.axis = sec_axis(~(. - y_min) / Y_DEN, name = "Climbability (0–1)")
-    ) +
-    scale_color_manual(
-      name = "Legend",
-      values = c("Ice thickness" = "black", "Climbability" = "red"),
-      breaks = c("Ice thickness", "Climbability"),
-      drop = FALSE
-    ) +
-    scale_fill_manual(
-      name = NULL,
-      values = c("Sun exposure" = "yellow"),
-      breaks = c("Sun exposure"),
-      drop = FALSE
-    ) +
-    guides(
-      color = guide_legend(order = 1, override.aes = list(fill = NA)),
-      fill = guide_legend(order = 2, title = NULL, override.aes = list(colour = NA, linetype = 0))
-    ) +
-    theme_minimal(base_size = 12) +
-    theme(
-      panel.grid.major.x = element_line(),
-      panel.grid.minor.x = element_blank(),
-      
-      plot.margin = margin(5.5, 18, 5.5, 2),  # Room for the right axis
-      axis.title.x = element_blank(),
-      
-      # Hide the left y-axis in the forecast panel.
-      axis.text.y  = element_blank(),
-      axis.ticks.y = element_blank(),
-      axis.title.y = element_blank(),
-      
-      # Show the right axis in the forecast panel.
-      axis.text.y.right  = element_text(size = 9),
-      axis.ticks.y.right = element_line(),
-      axis.title.y.right = element_text(margin = margin(l = 6)),
-      
-      axis.text.x = element_text(size = 9, lineheight = 0.95)
-    )
-  
-  plt <- (p_hist + p_fc) +
-    patchwork::plot_layout(widths = c(2, 1)) +
-    patchwork::plot_annotation(
-      title = paste0("Modeled ice thickness – ", ice_name, " (UID ", sprintf("%03d", UID_TEST), ")"),
-      subtitle = paste(
-        c(
-          if (!is.na(ice_alt_m)) paste0("Elevation: ", round(ice_alt_m, 0), " m"),
-          paste0("Station: ", station_id, " (", source, ")"),
-          paste0("dist ", round(dist_km, 2), " km"),
-          paste0("dz ", round(dz_m, 0), " m"),
-          if (cap_pair_confidence_uid > 0) paste0("CAP delta ", round(cap_delta_uid, 2)),
-          "Forecast (gray)"
-        ),
-        collapse = " | "
-      ),
-      caption = paste0("10-min model (dt=", MODEL_STEP_MIN, " min): FDH/PDH + CAP + SW(toposun) + Wind(vuln) + Dryness + Saturation")
-    )
-
-  plt <- plt + patchwork::plot_layout(guides = "collect") &
-    theme(
-      legend.position = "bottom",
-      legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 9),
-      legend.key = element_rect(fill = NA, colour = NA),
-      legend.box = "horizontal"
-    )
-  
-  }
-
 
 # =====================================================================
 # Export for the web (variant A): PNG to site/plots/

@@ -25,7 +25,6 @@ step_str <- paste0(MODEL_STEP_MIN, " mins")
 # ----------------------------
 # Time range (as in the model)
 # ----------------------------
-FORECAST_HOURS <- 60
 NOW_LOCAL <- with_tz(Sys.time(), TZ_LOCAL)
 END_DATE  <- as.Date(NOW_LOCAL)
 

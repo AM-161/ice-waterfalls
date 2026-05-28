@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------
 # 2025 All rights reserved.
 #
-# This script was created for the master thesis on icefall climbability
+# This script was created for the master thesis on icefall modeling
 # in North Tyrol. The code may not be copied, modified, shared, or
 # embedded in other projects (especially commercial or proprietary
 # software) without the author's prior written permission.
@@ -47,9 +47,7 @@ param_str     <- paste(parameters, collapse = ",")
 base_url_inca <- "https://dataset.api.hub.geosphere.at/v1/grid/historical/inca-v1-1h-1km"
 
 out_dir <- "data/inca_nordtirol"
-out_dir_nwp <- "data/nwp_2500m_forecast"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-dir.create(out_dir_nwp, showWarnings = FALSE, recursive = TRUE)
 
 nc_files <- character(length(chunk_starts))
 
@@ -434,8 +432,7 @@ r_FDH_eff <- raster(t(FDH_sum_eff))
 extent(r_FDH_eff) <- extent(r_template)
 crs(r_FDH_eff)    <- crs(r_template)
 names(r_FDH_eff)  <- "FDH_eff_C_h"
-
-# 7) Effective FDH -> ice thickness + climbability index (current) -----
+# 7) Effective FDH -> ice thickness -----------------------------------
 
 h_c      <- 30
 rho_i    <- 880
@@ -443,29 +440,6 @@ Lf       <- 334000
 FDH_crit <- 1
 
 alpha <- h_c * 3600 / (rho_i * Lf)
-
-score_h_fun <- function(h, h_min, h_opt) {
-  s <- (h - h_min) / (h_opt - h_min)
-  s[h <= h_min] <- 0
-  s[h >= h_opt] <- 1
-  s[!is.finite(s)] <- 0
-  s
-}
-
-score_T_fun <- function(Tv, T_opt, T_min, T_max, range_T) {
-  s <- 1 - abs(Tv - T_opt) / range_T
-  s[Tv <= T_min | Tv >= T_max] <- 0
-  s[s < 0] <- 0
-  s[!is.finite(s)] <- 0
-  s
-}
-
-score_RH_fun <- function(rh, RH_opt, RH_sig) {
-  peak <- exp(- (rh - RH_opt)^2 / (2 * RH_sig^2))
-  s <- peak
-  s[!is.finite(s)] <- 0
-  s
-}
 
 ice_hist_layers <- list()
 ice_hist_labels <- character(0)
@@ -486,350 +460,26 @@ ice_thick_expo <- r_FDH_eff * alpha
 ice_thick_expo[r_FDH_eff < FDH_crit] <- NA
 names(ice_thick_expo) <- "h_pot_expo_m"
 
-h_mat_ij <- FDH_sum_eff * alpha
-
-T_last_ij  <- T2M_arr[ , , nt]
-RH_last_ij <- RH_arr[ , , nt] / 100
-
-n_tr3   <- min(72, nt)
-idx_tr3 <- (nt - n_tr3 + 1):nt
-
-Tr3_ij <- apply(T2M_arr[ , , idx_tr3, drop = FALSE], c(1, 2), mean, na.rm = TRUE)
-
-h_min <- 0.10
-h_opt <- 0.50
-score_h <- score_h_fun(h_mat_ij, h_min, h_opt)
-
-T_opt   <- -4
-T_min   <- -20
-T_max   <- 0
-range_T <- max(T_opt - T_min, T_max - T_opt)
-score_T <- score_T_fun(T_last_ij, T_opt, T_min, T_max, range_T)
-
-T3_opt   <- -6
-T3_min   <- -20
-T3_max   <- -1
-range_T3 <- max(T3_opt - T3_min, T3_max - T3_opt)
-score_T3 <- score_T_fun(Tr3_ij, T3_opt, T3_min, T3_max, range_T3)
-
-RH_opt_c <- 0.7
-RH_sig_c <- 0.2
-score_RH <- score_RH_fun(RH_last_ij, RH_opt_c, RH_sig_c)
-
-# Climbability history (same behavior as before)
-climb_hist_layers <- list()
-climb_hist_labels <- character(0)
-
-if (length(FDH_hist_layers) > 0 && length(FDH_hist_labels) == length(FDH_hist_layers)) {
-  climb_hist_layers <- vector("list", length(FDH_hist_layers))
-  climb_hist_labels <- FDH_hist_labels
-  
-  for (i in seq_along(FDH_hist_layers)) {
-    r_fd <- FDH_hist_layers[[i]]
-    h_i  <- r_fd * alpha
-    h_i[r_fd < FDH_crit] <- NA
-    
-    t_i    <- FDH_hist_times[i]
-    dt_vec <- abs(as.numeric(difftime(time_vec, t_i, units = "hours")))
-    k_i    <- which.min(dt_vec)
-    if (!length(k_i) || !is.finite(k_i)) next
-    
-    T_i_mat  <- t(T2M_arr[ , , k_i])
-    RH_i_mat <- t(RH_arr[ , , k_i] / 100)
-    
-    r_T_i    <- raster(T_i_mat);  extent(r_T_i)  <- extent(r_template); crs(r_T_i)  <- crs(r_template)
-    r_RH_i   <- raster(RH_i_mat); extent(r_RH_i) <- extent(r_template); crs(r_RH_i) <- crs(r_template)
-    
-    k_start   <- max(1, k_i - (72 - 1))
-    idx3      <- k_start:k_i
-    Tr3_i_arr <- apply(T2M_arr[ , , idx3, drop = FALSE], c(1, 2), mean, na.rm = TRUE)
-    Tr3_i_mat <- t(Tr3_i_arr)
-    r_Tr3_i   <- raster(Tr3_i_mat); extent(r_Tr3_i) <- extent(r_template); crs(r_Tr3_i) <- crs(r_template)
-    
-    score_h_i  <- calc(h_i,    fun = function(h)  score_h_fun(h, h_min, h_opt))
-    score_T_i  <- calc(r_T_i,  fun = function(Tv) score_T_fun(Tv, T_opt, T_min, T_max, range_T))
-    score_T3_i <- calc(r_Tr3_i,fun = function(T3v)score_T_fun(T3v, T3_opt, T3_min, T3_max, range_T3))
-    score_RH_i <- calc(r_RH_i, fun = function(rh) score_RH_fun(rh, RH_opt_c, RH_sig_c))
-    
-    climb_i <- overlay(score_h_i, score_T_i, score_T3_i, score_RH_i,
-                       fun = function(a, b, c, d) a * b * c * d)
-    
-    climb_i[is.na(h_i) | h_i <= h_min] <- NA
-    climb_i[!is.finite(climb_i)]       <- NA
-    climb_i[climb_i <= 0]              <- NA
-    names(climb_i) <- paste0("Climbability_hist_", climb_hist_labels[i])
-    climb_hist_layers[[i]] <- climb_i
-  }
-}
-
-climb_index_ij <- score_h * score_T * score_T3 * score_RH
-climb_index_ij[h_mat_ij <= h_min]          <- NA
-climb_index_ij[!is.finite(climb_index_ij)] <- NA
-climb_index_ij[climb_index_ij <= 0]        <- NA
-
-climb_r <- raster(t(climb_index_ij))
-extent(climb_r) <- extent(r_template)
-crs(climb_r)    <- crs(r_template)
-names(climb_r)  <- "Climbability_0_1"
-
-# 8) Forecast from NWP -------------------------------------------------
-
-base_url_nwp   <- "https://dataset.api.hub.geosphere.at/v1/grid/forecast/nwp-v1-1h-2500m"
-parameters_nwp <- c("t2m", "rh2m", "u10m", "v10m")
-param_str_nwp  <- paste(parameters_nwp, collapse = ",")
-
-t_now    <- max(inca_nordtirol_all$time, na.rm = TRUE)
-t0       <- t_now
-fc_h_max <- 60
-
-t_fc_end <- t_now + fc_h_max * 3600
-
-start_fc <- format(t_now,    "%Y-%m-%dT%H:%M")
-end_fc   <- format(t_fc_end, "%Y-%m-%dT%H:%M")
-
-outfile_fc <- file.path(
-  out_dir_nwp,
-  sprintf("nwp_nordtirol_%s_%sh.nc",
-          format(as.Date(t_now), "%Y%m%d"),
-          fc_h_max)
-)
-
-if (!file.exists(outfile_fc) || file.info(outfile_fc)$size == 0) {
-  message("NWP chunk: ", start_fc, " to ", end_fc)
-  
-  query_fc <- list(
-    parameters    = param_str_nwp,
-    start         = start_fc,
-    end           = end_fc,
-    bbox          = paste(bbox, collapse = ","),
-    output_format = "netcdf",
-    filename      = "nwp_nordtirol"
-  )
-  
-  resp_fc <- GET(
-    url   = base_url_nwp,
-    query = query_fc,
-    write_disk(outfile_fc, overwrite = TRUE)
-  )
-  stop_for_status(resp_fc)
-  message("  -> NWP forecast saved: ", outfile_fc,
-          " (", file.info(outfile_fc)$size, " Bytes)")
-} else {
-  message("  -> NWP forecast skipped (exists): ", outfile_fc)
-}
-
-ice_fc_layers   <- NULL
-climb_fc_layers <- NULL
-fc_step_hours   <- NULL
-
-if (file.exists(outfile_fc)) {
-  nc_fc <- nc_open(outfile_fc)
-  
-  time_dim_name_fc <- names(nc_fc$dim)[grep("time", tolower(names(nc_fc$dim)))[1]]
-  time_fc_vals     <- ncvar_get(nc_fc, time_dim_name_fc)
-  time_fc_units    <- ncatt_get(nc_fc, time_dim_name_fc, "units")$value
-  time_fc          <- convert_nc_time(time_fc_vals, time_fc_units)
-  
-  nc_close(nc_fc)
-  
-  lead_hours <- as.numeric(difftime(time_fc, t_now, units = "hours"))
-  keep_fc    <- which(lead_hours >= 0 & lead_hours <= fc_h_max + 0.01)
-  
-  if (length(keep_fc) > 0) {
-    time_fc    <- time_fc[keep_fc]
-    lead_hours <- lead_hours[keep_fc]
-    
-    T2M_fc_brick  <- brick(outfile_fc, varname = "t2m")[[keep_fc]]
-    RH2M_fc_brick <- brick(outfile_fc, varname = "rh2m")[[keep_fc]]
-    U10_fc_brick  <- brick(outfile_fc, varname = "u10m")[[keep_fc]]
-    V10_fc_brick  <- brick(outfile_fc, varname = "v10m")[[keep_fc]]
-    
-    crs(T2M_fc_brick)  <- crs(r_template)
-    crs(RH2M_fc_brick) <- crs(r_template)
-    crs(U10_fc_brick)  <- crs(r_template)
-    crs(V10_fc_brick)  <- crs(r_template)
-    
-    T2M_fc  <- resample(T2M_fc_brick,  r_template, method = "bilinear")
-    RH2M_fc <- resample(RH2M_fc_brick, r_template, method = "bilinear")
-    U10_fc  <- resample(U10_fc_brick,  r_template, method = "bilinear")
-    V10_fc  <- resample(V10_fc_brick,  r_template, method = "bilinear")
-    
-    W_fc <- overlay(U10_fc, V10_fc, fun = function(u, v) sqrt(u^2 + v^2))
-    
-    time_local_fc <- as.POSIXlt(time_fc, tz = "Europe/Vienna")
-    doy_fc  <- time_local_fc$yday + 1
-    hour_fc <- time_local_fc$hour + time_local_fc$min / 60 + time_local_fc$sec / 3600
-    
-    delta_fc <- 23.44 * pi/180 * sin(2 * pi * (284 + doy_fc) / 365)
-    H_fc     <- (hour_fc - 12) * 15 * pi/180
-    
-    sin_alpha_fc <- sin(lat_center_rad) * sin(delta_fc) +
-      cos(lat_center_rad) * cos(delta_fc) * cos(H_fc)
-    sin_alpha_fc[sin_alpha_fc < 0] <- 0
-    solar_height_factor_fc <- sin_alpha_fc
-    
-    weight_time_fc <- rep(1, length(time_fc))
-    
-    Tr3_fc <- calc(T2M_fc, fun = function(x) mean(x, na.rm = TRUE))
-    score_T3_fc <- calc(Tr3_fc, fun = function(t3) {
-      score_T_fun(t3, T3_opt, T3_min, T3_max, range_T3)
-    })
-    
-    time_fc_local <- as.POSIXct(format(time_fc, tz = "Europe/Vienna", usetz = TRUE),
-                                tz = "Europe/Vienna")
-    
-    t0_local_fc <- as.POSIXct(format(t0, tz = "Europe/Vienna", usetz = TRUE),
-                              tz = "Europe/Vienna")
-    
-    target_hours_all  <- c(0, lead_hours)
-    target_labels_all <- c(
-      paste0(format(t0_local_fc, "%d.%m.%Y, %H:%M"), " (Analyse)"),
-      format(time_fc_local, "%d.%m.%Y, %H:%M")
-    )
-    
-    ord <- order(target_hours_all)
-    target_hours_all  <- target_hours_all[ord]
-    target_labels_all <- target_labels_all[ord]
-    
-    max_lead <- max(lead_hours) + 1e-6
-    keep_idx <- target_hours_all <= max_lead
-    target_hours_all  <- target_hours_all[keep_idx]
-    target_labels_all <- target_labels_all[keep_idx]
-    
-    target_times <- t0 + target_hours_all * 3600
-    
-    ice_fc_layers   <- vector("list", length(target_hours_all))
-    climb_fc_layers <- vector("list", length(target_hours_all))
-    names(ice_fc_layers)   <- target_labels_all
-    names(climb_fc_layers) <- target_labels_all
-    
-    if (length(target_hours_all) > 0 && target_hours_all[1] == 0) {
-      ice_fc_layers[[1]]   <- ice_thick_expo
-      climb_fc_layers[[1]] <- climb_r
-    }
-    
-    FDH_base_r  <- r_FDH_eff
-    delta_cum_r <- raster(FDH_base_r); delta_cum_r[] <- 0
-    
-    next_target_idx <- which(target_hours_all > 0)[1]
-    if (is.na(next_target_idx)) next_target_idx <- length(target_hours_all) + 1
-    
-    for (k in seq_along(time_fc)) {
-      dt_k <- lead_hours[k]
-      
-      T_k  <- raster(T2M_fc,  layer = k)
-      RH_k <- raster(RH2M_fc, layer = k) / 100
-      W_k  <- raster(W_fc,    layer = k)
-      
-      FDH_k <- calc(T_k, fun = function(x) pmax(-x, 0))
-      MDH_k <- calc(T_k, fun = function(x) pmax( x, 0))
-      
-      f_wind <- calc(W_k, fun = function(w) {
-        wn <- (w - wind_ref) / wind_ref
-        f  <- 1 + k_wind * wn
-        f[!is.finite(f)] <- 1
-        pmax(wind_min, pmin(wind_max, f))
-      })
-      
-      f_rh <- calc(RH_k, fun = function(rh) {
-        0.5 + 0.5 * exp(- (rh - rh_opt)^2 / (2 * rh_sig^2))
-      })
-      
-      s_height_k <- solar_height_factor_fc[k]
-      f_rad_k <- if (s_height_k == 0) {
-        solar_index_r * 0 + 1
-      } else {
-        calc(solar_index_r, fun = function(s_index) {
-          f <- 1 - k_expo * s_height_k * s_index
-          f[!is.finite(f)] <- 1
-          pmax(0, pmin(1, f))
-        })
-      }
-      
-      f_time_k <- weight_time_fc[k]
-      
-      FDH_eff_k <- FDH_k * f_wind * f_rh * f_rad_k * f_time_k
-      MDH_eff_k <- MDH_k * k_melt * f_time_k
-      
-      delta_cum_r <- delta_cum_r + (FDH_eff_k - MDH_eff_k)
-      
-      while (next_target_idx <= length(target_hours_all) &&
-             dt_k >= target_hours_all[next_target_idx] - 0.5 &&
-             is.null(ice_fc_layers[[next_target_idx]])) {
-        
-        FDH_fc_k <- FDH_base_r + delta_cum_r
-        FDH_fc_k[FDH_fc_k < 0] <- 0
-        
-        ice_k <- FDH_fc_k * alpha
-        ice_k[FDH_fc_k < FDH_crit] <- NA
-        names(ice_k) <- paste0("h_pot_expo_m_fc_", target_hours_all[next_target_idx], "h")
-        ice_fc_layers[[next_target_idx]] <- ice_k
-        
-        h_k <- ice_k
-        
-        score_h_k  <- calc(h_k, fun = function(h)  score_h_fun(h, h_min, h_opt))
-        score_T_k  <- calc(T_k, fun = function(Tv) score_T_fun(Tv, T_opt, T_min, T_max, range_T))
-        score_RH_k <- calc(RH_k,fun = function(rh) score_RH_fun(rh, RH_opt_c, RH_sig_c))
-        
-        climb_k <- overlay(score_h_k, score_T_k, score_T3_fc, score_RH_k,
-                           fun = function(a, b, c, d) a * b * c * d)
-        
-        climb_k[is.na(h_k) | h_k <= h_min] <- NA
-        climb_k[!is.finite(climb_k)]       <- NA
-        climb_k[climb_k <= 0]              <- NA
-        names(climb_k) <- paste0("Climbability_fc_", target_hours_all[next_target_idx], "h")
-        climb_fc_layers[[next_target_idx]] <- climb_k
-        
-        next_target_idx <- next_target_idx + 1
-      }
-    }
-    
-    if (any(vapply(ice_fc_layers, is.null, logical(1)))) {
-      last_non_null <- max(which(!vapply(ice_fc_layers, is.null, logical(1))))
-      for (i in seq_along(ice_fc_layers)) {
-        if (is.null(ice_fc_layers[[i]])) {
-          ice_fc_layers[[i]]   <- ice_fc_layers[[last_non_null]]
-          climb_fc_layers[[i]] <- climb_fc_layers[[last_non_null]]
-        }
-      }
-    }
-    
-    fc_step_hours <- target_hours_all
-  }
-}
 
 # 9) Controls / HTML summary ------------------------------------------
-# NOTE: The former daily climbability overview box was removed on request.
-#       No active calculation path/control binding remains for it.
+# 10) Build time layers -----------------------------------------------
 
-# 10) Build time layers (same step sequence as before) -----------------
-
-ice_time_layers   <- list()
-climb_time_layers <- list()
-time_labels       <- character(0)
+ice_time_layers <- list()
+time_labels     <- character(0)
 
 if (length(ice_hist_layers) > 0L) {
-  ice_time_layers   <- c(ice_time_layers, ice_hist_layers)
-  climb_time_layers <- c(climb_time_layers, climb_hist_layers)
-  time_labels       <- c(time_labels, ice_hist_labels)
-}
-
-if (!is.null(ice_fc_layers) && length(ice_fc_layers) > 0L) {
-  ice_time_layers   <- c(ice_time_layers, ice_fc_layers)
-  climb_time_layers <- c(climb_time_layers, climb_fc_layers)
-  time_labels       <- c(time_labels, names(ice_fc_layers))
+  ice_time_layers <- c(ice_time_layers, ice_hist_layers)
+  time_labels     <- c(time_labels, ice_hist_labels)
 }
 
 if (length(ice_time_layers) == 0L) {
-  ice_time_layers   <- list(ice_thick_expo)
-  climb_time_layers <- list(climb_r)
-  time_labels       <- format(Sys.Date(), "%d.%m.%Y (Jetzt)")
+  ice_time_layers <- list(ice_thick_expo)
+  time_labels     <- format(Sys.Date(), "%d.%m.%Y (Jetzt)")
 }
 
-n_steps <- min(length(ice_time_layers), length(climb_time_layers), length(time_labels))
-ice_time_layers   <- ice_time_layers[seq_len(n_steps)]
-climb_time_layers <- climb_time_layers[seq_len(n_steps)]
-time_labels       <- time_labels[seq_len(n_steps)]
+n_steps <- min(length(ice_time_layers), length(time_labels))
+ice_time_layers <- ice_time_layers[seq_len(n_steps)]
+time_labels     <- time_labels[seq_len(n_steps)]
 
 max_h_all <- vapply(
   ice_time_layers,
@@ -847,12 +497,6 @@ col_fun <- colorRampPalette(c("#ffffff", "#c6dbef", "#6baed6", "#08519c"))
 pal_h <- colorNumeric(
   palette  = col_fun(100),
   domain   = c(0, max_h),
-  na.color = "transparent"
-)
-
-pal_ci <- colorNumeric(
-  palette  = rev(terrain.colors(100)),
-  domain   = c(0, 1),
   na.color = "transparent"
 )
 
@@ -910,8 +554,7 @@ write_overlay_png <- function(r, pal, file) {
 
 message("Writing PNG overlays for ", n_steps, " steps ...")
 for (i in seq_len(n_steps)) {
-  write_overlay_png(ice_time_layers[[i]],   pal_h,  sprintf("site/img/ice_%03d.png", i))
-  write_overlay_png(climb_time_layers[[i]], pal_ci, sprintf("site/img/climb_%03d.png", i))
+  write_overlay_png(ice_time_layers[[i]], pal_h, sprintf("site/img/ice_%03d.png", i))
 }
 
 # 11) Icefall sun data + topo URLs ------------------------------------
@@ -1259,15 +902,6 @@ if (isTRUE(preview_mode)) {
       method  = "bilinear",
       group   = "Ice thickness",
       layerId = "ice_preview"
-    ) |>
-    addRasterImage(
-      climb_time_layers[[init_i]],
-      colors  = pal_ci,
-      opacity = 0.7,
-      project = TRUE,
-      method  = "bilinear",
-      group   = "Climbability",
-      layerId = "climb_preview"
     )
 } else {
   bounds_js <- sprintf("[[%f,%f],[%f,%f]]", ext@ymin, ext@xmin, ext@ymax, ext@xmax)
@@ -1280,8 +914,7 @@ if (isTRUE(preview_mode)) {
          var bounds = %s;
          function pad3(n){ return String(n).padStart(3,'0'); }
 
-         var iceUrl   = 'img/ice_'   + pad3(%d) + '.png';
-         var climbUrl = 'img/climb_' + pad3(%d) + '.png';
+         var iceUrl = 'img/ice_' + pad3(%d) + '.png';
 
          var rasterPane = map.getPane('iceRasterPane');
          if (!rasterPane && typeof map.createPane === 'function') {
@@ -1291,31 +924,25 @@ if (isTRUE(preview_mode)) {
            rasterPane.style.zIndex = 250;
          }
 
-         var ice   = L.imageOverlay(iceUrl,   bounds, {opacity: 0.8, layerId: 'ice_overlay',   pane: 'iceRasterPane'});
-         var climb = L.imageOverlay(climbUrl, bounds, {opacity: 0.7, layerId: 'climb_overlay', pane: 'iceRasterPane'});
+         var ice = L.imageOverlay(iceUrl, bounds, {opacity: 0.8, layerId: 'ice_overlay', pane: 'iceRasterPane'});
 
          try {
            if (map.layerManager && typeof map.layerManager.addLayer === 'function') {
-             map.layerManager.addLayer(ice,   'image', 'ice_overlay',   'Ice thickness',     null, null);
-             map.layerManager.addLayer(climb, 'image', 'climb_overlay', 'Climbability', null, null);
+             map.layerManager.addLayer(ice, 'image', 'ice_overlay', 'Ice thickness', null, null);
 
              if (typeof map.layerManager.showGroup === 'function') {
                map.layerManager.showGroup('Ice thickness');
-               map.layerManager.showGroup('Climbability');
              }
            } else {
              ice.addTo(map);
-             climb.addTo(map);
            }
          } catch(e) {
-           try { ice.addTo(map); climb.addTo(map); } catch(e2) {}
+           try { ice.addTo(map); } catch(e2) {}
          }
 
-         window._iceOverlay   = ice;
-         window._climbOverlay = climb;
+         window._iceOverlay = ice;
        }",
       bounds_js,
-      init_i,
       init_i
     )
   )
@@ -1385,7 +1012,7 @@ m <- m |>
           <div style='display:flex;flex-direction:column;gap:6px;'>
             <div style='font-size:11px;color:#444;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;'>Sun</div>
             <div style='display:flex;flex-direction:column;gap:4px;font-size:11px;color:#555;'>
-              <span>Sun tomorrow (h)</span>
+              <span>Sun today (h)</span>
               <div style='display:flex;gap:6px;align-items:center;flex-wrap:wrap;'>
                 <input id='mapSunMin' type='range' min='0' max='12' step='0.25' value='0' style='flex:1;min-width:120px;'/>
                 <input id='mapSunMax' type='range' min='0' max='12' step='0.25' value='12' style='flex:1;min-width:120px;'/>
@@ -1437,20 +1064,13 @@ m <- m |>
 m <- m |>
   addLayersControl(
     baseGroups    = c("OSM", "Terrain (Topo)"),
-    overlayGroups = c("Ice thickness", "Climbability", "Icefalls"),
+    overlayGroups = c("Ice thickness", "Icefalls"),
     options       = layersControlOptions(collapsed = FALSE)
   ) |>
   fitBounds(lng1 = ext@xmin, lat1 = ext@ymin, lng2 = ext@xmax, lat2 = ext@ymax)
 
 # Legends
 m <- m |>
-  addLegend(
-    pal       = pal_ci,
-    values    = c(0, 1),
-    title     = "Climbability",
-    labFormat = labelFormat(digits = 1),
-    position  = "bottomleft"
-  ) |>
   addLegend(
     pal       = pal_h,
     values    = c(0, max_h),
@@ -1502,13 +1122,11 @@ m <- m |>
           
           function pad3(n){ return String(n).padStart(3,'0'); }
           
-          var iceLayer   = window._iceOverlay   || null;
-          var climbLayer = window._climbOverlay || null;
+          var iceLayer = window._iceOverlay || null;
           
-          if (!iceLayer || !climbLayer) {
+          if (!iceLayer) {
             map.eachLayer(function(l){
-              if(!iceLayer   && l && l.options && l.options.layerId === 'ice_overlay')   iceLayer = l;
-              if(!climbLayer && l && l.options && l.options.layerId === 'climb_overlay') climbLayer = l;
+              if(!iceLayer && l && l.options && l.options.layerId === 'ice_overlay') iceLayer = l;
             });
           }
           
@@ -1520,8 +1138,7 @@ m <- m |>
             if (step >= nSteps) step = nSteps - 1;
             
             var i = step + 1; // 1..nSteps
-            if (iceLayer)   iceLayer.setUrl('img/ice_' + pad3(i) + '.png');
-            if (climbLayer) climbLayer.setUrl('img/climb_' + pad3(i) + '.png');
+            if (iceLayer) iceLayer.setUrl('img/ice_' + pad3(i) + '.png');
             
             var labelDiv = document.getElementById('time-label');
             if (labelDiv && step >= 0 && step < labels.length) {
@@ -1531,9 +1148,7 @@ m <- m |>
             var next = Math.min(nSteps, i+1);
             var prev = Math.max(1, i-1);
             var img1 = new Image(); img1.src = 'img/ice_' + pad3(next) + '.png';
-            var img2 = new Image(); img2.src = 'img/climb_' + pad3(next) + '.png';
             var img3 = new Image(); img3.src = 'img/ice_' + pad3(prev) + '.png';
-            var img4 = new Image(); img4.src = 'img/climb_' + pad3(prev) + '.png';
           }
           
           var sliderControl = L.control({position: 'topright'});
@@ -1550,7 +1165,7 @@ m <- m |>
             var title = document.createElement('div');
             title.style.fontSize    = '16px';
             title.style.marginBottom = '4px';
-            title.innerHTML = '<b>Ice thickness & climbability – timeline</b>';
+            title.innerHTML = '<b>Ice thickness timeline</b>';
             div.appendChild(title);
             
             var labelDiv = document.createElement('div');

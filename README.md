@@ -9,7 +9,6 @@ Interactive icefall map and model output for a master thesis project.
 - `data/`: input, cache, and derived data required by the model/build.
   - `data/Glacier/`: glacier inventory shapefile used by the CAP calculation.
   - `data/inca_nordtirol/point_timeseries/`: cached INCA point time series used by UID model plots.
-  - `data/nwp_2500m_forecast/point_forecasts/`: cached NWP point forecasts used by UID model plots.
 - `analysis/`: research, QA, and thesis-helper scripts that are not part of the normal Pages build.
 - `site/`: generated GitHub Pages output. It is ignored except for `.gitkeep`.
 - `ALT/`: local archive for old scripts, scratch files, and RStudio state. It is ignored by Git.

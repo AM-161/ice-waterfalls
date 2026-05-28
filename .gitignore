@@ -14,8 +14,6 @@ Rplots.pdf
 # Runtime-generated data and caches
 /data/plots/
 /data/inca_nordtirol/point_timeseries/
-/data/nwp_2500m_forecast/
-/data/nwp_3500m_forecast/nwp_metadata_cache.json
 /data/_cache_sunapi/
 /data/_cache_inversion/
 /data/_cache_cap/
@@ -37,11 +35,6 @@ Rplots.pdf
 !/add_new/new_icefalls.csv
 /tmp/
 /scripts/AWS Validation/out/
-
-# Analysis outputs kept out of Git; scripts live under analysis/
-/Hist_Klima/
-/analysis/historical_climate/**/cache/
-/analysis/historical_climate/**/output/
 
 # Python and OS noise
 __pycache__/

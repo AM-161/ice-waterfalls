@@ -62,7 +62,6 @@ jobs:
             any::tibble
             any::zoo
             any::ggplot2
-            any::patchwork
             any::raster
             any::leaflet
             any::htmlwidgets

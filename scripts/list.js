@@ -41,7 +41,7 @@
     const openNewTab = document.getElementById("openNewTab");
 
     let rows = [];
-    let sortKey = "climb_max_tomorrow";
+    let sortKey = "thickness_latest_m";
     let sortAsc = false;
 
     let center = null;
@@ -230,7 +230,7 @@
         if (isFinite(fRmax) && v > fRmax) return false;
       }
       if (isFinite(fSunMin) || isFinite(fSunMax)) {
-        const v = num(r.sun_hours_tomorrow_h);
+        const v = num(r.sun_hours_today_h);
         if (!isFinite(v)) return false;
         if (isFinite(fSunMin) && v < fSunMin) return false;
         if (isFinite(fSunMax) && v > fSunMax) return false;
@@ -349,11 +349,10 @@
           <td>${rTxt}</td>
           <td>${isFinite(num(r.elev_m)) ? Math.round(num(r.elev_m)) : "<span class=muted>&mdash;</span>"}</td>
           <td>${isFinite(num(r._dist_km)) ? (num(r._dist_km).toFixed(1) + " km") : "<span class=muted>&mdash;</span>"}</td>
-          <td>${str(r.sun_tomorrow_range_txt) || "<span class=muted>&mdash;</span>"}</td>
-          <td>${isFinite(num(r.sun_hours_tomorrow_h)) ? (num(r.sun_hours_tomorrow_h).toFixed(1) + " h") : "<span class=muted>&mdash;</span>"}</td>
-          <td>${r.thickness_tomorrow_07_txt || "<span class=muted>&mdash;</span>"}</td>
-          <td>${(r.climb_max_tomorrow_txt || str(r.climb_max_time_local))
-            ? `${r.climb_max_tomorrow_txt || "<span class=muted>&mdash;</span>"}<div class="muted">${str(r.climb_max_time_local) || "&mdash;"}</div>`
+          <td>${str(r.sun_today_range_txt) || "<span class=muted>&mdash;</span>"}</td>
+          <td>${isFinite(num(r.sun_hours_today_h)) ? (num(r.sun_hours_today_h).toFixed(1) + " h") : "<span class=muted>&mdash;</span>"}</td>
+          <td>${(r.thickness_latest_txt || str(r.thickness_latest_time_local))
+            ? `${r.thickness_latest_txt || "<span class=muted>&mdash;</span>"}<div class="muted">${str(r.thickness_latest_time_local) || "&mdash;"}</div>`
             : "<span class=muted>&mdash;</span>"}</td>
           <td>${r.last_upload_txt || "<span class=muted>&mdash;</span>"}</td>
           <td>${detailsBtn}</td>
@@ -688,7 +687,7 @@
       // set SUN max to data-driven max (rounded up), keep within [2, 24]
       let mx = 0;
       for (const r of rows){
-        const v = num(r.sun_hours_tomorrow_h);
+        const v = num(r.sun_hours_today_h);
         if (isFinite(v)) mx = Math.max(mx, v);
       }
       if (!isFinite(mx) || mx <= 0) mx = RANGE.SUN.max;
