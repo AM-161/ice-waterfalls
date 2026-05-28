@@ -30,22 +30,35 @@ SUPPORT_GRADE_REF <- 0.6
 
 DEM_SPECS <- list(
   list(
+    id = "oetztal_50cm",
+    label = "DOM_Oetztal_50cm",
+    path = "data/DEM/DOM_Oetztal_50cm.tif",
+    dem_resolution_factor = 1.10,
+    coarse_target_res_m = 2,
+    final_target_res_m = 0.5,
+    final_corridor_buffer_m = 100,
+    required = FALSE
+  ),
+  list(
     id = "tirol_5m",
     label = "DGM_Tirol_5m_epsg31254_2006_2020",
     path = "data/DEM/DGM_Tirol_5m_epsg31254_2006_2020.tif",
-    dem_resolution_factor = 1.00
+    dem_resolution_factor = 1.00,
+    required = FALSE
   ),
   list(
     id = "at_5m",
     label = "DGM_AT_5m_epsg31287",
     path = "data/DEM/DGM_AT_5m_epsg31287.tif",
-    dem_resolution_factor = 0.95
+    dem_resolution_factor = 0.95,
+    required = FALSE
   ),
   list(
     id = "eudem_25m",
     label = "eudem_dem_3035_europe",
     path = "data/DEM/eudem_dem_3035_europe.tif",
-    dem_resolution_factor = 0.55
+    dem_resolution_factor = 0.55,
+    required = FALSE
   )
 )
 
@@ -60,6 +73,13 @@ if (length(uid_arg) > 0) {
   uid_filter <- sort(unique(uid_filter[is.finite(uid_filter)]))
 }
 force_cache <- any(args == "--force") || identical(Sys.getenv("ICEFALL_FORCE_CACHE", "0"), "1")
+
+spec_num <- function(spec, name, default = NA_real_) {
+  value <- spec[[name]]
+  if (is.null(value)) return(default)
+  value <- suppressWarnings(as.numeric(value))
+  if (length(value) == 0 || !is.finite(value[[1]])) default else value[[1]]
+}
 
 clamp01 <- function(x) {
   pmax(0, pmin(1, x))
@@ -298,12 +318,19 @@ build_meta <- function(path) {
 }
 
 load_dem_catalog <- function() {
-  lapply(DEM_SPECS, function(spec) {
-    if (!file.exists(spec$path)) stop("Missing DEM: ", spec$path)
+  out <- lapply(DEM_SPECS, function(spec) {
+    if (!file.exists(spec$path)) {
+      if (isTRUE(spec$required)) stop("Missing DEM: ", spec$path)
+      message("DEM not found, skip: ", spec$path)
+      return(NULL)
+    }
     r <- terra::rast(spec$path)
     spec$resolution_m <- mean(terra::res(r))
     list(spec = spec, raster = r)
   })
+  out <- Filter(Negate(is.null), out)
+  if (length(out) == 0) stop("No DEM files found.")
+  out
 }
 
 choose_dem_for_point <- function(point_ll, dem_catalog) {
@@ -322,9 +349,9 @@ choose_dem_for_point <- function(point_ll, dem_catalog) {
   NULL
 }
 
-build_local_bundle <- function(uid, dem_choice, force = FALSE) {
+build_local_bundle <- function(uid, dem_choice, force = FALSE, mode = "single", crop_ext = NULL, target_res_m = NA_real_) {
   uid_key <- sprintf("%03d", as.integer(uid))
-  stem <- paste0("uid_", uid_key, "_", dem_choice$spec$id)
+  stem <- paste0("uid_", uid_key, "_", dem_choice$spec$id, "_", mode)
   path_dem <- file.path(CACHE_DIR, paste0(stem, "_dem.tif"))
   path_slope <- file.path(CACHE_DIR, paste0(stem, "_slope.tif"))
   path_aspect <- file.path(CACHE_DIR, paste0(stem, "_aspect.tif"))
@@ -333,11 +360,29 @@ build_local_bundle <- function(uid, dem_choice, force = FALSE) {
 
   cache_exists <- all(file.exists(c(path_dem, path_slope, path_aspect, path_topo, path_tpi)))
   if (!cache_exists || force) {
-    buf <- terra::buffer(dem_choice$point, width = WINDOW_RADIUS_M)
-    crop_ext <- terra::ext(buf)
+    if (is.null(crop_ext)) {
+      buf <- terra::buffer(dem_choice$point, width = WINDOW_RADIUS_M)
+      crop_ext <- terra::ext(buf)
+    }
     dem_local <- terra::crop(dem_choice$raster, crop_ext, snap = "out")
     if (is.null(dem_local) || terra::ncell(dem_local) == 0) {
       stop("No DEM cells in local window")
+    }
+    target_res <- target_res_m
+    if (!is.finite(target_res)) {
+      target_res <- spec_num(dem_choice$spec, "structure_target_res_m", NA_real_)
+    }
+    if (is.finite(target_res)) {
+      source_res <- mean(terra::res(dem_local))
+      if (is.finite(source_res) && source_res < target_res) {
+        fact <- max(1L, round(target_res / source_res))
+        message(
+          "  UID ", uid, ": ", mode, " ", dem_choice$spec$id,
+          " window from ", round(source_res, 2),
+          " m to about ", round(source_res * fact, 2), " m"
+        )
+        dem_local <- terra::aggregate(dem_local, fact = fact, fun = mean, na.rm = TRUE)
+      }
     }
     names(dem_local) <- "elev_m"
     if (!any(is.finite(terra::values(dem_local, mat = FALSE)))) {
@@ -379,6 +424,15 @@ build_local_bundle <- function(uid, dem_choice, force = FALSE) {
     aspect = terra::rast(path_aspect),
     topo = terra::rast(path_topo),
     tpi = terra::rast(path_tpi)
+  )
+}
+
+route_corridor_ext <- function(route_coords, buffer_m) {
+  terra::ext(
+    min(route_coords[, 1], na.rm = TRUE) - buffer_m,
+    max(route_coords[, 1], na.rm = TRUE) + buffer_m,
+    min(route_coords[, 2], na.rm = TRUE) - buffer_m,
+    max(route_coords[, 2], na.rm = TRUE) + buffer_m
   )
 }
 
@@ -603,7 +657,14 @@ analyze_single_icefall <- function(row, dem_catalog, force_local_cache = FALSE) 
   base$dem_resolution_m <- dem_choice$spec$resolution_m
   base$dem_resolution_factor <- dem_choice$spec$dem_resolution_factor
 
-  local_bundle <- build_local_bundle(base$uid, dem_choice, force = force_local_cache)
+  coarse_target_res <- spec_num(dem_choice$spec, "coarse_target_res_m", NA_real_)
+  local_bundle <- build_local_bundle(
+    base$uid,
+    dem_choice,
+    force = force_local_cache,
+    mode = if (is.finite(coarse_target_res)) "coarse" else "single",
+    target_res_m = coarse_target_res
+  )
   if (!is.finite(base$preferred_aspect_deg)) {
     point_aspect <- suppressWarnings(as.numeric(terra::extract(local_bundle$aspect, dem_choice$point)[1, 2]))
     base$preferred_aspect_deg <- point_aspect
@@ -630,6 +691,51 @@ analyze_single_icefall <- function(row, dem_catalog, force_local_cache = FALSE) 
     base$qa_note <- "Automatic route tracing could not build a line with at least three support points."
     return(list(record = base, route_coords_ll = NULL, route_coords_local = route_coords, accepted = FALSE))
   }
+
+  final_target_res <- spec_num(dem_choice$spec, "final_target_res_m", NA_real_)
+  final_corridor_buffer <- spec_num(dem_choice$spec, "final_corridor_buffer_m", NA_real_)
+  if (is.finite(final_target_res) && is.finite(final_corridor_buffer) && final_corridor_buffer > 0) {
+    message(
+      "  UID ", base$uid, ": final 50 cm structure pass in ",
+      round(final_corridor_buffer), " m corridor"
+    )
+    final_bundle <- tryCatch(
+      build_local_bundle(
+        base$uid,
+        dem_choice,
+        force = force_local_cache,
+        mode = "final",
+        crop_ext = route_corridor_ext(route_coords, final_corridor_buffer),
+        target_res_m = final_target_res
+      ),
+      error = function(e) {
+        message("  UID ", base$uid, ": final pass failed; keep coarse route: ", conditionMessage(e))
+        NULL
+      }
+    )
+    if (!is.null(final_bundle)) {
+      final_start_cell <- find_start_cell(final_bundle$dem, final_bundle$slope, dem_choice$point, radius_m = START_RADIUS_M)
+      if (is.finite(final_start_cell)) {
+        final_route_coords <- build_route_coords(
+          final_start_cell,
+          final_bundle$dem,
+          final_bundle$slope,
+          final_bundle$aspect,
+          base$preferred_aspect_deg
+        )
+        if (nrow(final_route_coords) >= 3 && line_length_m(final_route_coords) > 0) {
+          local_bundle <- final_bundle
+          route_coords <- final_route_coords
+        } else {
+          message("  UID ", base$uid, ": final route too short; keep coarse route.")
+        }
+      } else {
+        message("  UID ", base$uid, ": no final start cell; keep coarse route.")
+      }
+    }
+  }
+
+  base$dem_resolution_m <- mean(terra::res(local_bundle$dem))
 
   route_length <- line_length_m(route_coords)
   if (!is.finite(route_length) || route_length <= 0) {
@@ -736,9 +842,7 @@ route_i <- 0L
 for (i in seq_len(nrow(meta))) {
   row <- meta[i, , drop = FALSE]
   uid <- as.integer(row$uid[[1]])
-  if (i %% 25 == 0 || i == 1L || i == nrow(meta)) {
-    message(sprintf("[%d/%d] uid=%s %s", i, nrow(meta), uid, coalesce_chr(row$name[[1]])))
-  }
+  message(sprintf("[%d/%d] uid=%s %s", i, nrow(meta), uid, coalesce_chr(row$name[[1]])))
   result <- tryCatch(
     analyze_single_icefall(row, dem_catalog, force_local_cache = force_cache),
     error = function(e) {

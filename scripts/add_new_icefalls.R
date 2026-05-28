@@ -74,6 +74,7 @@ BUILD_MAP <- has_arg("--build-map")
 KEEP_EXISTING_SUN <- has_arg("--keep-existing-sun")
 FORCE_STRUCTURE <- has_arg("--force-structure")
 FORCE_CAP <- has_arg("--force-cap")
+RERUN_OETZTAL <- has_arg("--rerun-oetztal")
 
 uid_filter <- parse_uid_arg(arg_value("--uids=", ""))
 
@@ -272,10 +273,26 @@ find_next_uid <- function(used) {
 # ---------------------------------------------------------------------
 
 DEM_SPECS <- list(
+  list(
+    id = "oetztal_50cm",
+    label = "DOM_Oetztal_50cm",
+    path = "data/DEM/DOM_Oetztal_50cm.tif",
+    factor = 1.10,
+    local_aspect_only = TRUE,
+    aspect_target_res_m = 2,
+    horizon_min_step_m = 10
+  ),
   list(id = "tirol_5m", label = "DGM_Tirol_5m_epsg31254_2006_2020", path = "data/DEM/DGM_Tirol_5m_epsg31254_2006_2020.tif", factor = 1.00),
   list(id = "at_5m", label = "DGM_AT_5m_epsg31287", path = "data/DEM/DGM_AT_5m_epsg31287.tif", factor = 0.95),
   list(id = "eudem_25m", label = "eudem_dem_3035_europe", path = "data/DEM/eudem_dem_3035_europe.tif", factor = 0.55)
 )
+
+spec_num <- function(spec, name, default = NA_real_) {
+  value <- spec[[name]]
+  if (is.null(value)) return(default)
+  value <- suppressWarnings(as.numeric(value))
+  if (length(value) == 0 || !is.finite(value[[1]])) default else value[[1]]
+}
 
 load_dem_catalog <- function(required = FALSE) {
   out <- list()
@@ -307,6 +324,13 @@ extract_point <- function(r, pt, buffer = NA_real_, fun = mean) {
   if (length(out) == 0 || !is.finite(out)) NA_real_ else out
 }
 
+modal_num <- function(x, ...) {
+  x <- x[is.finite(x)]
+  if (length(x) == 0) return(NA_real_)
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
 choose_dem_for_lonlat <- function(lon, lat, dem_catalog) {
   if (!is.finite(lon) || !is.finite(lat)) return(NULL)
   p_ll <- point_ll(lon, lat)
@@ -329,6 +353,9 @@ aspect_cache_path <- function(spec) {
 
 get_aspect_raster <- function(entry) {
   key <- entry$spec$id
+  if (isTRUE(entry$spec$local_aspect_only)) {
+    stop("DEM uses local aspect extraction only: ", entry$spec$id, call. = FALSE)
+  }
   if (exists(key, envir = aspect_cache_env, inherits = FALSE)) return(get(key, envir = aspect_cache_env))
   path <- aspect_cache_path(entry$spec)
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
@@ -343,6 +370,27 @@ get_aspect_raster <- function(entry) {
   }
   assign(key, asp, envir = aspect_cache_env)
   asp
+}
+
+extract_local_aspect <- function(choice, buffer_m = 15, crop_buffer_m = 60) {
+  xy <- terra::crds(choice$point, df = TRUE)[1, c("x", "y")]
+  ext <- terra::ext(
+    xy$x - crop_buffer_m, xy$x + crop_buffer_m,
+    xy$y - crop_buffer_m, xy$y + crop_buffer_m
+  )
+  dem_local <- tryCatch(terra::crop(choice$raster, ext, snap = "out"), error = function(e) NULL)
+  if (is.null(dem_local) || terra::ncell(dem_local) == 0) return(NA_real_)
+  target_res <- spec_num(choice$spec, "aspect_target_res_m", NA_real_)
+  if (is.finite(target_res)) {
+    current_res <- mean(terra::res(dem_local))
+    if (is.finite(current_res) && current_res < target_res) {
+      fact <- max(1L, round(target_res / current_res))
+      dem_local <- terra::aggregate(dem_local, fact = fact, fun = mean, na.rm = TRUE)
+    }
+  }
+  asp <- tryCatch(terra::terrain(dem_local, v = "aspect", unit = "degrees"), error = function(e) NULL)
+  if (is.null(asp)) return(NA_real_)
+  extract_point(round(asp), choice$point, buffer = buffer_m, fun = modal_num)
 }
 
 deg_to_dir8 <- function(deg) {
@@ -370,15 +418,7 @@ update_height_aspect <- function(meta, affected_uids, dem_catalog) {
       next
     }
     elev <- extract_point(choice$raster, choice$point, buffer = 15, fun = mean)
-    asp <- NA_real_
-    asp_r <- tryCatch(get_aspect_raster(choice), error = function(e) NULL)
-    if (!is.null(asp_r)) {
-      pt_asp <- tryCatch(terra::project(point_ll(lon, lat), terra::crs(asp_r)), error = function(e) NULL)
-      if (!is.null(pt_asp)) {
-        asp_round <- round(asp_r)
-        asp <- extract_point(asp_round, pt_asp, buffer = 15, fun = terra::modal)
-      }
-    }
+    asp <- extract_local_aspect(choice, buffer_m = 15)
     if (is.finite(elev)) meta$elevation_dgm5m[i] <- format(elev, scientific = FALSE, trim = TRUE)
     if (is.finite(asp)) {
       asp_i <- as.integer(round(asp)) %% 360L
@@ -711,7 +751,8 @@ compute_horizon_for_point <- function(choice, buffer_m, max_dist_m, step_m, n_az
   if (!is.finite(z0)) stop("No DEM elevation at point for horizon.", call. = FALSE)
 
   dirs <- seq(0, 360, length.out = n_az + 1L)[-(n_az + 1L)]
-  dists <- seq(step_m, max_dist_m, by = step_m)
+  sample_step_m <- max(step_m, spec_num(choice$spec, "horizon_min_step_m", step_m))
+  dists <- seq(sample_step_m, max_dist_m, by = sample_step_m)
   rad <- dirs * pi / 180
   x <- as.vector(sapply(rad, function(a) xy0[1] + dists * sin(a)))
   y <- as.vector(sapply(rad, function(a) xy0[2] + dists * cos(a)))
@@ -818,9 +859,22 @@ write_csv_safe <- function(df, path) {
   readr::write_csv(df, path, na = "")
 }
 
+coerce_merge_ids <- function(df) {
+  id_cols <- c(
+    "entity_type", "entity_id", "station_id", "name",
+    "cap_class", "cap_status", "cap_algorithm_version",
+    "icefall_cap_class", "station_cap_class"
+  )
+  for (col in intersect(id_cols, names(df))) df[[col]] <- as.character(df[[col]])
+  if ("uid" %in% names(df)) df$uid <- parse_uid(df$uid)
+  df
+}
+
 merge_uid_table <- function(old, new, affected_uids) {
   if (!"uid" %in% names(old)) old <- tibble()
   if (!"uid" %in% names(new)) new <- tibble()
+  old <- coerce_merge_ids(old)
+  new <- coerce_merge_ids(new)
   out <- bind_rows(
     old %>% filter(!(parse_uid(uid) %in% affected_uids)),
     new
@@ -883,6 +937,8 @@ merge_cap_index <- function(old, new) {
   key <- function(df) paste(as.character(df$entity_type), as.character(df$entity_id), sep = ":")
   if (!all(c("entity_type", "entity_id") %in% names(old))) old <- tibble()
   if (!all(c("entity_type", "entity_id") %in% names(new))) new <- tibble()
+  old <- coerce_merge_ids(old)
+  new <- coerce_merge_ids(new)
   old_key <- if (nrow(old) > 0) key(old) else character(0)
   new_key <- if (nrow(new) > 0) key(new) else character(0)
   out <- bind_rows(old[!(old_key %in% new_key), , drop = FALSE], new)
@@ -900,9 +956,8 @@ run_cap_update <- function(affected_uids) {
   old_pairs <- read_csv_if_exists(path_pairs)
 
   extra <- c(paste0("--uids=", paste(affected_uids, collapse = ",")))
-  env <- character(0)
-  if (FORCE_CAP) env <- c(env, "ICEFALL_FORCE_CAP=1")
-  run_rscript(script, extra, env = env)
+  if (FORCE_CAP) extra <- c(extra, "--force")
+  run_rscript(script, extra)
 
   new_index <- read_csv_if_exists(path_index)
   new_pairs <- read_csv_if_exists(path_pairs)
@@ -916,15 +971,24 @@ run_cap_update <- function(affected_uids) {
 
 msg("Project root: ", PROJECT_ROOT)
 stop_if_missing(PATH_META, "main icefall table")
-stop_if_missing(PATH_INPUT, "new icefall input")
 
 meta <- read_meta(PATH_META)
-input <- read_any_csv(PATH_INPUT, force_character = TRUE) %>%
-  standardize_new_icefall_cols() %>%
-  drop_blank_rows()
+
+if (RERUN_OETZTAL) {
+  input <- meta %>%
+    mutate(.is_oetztal = grepl("oetztalclimbing", tolower(paste(topo_url, url)))) %>%
+    filter(.is_oetztal) %>%
+    select(-.is_oetztal)
+  msg("Rerun existing Oetztal rows from main table: ", nrow(input))
+} else {
+  stop_if_missing(PATH_INPUT, "new icefall input")
+  input <- read_any_csv(PATH_INPUT, force_character = TRUE) %>%
+    standardize_new_icefall_cols() %>%
+    drop_blank_rows()
+}
 
 if (nrow(input) == 0) {
-  stop("Input has no data rows. Fill ", PATH_INPUT, " and run again.", call. = FALSE)
+  stop("Input has no data rows. Fill ", PATH_INPUT, " or use --rerun-oetztal.", call. = FALSE)
 }
 
 required_input <- c("name", "latitude", "longitude")

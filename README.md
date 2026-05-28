@@ -63,6 +63,30 @@ parameters such as height/aspect, station assignment, wind vulnerability,
 topographic sun, route structure, and cold-air-pooling tables. Add `--dry-run`
 to preview the affected UIDs without writing files.
 
+## Rerun Oetztal with the 50 cm raster
+
+The Oetztal 50 cm raster is expected at:
+
+```text
+data/DEM/DOM_Oetztal_50cm.tif
+```
+
+When this file exists, the DEM catalog uses it before the 5 m Tirol DGM.
+
+For a quick test on one UID first, without rebuilding sun tables, CAP, or the
+site:
+
+```powershell
+& "C:\Program Files\R\R-4.5.3\bin\Rscript.exe" scripts/add_new_icefalls.R --rerun-oetztal --uids=1 --skip-sun --skip-cap --skip-site --force-structure
+```
+
+To recalculate all existing Oetztal icefalls from the main table and rebuild
+the model plots and map:
+
+```powershell
+& "C:\Program Files\R\R-4.5.3\bin\Rscript.exe" scripts/add_new_icefalls.R --rerun-oetztal --force-structure --run-models --build-map
+```
+
 ## Notes for pushing
 
 Do not commit generated caches, `site/`, local DEM source files, RStudio state, or local analysis outputs. The `.gitignore` keeps these out of Git.

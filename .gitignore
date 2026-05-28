@@ -24,6 +24,7 @@ Rplots.pdf
 # Large DEM/source files that should stay local
 /data/DEM/DGM_AT_5m_epsg31287.tif
 /data/DEM/DGM_Tirol_5m_epsg31254_2006_2020.tif
+/data/DEM/DOM_Oetztal_50cm.tif
 /data/DEM/eudem_dem_3035_europe.tif
 /DGM_Tirol_5m_epsg31254_2006_2020.tif
 
