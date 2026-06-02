@@ -36,6 +36,7 @@ Rplots.pdf
 !/add_new/new_icefalls.csv
 /tmp/
 /scripts/AWS Validation/out/
+analysis/Icefall_validation/
 
 # Python and OS noise
 __pycache__/
