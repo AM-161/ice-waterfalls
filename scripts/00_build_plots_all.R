@@ -12,10 +12,12 @@ if (!("uid" %in% names(assign))) stop("Column 'uid' is missing in ", assign_path
 
 uids <- sort(unique(assign$uid))
 uids <- uids[is.finite(uids)]
+assign_uids <- uids
 
 if (length(uids) == 0) stop("No UIDs found.")
 
 strict_plots <- tolower(Sys.getenv("STRICT_PLOTS", "false")) %in% c("1", "true", "yes", "y")
+rscript_bin <- Sys.getenv("RSCRIPT_BIN", "Rscript")
 
 # Optional: limit build to a specific UID list (for faster testing)
 # Usage:
@@ -25,17 +27,20 @@ uid_arg <- grep("^--uids=", commandArgs(trailingOnly = TRUE), value = TRUE)
 uid_raw <- if (length(uid_arg) > 0) sub("^--uids=", "", uid_arg[1]) else Sys.getenv("UID_LIMIT", "")
 if (nzchar(uid_raw)) {
   uid_list <- suppressWarnings(as.integer(trimws(unlist(strsplit(uid_raw, "[,;\\s]+")))))
-  uid_list <- uid_list[is.finite(uid_list)]
+  uid_list <- sort(unique(uid_list[is.finite(uid_list)]))
   if (length(uid_list) == 0) stop("UID_LIMIT/--uids contains no valid UIDs.")
-  uids <- uids[uids %in% uid_list]
-  if (length(uids) == 0) stop("No UIDs left after filter: ", uid_raw)
+  missing_assign <- setdiff(uid_list, assign_uids)
+  if (length(missing_assign) > 0) {
+    message("UIDs not in station assignment table; diagram_uid.R will use fallback: ", paste(missing_assign, collapse = ", "))
+  }
+  uids <- uid_list
   message("UID filter active: ", paste(uids, collapse = ", "))
 }
 
 dir.create("site/plots", recursive = TRUE, showWarnings = FALSE)
 
 run_rscript_checked <- function(script, args = character()) {
-  status <- system2("Rscript", c(script, args), stdout = "", stderr = "")
+  status <- system2(rscript_bin, c(script, args), stdout = "", stderr = "")
   exit_code <- attr(status, "status")
   if (is.null(exit_code)) exit_code <- status
   if (length(exit_code) == 0 || is.na(exit_code)) exit_code <- 0

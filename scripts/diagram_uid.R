@@ -37,10 +37,13 @@ DT_H   <- MODEL_STEP_MIN / 60
 DT_SEC <- MODEL_STEP_MIN * 60
 W2MJ_STEP <- DT_SEC / 1e6  # W/m2 -> MJ/m2 per model step
 
-END_DATE <- Sys.Date()
+model_end_date_raw <- Sys.getenv("MODEL_END_DATE", "")
+END_DATE <- if (nzchar(model_end_date_raw)) as.Date(model_end_date_raw) else Sys.Date()
+if (is.na(END_DATE)) stop("MODEL_END_DATE is not a valid date: ", model_end_date_raw)
 END_DATE_EXT <- END_DATE
 
 PATH_ASSIGN   <- "data/AWS/icefalls_nearest_station.csv"
+PATH_META     <- "data/Koordinaten_Wasserfaelle/eisklettern_links_entries_diff.csv"
 PATH_STATIONS <- "data/AWS/stations_all.csv"
 DIR_SUN       <- "data/suntime"
 PATH_WINDLUT  <- "data/Wind/wind_vulnerability_5deg.csv"
@@ -48,6 +51,7 @@ PATH_STRUCTURE <- "data/derived/icefall_structure/icefall_structure_analysis.csv
 PATH_CAP <- "data/CAP/icefall_station_cap.csv"
 PATH_INV_DIR <- "data/_cache_inversion"
 PATH_INV_RDS <- file.path(PATH_INV_DIR, sprintf("inversion_%s.rds", format(END_DATE, "%Y%m%d")))
+PATH_ELEV_DEM <- "data/DEM/DEM_Tirol_INCAgrid_1km_epsg4326.tif"
 
 PATH_INCA_DIR <- "data/inca_nordtirol/point_timeseries"
 
@@ -87,14 +91,15 @@ parse_time_any <- function(x, tz = TZ_LOCAL) {
   out
 }
 
-fill1 <- function(x) {
-  x <- zoo::na.approx(x, na.rm = FALSE)
-  x <- zoo::na.locf(x, na.rm = FALSE)
-  x <- zoo::na.locf(x, na.rm = FALSE, fromLast = TRUE)
-  x
+fill_station_gaps <- function(x, max_gap_steps = as.integer(6 * 60 / MODEL_STEP_MIN)) {
+  # Fill only short station outages; never extrapolate long season-start gaps.
+  x <- zoo::na.approx(x, na.rm = FALSE, maxgap = max_gap_steps)
+  zoo::na.locf(x, na.rm = FALSE, maxgap = max_gap_steps)
 }
 
 clamp01 <- function(x) pmin(1, pmax(0, x))
+
+valid_elev_m <- function(x) is.finite(x) & x > -500 & x < 6000
 
 deg2rad <- function(x) x * pi / 180
 rad2deg <- function(x) x * 180 / pi
@@ -104,6 +109,30 @@ first_finite <- function(...) {
   vals <- vals[is.finite(vals)]
   if (length(vals) == 0) return(NA_real_)
   vals[[1]]
+}
+
+haversine_km <- function(lat1, lon1, lat2, lon2) {
+  r <- 6371
+  lat1r <- deg2rad(lat1)
+  lat2r <- deg2rad(lat2)
+  dlat <- deg2rad(lat2 - lat1)
+  dlon <- deg2rad(lon2 - lon1)
+  a <- sin(dlat / 2)^2 + cos(lat1r) * cos(lat2r) * sin(dlon / 2)^2
+  2 * r * atan2(sqrt(a), sqrt(1 - a))
+}
+
+extract_dem_elev_m <- function(lon, lat) {
+  if (!file.exists(PATH_ELEV_DEM) || !requireNamespace("terra", quietly = TRUE)) return(NA_real_)
+  if (!is.finite(lon) || !is.finite(lat)) return(NA_real_)
+  tryCatch({
+    dem <- terra::rast(PATH_ELEV_DEM)
+    pt <- terra::vect(data.frame(lon = lon, lat = lat), geom = c("lon", "lat"), crs = "EPSG:4326")
+    dem_crs <- terra::crs(dem)
+    if (nzchar(dem_crs)) pt <- terra::project(pt, dem_crs)
+    val <- terra::extract(dem, pt, ID = FALSE)[1, 1]
+    val <- to_num(val)
+    if (is.finite(val)) val else NA_real_
+  }, error = function(e) NA_real_)
 }
 
 tz_offset_hours_vec <- function(time_local) {
@@ -496,12 +525,20 @@ get_station_tlrf <- function(start_date, end_date, station_id, source) {
 # =====================================================================
 stopifnot(file.exists(PATH_ASSIGN), file.exists(PATH_STATIONS), dir.exists(DIR_SUN), file.exists(PATH_WINDLUT))
 
-assign <- readr::read_csv(
-  PATH_ASSIGN, show_col_types = FALSE, progress = FALSE
-)
+assign <- readr::read_csv(PATH_ASSIGN, show_col_types = FALSE, progress = FALSE)
+meta_all <- if (file.exists(PATH_META)) {
+  readr::read_delim(
+    PATH_META, delim = ";",
+    col_types = readr::cols(.default = readr::col_character()),
+    show_col_types = FALSE, progress = FALSE,
+    col_select = dplyr::any_of(c("uid", "name", "latitude", "longitude", "elevation_dgm5m"))
+  )
+} else {
+  tibble(uid = integer(), name = character(), latitude = numeric(), longitude = numeric(), elevation_dgm5m = numeric())
+}
 stations_all <- readr::read_csv(
   PATH_STATIONS, show_col_types = FALSE, progress = FALSE,
-  col_select = dplyr::any_of(c("station_id","altitude_m"))
+  col_select = dplyr::any_of(c("station_id", "name", "lon", "lat", "altitude_m", "source", "tl", "rf", "td_lwd"))
 )
 structure_all <- if (file.exists(PATH_STRUCTURE)) {
   readr::read_csv(
@@ -583,7 +620,69 @@ wind_lut <- readr::read_csv(
   col_select = dplyr::any_of(c("uid","dir_deg","wind_vuln_0_9"))
 )
 
+fallback_station_assignment <- function(uid) {
+  ice <- meta_all %>%
+    mutate(
+      uid_num = suppressWarnings(as.integer(uid)),
+      ice_lat = to_num(latitude),
+      ice_lon = to_num(longitude),
+      icefall_elev_m = to_num(elevation_dgm5m)
+    ) %>%
+    filter(uid_num == !!uid, is.finite(ice_lat), is.finite(ice_lon)) %>%
+    slice(1)
+
+  if (nrow(ice) == 0) return(tibble())
+
+  stations <- stations_all %>%
+    mutate(
+      station_id = as.character(station_id),
+      station_name = as.character(name),
+      station_lat = to_num(lat),
+      station_lon = to_num(lon),
+      station_altitude_m = to_num(altitude_m),
+      source = as.character(source)
+    ) %>%
+    filter(source %in% c("GeoSphere", "LWD"), is.finite(station_lat), is.finite(station_lon))
+
+  if (nrow(stations) == 0) return(tibble())
+
+  stations <- stations %>%
+    mutate(dist_km = haversine_km(ice$ice_lat[[1]], ice$ice_lon[[1]], station_lat, station_lon)) %>%
+    arrange(dist_km)
+
+  station <- stations %>% slice(1)
+  ice_elev_m <- ice$icefall_elev_m[[1]]
+  if (!valid_elev_m(ice_elev_m)) {
+    ice_elev_m <- extract_dem_elev_m(ice$ice_lon[[1]], ice$ice_lat[[1]])
+  }
+  if (!valid_elev_m(ice_elev_m)) {
+    ice_elev_m <- station$station_altitude_m[[1]]
+  }
+  elev_diff_m <- ice_elev_m - station$station_altitude_m[[1]]
+
+  tibble(
+    uid = uid,
+    icefall_name = as.character(ice$name[[1]]),
+    ice_lat = ice$ice_lat[[1]],
+    ice_lon = ice$ice_lon[[1]],
+    station_id = station$station_id[[1]],
+    station_name = station$station_name[[1]],
+    source = station$source[[1]],
+    station_lat = station$station_lat[[1]],
+    station_lon = station$station_lon[[1]],
+    dist_km = station$dist_km[[1]],
+    icefall_elev_m = ice_elev_m,
+    elev_diff_m = elev_diff_m,
+    topo_pos_diff = NA_real_,
+    path_barrier_m = NA_real_
+  )
+}
+
 row_uid <- assign %>% filter(uid == UID_TEST) %>% slice(1)
+if (nrow(row_uid) == 0) {
+  message("UID ", UID_TEST, " not found in station assignment table; using nearest-station fallback.")
+  row_uid <- fallback_station_assignment(UID_TEST)
+}
 if (nrow(row_uid) == 0) stop("uid not found: ", UID_TEST)
 
 station_id <- as.character(row_uid$station_id)
@@ -594,6 +693,8 @@ ice_lon    <- to_num(row_uid$ice_lon)
 ice_lat    <- to_num(row_uid$ice_lat)
 path_barrier_m_uid <- if ("path_barrier_m" %in% names(row_uid)) to_num(row_uid$path_barrier_m) else NA_real_
 topo_pos_diff_uid <- if ("topo_pos_diff" %in% names(row_uid)) to_num(row_uid$topo_pos_diff) else NA_real_
+if (!is.finite(path_barrier_m_uid)) path_barrier_m_uid <- 80
+if (!is.finite(topo_pos_diff_uid)) topo_pos_diff_uid <- 0.16
 
 cap_uid <- cap_pairs %>% filter(uid == UID_TEST) %>% slice(1)
 cap_num <- function(df, col, default = NA_real_) {
@@ -696,20 +797,25 @@ if (all(is.na(wx10$TL))) stop("TL is completely missing.")
 if (all(is.na(wx10$RF))) stop("RF is completely missing.")
 
 step_str <- paste0(MODEL_STEP_MIN, " mins")
+model_time <- seq(
+  as.POSIXct(START_DATE, tz = TZ_LOCAL),
+  as.POSIXct(END_DATE + 1, tz = TZ_LOCAL) - lubridate::minutes(MODEL_STEP_MIN),
+  by = step_str
+)
 
 wx <- wx10 %>%
   mutate(time = floor_date(timestamp, unit = step_str)) %>%
   group_by(time) %>%
   summarise(
-    TL = mean(TL, na.rm = TRUE),
-    RF = mean(RF, na.rm = TRUE),
+    TL = if (all(is.na(TL))) NA_real_ else mean(TL, na.rm = TRUE),
+    RF = if (all(is.na(RF))) NA_real_ else mean(RF, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  tidyr::complete(time = seq(min(time), max(time), by = step_str)) %>%
+  tidyr::complete(time = model_time) %>%
   arrange(time) %>%
   mutate(
-    TL = fill1(TL),
-    RF = fill1(RF)
+    TL = fill_station_gaps(TL),
+    RF = fill_station_gaps(RF)
   )
 
 # =====================================================================
@@ -957,6 +1063,7 @@ wx <- wx %>%
     TLz_base = if_else(use_prof, TL + dT_prof, TLz_raw),
     FF_eff = pmin(coef$wind_cap_ms, pmax(0, FF)),
     GLOW = if_else(is.finite(GLOW), GLOW, 0),
+    weather_ok = is.finite(TL),
 
     # Station-relative cold-air pooling correction:
     # positive cap_delta_uid cools the route relative to the station;
@@ -973,8 +1080,8 @@ wx <- wx %>%
       cap_pair_confidence_uid * cap_stability_fac,
     TLz = TLz_base - cap_temp_adjust_C,
 
-    FDH = pmax(0, -TLz),
-    PDH = pmax(0,  TLz),
+    FDH = if_else(is.finite(TLz), pmax(0, -TLz), 0),
+    PDH = if_else(is.finite(TLz), pmax(0,  TLz), 0),
 
     solar_load_fac = if_else(
       topo_sun_fac > 0,
@@ -995,16 +1102,27 @@ wx <- wx %>%
     SW_MJ_step = GLOW * W2MJ_STEP * solar_load_fac * (1 - ice_params$albedo),
     
     wind_fac = 1 + coef$k_wind * FF_eff * wind_vuln,
-    dry_fac  = 1 + coef$k_dry  * pmax(0, 1 - RF/100),
+    dry_fac  = if_else(is.finite(RF), 1 + coef$k_dry * pmax(0, 1 - RF / 100), 1),
     
-    base_growth_mm_step = coef$growth_mm_per_C_h * FDH * DT_H * wind_fac * dry_fac,
-    base_melt_mm_step   = coef$melt_mm_per_C_h * PDH * DT_H * wind_fac +
-      coef$rad_melt_mm_per_MJ * SW_MJ_step
+    base_growth_mm_step = if_else(
+      weather_ok,
+      coef$growth_mm_per_C_h * FDH * DT_H * wind_fac * dry_fac,
+      0
+    ),
+    base_melt_mm_step = if_else(
+      weather_ok,
+      coef$melt_mm_per_C_h * PDH * DT_H * wind_fac +
+        coef$rad_melt_mm_per_MJ * SW_MJ_step,
+      0
+    )
   ) %>%
   mutate(
     TLz_72h_step = zoo::rollapplyr(
       TLz, width = as.integer(72 * 60 / MODEL_STEP_MIN),
-      FUN = function(x) mean(x, na.rm = TRUE),
+      FUN = function(x) {
+        x <- x[is.finite(x)]
+        if (length(x) == 0) NA_real_ else mean(x)
+      },
       fill = NA_real_, partial = TRUE
     )
   )
@@ -1053,6 +1171,7 @@ for (i in 2:nrow(wx)) {
   melt_scale <- 1 - melt_damping_eff * pmin(1, Hprev_m / ice_params$melt_damping_scale_m)
   melt_total <- wx$base_melt_mm_step[i] * melt_scale
   spring_exposure_fac <- clamp01((wx$TLz_72h_step[i] + 5) / 5)
+  if (!is.finite(spring_exposure_fac)) spring_exposure_fac <- 0
   melt_total <- melt_total * (1 + 0.8 * exposure_fac_uid * spring_exposure_fac)
 
   melt_surface <- min(surface_pre_melt, melt_total)
@@ -1065,7 +1184,9 @@ for (i in 2:nrow(wx)) {
   melt_core <- min(core_pre_melt, melt_left * core_melt_fac)
 
   reserve_gain_mm <- 0.30 * growth_core * retention_fac_uid
-  reserve_loss_mm <- (0.08 * wx$PDH[i] * DT_H + 0.05 * wx$solar_core_fac + 0.02 * pmax(0, wx$TLz_72h_step[i] + 2)) *
+  reserve_temp_loss <- pmax(0, wx$TLz_72h_step[i] + 2)
+  if (!is.finite(reserve_temp_loss)) reserve_temp_loss <- 0
+  reserve_loss_mm <- (0.08 * wx$PDH[i] * DT_H + 0.05 * wx$solar_core_fac + 0.02 * reserve_temp_loss) *
     retention_fac_uid
   reserve_cap_mm <- 0.28 * core_pre_melt
   core_reserve_mm[i] <- min(

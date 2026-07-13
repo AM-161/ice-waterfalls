@@ -26,7 +26,9 @@ step_str <- paste0(MODEL_STEP_MIN, " mins")
 # Time range (as in the model)
 # ----------------------------
 NOW_LOCAL <- with_tz(Sys.time(), TZ_LOCAL)
-END_DATE  <- as.Date(NOW_LOCAL)
+model_end_date_raw <- Sys.getenv("MODEL_END_DATE", "")
+END_DATE <- if (nzchar(model_end_date_raw)) as.Date(model_end_date_raw) else as.Date(NOW_LOCAL)
+if (is.na(END_DATE)) stop("MODEL_END_DATE is not a valid date: ", model_end_date_raw)
 
 season_start_oct <- function(d) {
   d <- as.Date(d)
