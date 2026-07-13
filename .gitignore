@@ -36,6 +36,8 @@ Rplots.pdf
 !/add_new/new_icefalls.csv
 /tmp/
 /scripts/AWS Validation/out/
+# Private validation material (WhatsApp/website photos, videos) - keep local only, never push
+/analysis/Icefall_validation/
 
 # Python and OS noise
 __pycache__/
